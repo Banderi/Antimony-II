@@ -1,0 +1,50 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Antimony/scripts/hud/balloon.gd" type="Script" id=1]
+
+[node name="balloon" type="Control"]
+show_behind_parent = true
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="Panel" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -120.893
+margin_top = -106.132
+margin_right = 117.107
+margin_bottom = -15.132
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Panel2" type="Panel" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -0.893333
+margin_top = -65.132
+margin_right = 67.1067
+margin_bottom = -43.132
+rect_rotation = 44.9999
+rect_scale = Vector2( 0.686988, 2.05456 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="txt" type="RichTextLabel" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = -113.0
+margin_top = -99.3073
+margin_right = 109.0
+margin_bottom = -23.3073
+__meta__ = {
+"_edit_use_anchors_": false
+}

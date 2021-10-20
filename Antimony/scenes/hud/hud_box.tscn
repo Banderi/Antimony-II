@@ -1,0 +1,132 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://Antimony/scripts/hud/hud_box.gd" type="Script" id=1]
+
+[node name="container" type="ColorRect"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_right = -1520.0
+margin_bottom = -944.0
+rect_min_size = Vector2( 70, 70 )
+color = Color( 0, 0, 0, 0.4 )
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="dbg" type="Label" parent="."]
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+margin_left = -105.0
+margin_top = 1.0
+margin_right = 104.0
+margin_bottom = 60.0
+align = 1
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="bb" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.0784314, 0.615686, 0.32549, 1 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="sel" type="Control" parent="."]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -33.0
+margin_top = -33.0
+margin_right = 33.0
+margin_bottom = 33.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="bd" type="ColorRect" parent="sel"]
+visible = false
+margin_right = 66.0
+margin_bottom = 66.0
+mouse_filter = 2
+color = Color( 1, 1, 1, 0.4 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="draw" type="Node2D" parent="sel"]
+z_index = 2000
+
+[node name="arrow" type="Polygon2D" parent="sel/draw"]
+visible = false
+position = Vector2( 59.7719, 5.94564 )
+color = Color( 0, 1, 0.0392157, 1 )
+polygon = PoolVector2Array( -36.7719, -0.211906, -26.7719, 9.78809, -16.7719, -0.211906 )
+
+[node name="def" type="Control" parent="sel/draw"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+mouse_filter = 2
+__meta__ = {
+"_edit_group_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="sel/draw/def"]
+margin_right = 5.0
+margin_bottom = 66.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect2" type="ColorRect" parent="sel/draw/def"]
+margin_left = 61.0
+margin_right = 66.0
+margin_bottom = 66.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Polygon2D2" type="Polygon2D" parent="sel/draw/def"]
+position = Vector2( 66, 0 )
+scale = Vector2( 0.5, 0.25 )
+polygon = PoolVector2Array( 0, -3.8147e-06, 0, 18.5802, -20, 18.5802, -20, -3.8147e-06 )
+
+[node name="Polygon2D3" type="Polygon2D" parent="sel/draw/def"]
+position = Vector2( 0, 4.64505 )
+rotation = 3.14159
+scale = Vector2( 0.5, 0.25 )
+polygon = PoolVector2Array( 0, -3.8147e-06, 0, 18.5802, -20, 18.5802, -20, -3.8147e-06 )
+
+[node name="Polygon2D5" type="Polygon2D" parent="sel/draw/def"]
+position = Vector2( 0, 66 )
+rotation = 3.14159
+scale = Vector2( 0.5, 0.25 )
+polygon = PoolVector2Array( 0, -3.8147e-06, 0, 18.5802, -20, 18.5802, -20, -3.8147e-06 )
+
+[node name="Polygon2D4" type="Polygon2D" parent="sel/draw/def"]
+position = Vector2( 56, 66 )
+rotation = 9.42476
+scale = Vector2( 0.5, 0.25 )
+polygon = PoolVector2Array( 0, -3.8147e-06, 0, 18.5802, -20, 18.5802, -20, -3.8147e-06 )
+
+[node name="items" type="Control" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_lock_": true
+}

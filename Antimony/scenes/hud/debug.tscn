@@ -1,0 +1,145 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://Antimony/fonts/hotbar.tres" type="DynamicFont" id=1]
+[ext_resource path="res://Antimony/fonts/debug_monospace_outline.tres" type="DynamicFont" id=2]
+
+[sub_resource type="SpatialMaterial" id=1]
+flags_transparent = true
+flags_unshaded = true
+flags_vertex_lighting = true
+flags_no_depth_test = true
+flags_use_point_size = true
+vertex_color_use_as_albedo = true
+params_point_size = 10.0
+
+[sub_resource type="ShortCut" id=2]
+
+[node name="debug" type="Control"]
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="im" type="ImmediateGeometry" parent="."]
+material_override = SubResource( 1 )
+
+[node name="text" type="Control" parent="."]
+margin_right = 556.0
+margin_bottom = 688.0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="fps" type="Label" parent="text"]
+margin_left = 1113.33
+margin_top = 42.7217
+margin_right = 1563.33
+margin_bottom = 68.7216
+mouse_filter = 1
+custom_fonts/font = ExtResource( 1 )
+text = "60"
+align = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="box" type="Label" parent="text"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+text = "testetst
+asgerrrr
+te
+sadt
+fae
+fe
+eagaewgeg"
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="conn" type="Label" parent="text"]
+visible = false
+margin_left = 39.1458
+margin_top = 42.7217
+margin_right = 489.147
+margin_bottom = 68.7216
+mouse_filter = 1
+text = "---"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="conn2" type="Label" parent="text"]
+visible = false
+margin_left = 39.1458
+margin_top = 63.9798
+margin_right = 489.147
+margin_bottom = 89.9798
+mouse_filter = 1
+text = "---"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="txt1" type="Label" parent="text"]
+visible = false
+margin_left = 38.8523
+margin_top = 90.6554
+margin_right = 308.852
+margin_bottom = 112.655
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+custom_constants/shadow_as_outline = 0
+text = "- - -"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="txt2" type="Label" parent="text"]
+visible = false
+margin_left = 38.8523
+margin_top = 112.321
+margin_right = 308.852
+margin_bottom = 134.321
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+custom_constants/shadow_as_outline = 0
+text = "- - -"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="Panel" parent="."]
+visible = false
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = 900.0
+margin_bottom = 984.0
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="connect" type="Button" parent="Panel"]
+anchor_top = 1.0
+anchor_bottom = 1.0
+margin_left = 21.97
+margin_top = -61.3853
+margin_right = 145.97
+margin_bottom = -19.3853
+mouse_filter = 1
+shortcut = SubResource( 2 )
+text = "CONNECT"
+__meta__ = {
+"_edit_use_anchors_": false
+}

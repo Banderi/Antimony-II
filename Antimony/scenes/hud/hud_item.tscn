@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://graphics/obj_dummy.png" type="Texture" id=1]
+[ext_resource path="res://Antimony/scripts/hud/hud_item.gd" type="Script" id=2]
+
+[node name="item" type="Node2D"]
+z_index = 999
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="ColorRect" type="ColorRect" parent="."]
+visible = false
+margin_right = 70.0
+margin_bottom = 70.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="btn" type="TextureButton" parent="."]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 64.0
+margin_bottom = 64.0
+mouse_filter = 1
+texture_normal = ExtResource( 1 )
+expand = true
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": true
+}
+
+[node name="dbg" type="Label" parent="btn"]
+anchor_left = 0.5
+anchor_top = -0.146708
+anchor_right = 0.5
+anchor_bottom = -0.146708
+margin_left = -154.5
+margin_top = -13.0
+margin_right = 154.5
+margin_bottom = 1.0
+text = "test"
+align = 1
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": true
+}

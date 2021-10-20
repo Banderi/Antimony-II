@@ -1,0 +1,298 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://Antimony/scripts/root.gd" type="Script" id=2]
+[ext_resource path="res://Antimony/fonts/slkscr.ttf" type="DynamicFontData" id=3]
+[ext_resource path="res://Antimony/scenes/controller.tscn" type="PackedScene" id=4]
+[ext_resource path="res://Antimony/fonts/slkscr.tres" type="DynamicFont" id=8]
+[ext_resource path="res://Antimony/scenes/hud/hud_item.tscn" type="PackedScene" id=12]
+[ext_resource path="res://Antimony/scenes/hud/debug.tscn" type="PackedScene" id=25]
+
+[sub_resource type="StyleBoxEmpty" id=1]
+
+[sub_resource type="StyleBoxEmpty" id=2]
+
+[sub_resource type="DynamicFont" id=3]
+size = 17
+font_data = ExtResource( 3 )
+
+[node name="root" type="Node"]
+script = ExtResource( 2 )
+
+[node name="TESTING_COLOR" type="ColorRect" parent="."]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color( 0.439216, 0.501961, 0.568627, 1 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="controller" parent="." instance=ExtResource( 4 )]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="debug" parent="UI" instance=ExtResource( 25 )]
+
+[node name="m_pause" type="ColorRect" parent="UI"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0, 0, 0, 0.490196 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Panel" type="Button" parent="UI/m_pause"]
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -93.5
+margin_top = -139.5
+margin_right = 93.5
+margin_bottom = 139.5
+mouse_filter = 2
+custom_styles/focus = SubResource( 1 )
+disabled = true
+enabled_focus_mode = 0
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Label" type="Label" parent="UI/m_pause/Panel"]
+margin_left = 4.0
+margin_top = 200.0
+margin_right = 184.0
+margin_bottom = 300.0
+rect_min_size = Vector2( 0, 100 )
+size_flags_vertical = 0
+custom_fonts/font = ExtResource( 8 )
+text = "project k
+v.alpha0.0.2"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="vbox" type="VBoxContainer" parent="UI/m_pause/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 4.0
+margin_right = -3.0
+margin_bottom = 47.0
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="resume" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_right = 180.0
+margin_bottom = 24.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "Continue Game"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="new" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 28.0
+margin_right = 180.0
+margin_bottom = 52.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "New World"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="save" type="Button" parent="UI/m_pause/Panel/vbox"]
+visible = false
+margin_top = 56.0
+margin_right = 180.0
+margin_bottom = 80.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "Save Game"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="load" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 56.0
+margin_right = 180.0
+margin_bottom = 80.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "Load Game"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="connect" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 84.0
+margin_right = 180.0
+margin_bottom = 108.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+disabled = true
+text = "Connect"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="settings" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 112.0
+margin_right = 180.0
+margin_bottom = 136.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+disabled = true
+text = "Settings"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="about" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 140.0
+margin_right = 180.0
+margin_bottom = 164.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "About"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="credits" type="Button" parent="UI/m_pause/Panel/vbox"]
+visible = false
+margin_top = 168.0
+margin_right = 180.0
+margin_bottom = 192.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "Credits"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="quit" type="Button" parent="UI/m_pause/Panel/vbox"]
+margin_top = 168.0
+margin_right = 180.0
+margin_bottom = 192.0
+custom_styles/focus = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
+text = "Exit"
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="spacer" type="Control" parent="UI/m_pause/Panel/vbox"]
+visible = false
+margin_top = 168.0
+margin_right = 180.0
+margin_bottom = 243.0
+rect_min_size = Vector2( 0, 75 )
+__meta__ = {
+"_edit_lock_": true
+}
+
+[node name="Panel2" type="Button" parent="UI/m_pause"]
+visible = false
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+margin_left = -81.0
+margin_top = -121.0
+margin_right = 83.0
+margin_bottom = 128.0
+mouse_filter = 2
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="resume" type="Button" parent="UI/m_pause/Panel2"]
+anchor_left = 0.5
+anchor_right = 0.5
+margin_left = -64.0
+margin_top = 17.0
+margin_right = 64.0
+margin_bottom = 49.0
+text = "Resume"
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="settings" type="Button" parent="UI/m_pause/Panel2"]
+anchor_left = 0.5
+anchor_right = 0.5
+margin_left = -64.0
+margin_top = 67.0
+margin_right = 64.0
+margin_bottom = 99.0
+text = "Settings"
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="multiplayer" type="Button" parent="UI/m_pause/Panel2"]
+anchor_left = 0.5
+anchor_right = 0.5
+margin_left = -64.0
+margin_top = 117.0
+margin_right = 64.0
+margin_bottom = 149.0
+text = "Multiplayer"
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="quit" type="Button" parent="UI/m_pause/Panel2"]
+anchor_left = 0.5
+anchor_right = 0.5
+margin_left = -64.0
+margin_top = 167.0
+margin_right = 64.0
+margin_bottom = 199.0
+text = "Quit game"
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="UI/m_pause/Panel2"]
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -37.0
+custom_fonts/font = ExtResource( 8 )
+text = "project k
+v.alpha0.0.2"
+align = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="m_main" type="ColorRect" parent="UI"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color( 0.192157, 0.192157, 0.192157, 1 )
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="item" parent="UI" instance=ExtResource( 12 )]
+visible = false
+
+[node name="level" type="Spatial" parent="."]
