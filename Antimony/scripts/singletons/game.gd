@@ -258,10 +258,6 @@ func get_playername():
 
 ###
 
-func init():
-
-	pass
-
 func load_level(map):
 	# unload current level
 	game.root.remove_child(game.root.get_node("level"))

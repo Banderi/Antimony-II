@@ -10,7 +10,7 @@ var ping = 200
 
 onready var body3D = get_node("body3D")
 onready var mesh = body3D.get_node("mesh")
-onready var animset = mesh.get_node("AnimationPlayer")
+onready var animset = (null if mesh == null else mesh.get_node("AnimationPlayer"))
 onready var animtree = body3D.get_node("AnimationTree")
 onready var statemachine = animtree.get("parameters/machine/playback")
 
@@ -605,7 +605,8 @@ func state_update(delta): # neverending headache
 
 	# update animation playback speed blending? (for 3D animation)
 	var mov_speed = velocity.length()
-	animset.playback_default_blend_time = 0.1
+	if !game.is_2D():
+		animset.playback_default_blend_time = 0.1
 
 	# if attacking while mid-air, counter gravity a bit?
 	if state == states.attacking && !onground:
@@ -736,12 +737,14 @@ func set_color(color):
 			n.get_surface_material(0).albedo_color = color
 
 func refresh_equip():
-	for m in game.items:
-		var n = mesh.get_node("Armature/Skeleton/" + m)
-		if n != null:
-			n.visible = false
-	for m in equipment:
-		mesh.get_node("Armature/Skeleton/" + m).visible = true
+	# only in 3D for now!
+	if !game.is_2D():
+		for m in game.items:
+			var n = mesh.get_node("Armature/Skeleton/" + m)
+			if n != null:
+				n.visible = false
+		for m in equipment:
+			mesh.get_node("Armature/Skeleton/" + m).visible = true
 
 ###
 
@@ -1037,19 +1040,20 @@ func _physics_process(delta):
 		dir = Vector3()
 
 func _ready():
-	for a in animset.get_animation_list():
-		animset.animation_set_next(a,a)
-	animset.animation_set_next("08_roll","06_crouch")
-	animset.animation_set_next("10_jump","11_fall")
-	animset.animation_set_next("12_land","02_idle")
-	animset.animation_set_next("15_hland","02_idle")
-	animset.animation_set_next("16_death","17_ded")
-#	animset.animation_set_next("30_detected","02_idle")
+	if !game.is_2D():
+		for a in animset.get_animation_list():
+			animset.animation_set_next(a,a)
+		animset.animation_set_next("08_roll","06_crouch")
+		animset.animation_set_next("10_jump","11_fall")
+		animset.animation_set_next("12_land","02_idle")
+		animset.animation_set_next("15_hland","02_idle")
+		animset.animation_set_next("16_death","17_ded")
+#		animset.animation_set_next("30_detected","02_idle")
 
-	animset.playback_default_blend_time = 0.1
-	animset.play("02_idle")
+		animset.playback_default_blend_time = 0.1
+		animset.play("02_idle")
 
-	pos = body3D.get_global_transform().origin
+#		pos = body3D.get_global_transform().origin
 	touch_ground()
 
 	add_to_group("actors")
