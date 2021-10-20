@@ -11,12 +11,14 @@ var ping = 200
 onready var body3D = get_node("body3D")
 onready var mesh = body3D.get_node("mesh")
 onready var animset = (null if mesh == null else mesh.get_node("AnimationPlayer"))
+#onready var animset = mesh.get_node("AnimationPlayer")
 onready var animtree = body3D.get_node("AnimationTree")
 onready var statemachine = animtree.get("parameters/machine/playback")
 
 onready var body2D = get_node("body2D")
 onready var animsprite = body2D.get_node("sprite")
-onready var animframes = animsprite.frames
+onready var animframes = (null if animsprite == null else animsprite.frames)
+#onready var animframes = animsprite.frames
 
 var current_anim = ""
 
@@ -798,7 +800,10 @@ func _process(delta):
 
 	debug.loginfo("")
 
-	debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animsprite.speed_scale) + " mirror: " + str(animsprite.flip_h) + ")")
+	if game.is_2D():
+		debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animsprite.speed_scale) + " mirror: " + str(animsprite.flip_h) + ")")
+	else:
+		debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animset.playback_speed) + " blending: " + str(animset.playback_default_blend_time) + ")")
 	debug.loginfo("state:      ", states.keys()[state])
 	debug.loginfo("jumping:    ", jumping)
 	debug.loginfo("dashing:    ", dashing)

@@ -222,11 +222,11 @@ func new_actor(peer, actor_scene): # this will ONLY spawn a new actor on a this 
 	var ass = load("res://scenes/actors/" + actor_scene).instance()
 	if is_2D() && ass is AnimatedSprite:
 		ass.name = "sprite"
-		a.remove_child(a.body3D)
+#		a.remove_child(a.body3D)
 		a.get_node("body2D").add_child(ass)
 	elif !is_2D() && ass is Spatial:
 		ass.name = "mesh"
-		a.remove_child(a.body2D)
+#		a.remove_child(a.body2D)
 		a.get_node("body3D").add_child(ass)
 	else:
 		print("ERROR: Could not load actor!")
