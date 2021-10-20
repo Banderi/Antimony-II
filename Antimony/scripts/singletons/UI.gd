@@ -1,6 +1,6 @@
 extends Node
 
-onready var HUD_item_scene = preload("res://scenes/hud_item.tscn")
+onready var HUD_item_scene = preload("res://Antimony/scenes/hud/hud_item.tscn")
 var HUD_dragging = null # dragged item
 var HUD_hover = null
 var slot_hover = -2 # the slot the dragged item will fall into
@@ -227,12 +227,12 @@ func move_HUDitem(hi, s):
 	hbox(s).add_item(hi)
 
 func spawn_balloon(message, peer):
-	var b = preload("res://scenes/balloon.tscn").instance()
+	var b = preload("res://Antimony/scenes/hud/balloon.tscn").instance()
 	b.get_node("txt").text = message
 	b.pos = game.level.get_node("PLAYER_" + str(peer)).get_global_transform().origin + Vector3(0, 2, 0)
 	UI_root.add_child(b)
 func chat_push(message, timestamp, player):
-	var b = preload("res://scenes/chat_msg.tscn").instance()
+	var b = preload("res://Antimony/scenes/hud/chat_msg.tscn").instance()
 	b.player = player
 	b.msg = message
 	b.timestamp = timestamp
@@ -424,7 +424,8 @@ func update_status_icons():
 func load_UI(mode): # load hud scene node and set UI mode
 	# delete previously loaded hud, first
 	UI_root.remove_child($hud)
-	var hud_node = load(str("res://scenes/hud/", game.gm.keys()[mode], ".tscn")).instance()
+	var mode_name = game.gm.keys()[mode]
+	var hud_node = load("res://scenes/hud/" + mode_name + ".tscn").instance()
 	hud_node.set_name("hud")
 	UI_root.add_child(hud_node)
 
@@ -449,6 +450,9 @@ func register_inv_hotbar_slots(tot_slots, hbar_slots): # register hotbar slots
 			UI.hh_invbar[i].slot = i
 		else:
 			UI.hh_invequip[i - hbar_slots].slot = i
+func game_text_set(wname, pmenu, sub = ""):
+	OS.set_window_title(wname)
+	m_pause.get_node("Panel/Label").text = pmenu
 
 ###
 
@@ -523,8 +527,6 @@ func _input(event):
 
 	if check_mouse_within(UI.h_invpanel) && m_inv.visible:
 		handle_input += 1
-
-
 
 func _process(delta):
 	if !is_ui_valid():

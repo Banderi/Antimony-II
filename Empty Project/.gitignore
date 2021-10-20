@@ -1,0 +1,19 @@
+
+# Godot-specific ignores
+build/
+.import/
+**/*.*.import
+*.lnk
+export.cfg
+export_presets.cfg
+
+# Mono-specific ignores
+.mono/
+
+# Others
+.blend1
+*.blend1
+
+Antimony
+Ludcorp
+notes.txt

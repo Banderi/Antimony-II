@@ -17,12 +17,10 @@ func _input(event):
 		debug.display += 1
 
 func _ready():
+	OS.set_window_title("Loading... (Godot Window)")
 
-	# set internal nodes and variables
-	OS.set_window_title("Project K (Godot Window)")
+	# register internal nodes and common UI members
 	game.root = self
-
-#	# register common UI members
 	debug.dbg = $UI/debug
 	debug.im = $UI/debug/im
 	debug.fps = $UI/debug/text/fps
@@ -31,29 +29,27 @@ func _ready():
 	UI.m_main = $UI/m_main
 	UI.m_pause = $UI/m_pause
 
+	# register pause menu elements
 	for btn in $UI/m_pause/Panel/vbox.get_children():
 		if btn is Button:
 			var method = str(btn.name, "_btn")
 			btn.connect("pressed", UI, method)
 
-	# level testing!!
-	game.init()
-#	game.load_level("levels/testing/00")
-#	game.load_level("levels/testing/02")
-#	game.load_level("levels/plat/test")
-#	game.load_level("levels/suitfights/test")
-#	game.load_level("levels/shooter/test")
-
-	# pause menu text
-	$UI/m_pause/Panel/Label.text = "project k\nv.alpha0.0.2"
-
-	# push chat history (for testing purposes)
-	UI.chat_push("testest", OS.get_datetime(), "test")
-	UI.clear_chathistory()
-
 	# (colored backdrop used for in-editor UI testing and development)
 	$TESTING_COLOR.free()
 
-	# initialize game!!!
+	####
+
+	# load initial level
+	game.load_level("levels/main")
+	if !UI.is_ui_valid():
+		print("ERROR: UI could not init! Quitting...")
+		game.quit_game()
+
+	# push chat history (for testing purposes)
+#	UI.chat_push("testest", OS.get_datetime(), "test")
+#	UI.clear_chathistory()
+
+	# start game!!!
 	debug.display = 1
 	UI.state = UI.ms.ingame

@@ -1,133 +1,6 @@
-[gd_scene load_steps=142 format=2]
+[gd_scene load_steps=14 format=2]
 
-[ext_resource path="res://meshes/body_anim.dae" type="PackedScene" id=1]
 [ext_resource path="res://Antimony/scripts/actor.gd" type="Script" id=2]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0001.png" type="Texture" id=3]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0003.png" type="Texture" id=4]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0007.png" type="Texture" id=5]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0001.png" type="Texture" id=6]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0004.png" type="Texture" id=7]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0003.png" type="Texture" id=8]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0012.png" type="Texture" id=9]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0002.png" type="Texture" id=10]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0010.png" type="Texture" id=11]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0004.png" type="Texture" id=12]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0001.png" type="Texture" id=13]
-[ext_resource path="res://FightingGame/graphics/becca/kick_high_0005.png" type="Texture" id=14]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0011.png" type="Texture" id=15]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0002.png" type="Texture" id=16]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0004.png" type="Texture" id=17]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0002.png" type="Texture" id=18]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0001.png" type="Texture" id=19]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_sweep_0008.png" type="Texture" id=20]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0001.png" type="Texture" id=21]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0001.png" type="Texture" id=22]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0006.png" type="Texture" id=23]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0002.png" type="Texture" id=24]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0003.png" type="Texture" id=25]
-[ext_resource path="res://FightingGame/graphics/becca/dash_0001.png" type="Texture" id=26]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0007.png" type="Texture" id=27]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_sweep_0005.png" type="Texture" id=28]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0005.png" type="Texture" id=29]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0006.png" type="Texture" id=30]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_sweep_0006.png" type="Texture" id=31]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0002.png" type="Texture" id=32]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_sweep_0004.png" type="Texture" id=33]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0004.png" type="Texture" id=34]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0004.png" type="Texture" id=35]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0008.png" type="Texture" id=36]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0002.png" type="Texture" id=37]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0003.png" type="Texture" id=38]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0004.png" type="Texture" id=39]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0003.png" type="Texture" id=40]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0001.png" type="Texture" id=41]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0007.png" type="Texture" id=42]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_tail_0005.png" type="Texture" id=43]
-[ext_resource path="res://FightingGame/graphics/becca/backstep_0001.png" type="Texture" id=44]
-[ext_resource path="res://FightingGame/graphics/becca/cartwheel_0009.png" type="Texture" id=45]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_B_0001.png" type="Texture" id=46]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_sweep_0002.png" type="Texture" id=47]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0003.png" type="Texture" id=48]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_tail_0002.png" type="Texture" id=49]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_tail_0001.png" type="Texture" id=50]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_tail_0004.png" type="Texture" id=51]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_tail_0003.png" type="Texture" id=52]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0008.png" type="Texture" id=53]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_swing_0005.png" type="Texture" id=54]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0006.png" type="Texture" id=55]
-[ext_resource path="res://FightingGame/graphics/becca/cord_throw_0003.png" type="Texture" id=56]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0005.png" type="Texture" id=57]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0011.png" type="Texture" id=58]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0012.png" type="Texture" id=59]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_A_0002.png" type="Texture" id=60]
-[ext_resource path="res://FightingGame/graphics/becca/cord_throw_0004.png" type="Texture" id=61]
-[ext_resource path="res://FightingGame/graphics/becca/cord_throw_0002.png" type="Texture" id=62]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0005.png" type="Texture" id=63]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0004.png" type="Texture" id=64]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0002.png" type="Texture" id=65]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grabbed_0001.png" type="Texture" id=66]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0006.png" type="Texture" id=67]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0006.png" type="Texture" id=68]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0003.png" type="Texture" id=69]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grabbed_0003.png" type="Texture" id=70]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0006.png" type="Texture" id=71]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0007.png" type="Texture" id=72]
-[ext_resource path="res://FightingGame/graphics/becca/cord_throw_0001.png" type="Texture" id=73]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0007.png" type="Texture" id=74]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0008.png" type="Texture" id=75]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0009.png" type="Texture" id=76]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0001.png" type="Texture" id=77]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_A_0003.png" type="Texture" id=78]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0002.png" type="Texture" id=79]
-[ext_resource path="res://FightingGame/graphics/becca/crouch_A_0001.png" type="Texture" id=80]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0010.png" type="Texture" id=81]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grabbed_0004.png" type="Texture" id=82]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grab_0003.png" type="Texture" id=83]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0005.png" type="Texture" id=84]
-[ext_resource path="res://FightingGame/graphics/becca/cord_grabbed_0002.png" type="Texture" id=85]
-[ext_resource path="res://FightingGame/graphics/becca/claws_low_0006.png" type="Texture" id=86]
-[ext_resource path="res://FightingGame/graphics/becca/claws_high_0005.png" type="Texture" id=87]
-[ext_resource path="res://FightingGame/graphics/becca/idle_0004.png" type="Texture" id=88]
-[ext_resource path="res://FightingGame/graphics/becca/claws_mid_0005.png" type="Texture" id=89]
-[ext_resource path="res://FightingGame/graphics/becca/run_0004.png" type="Texture" id=90]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0009.png" type="Texture" id=91]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0004.png" type="Texture" id=92]
-[ext_resource path="res://FightingGame/graphics/becca/posing_0001.png" type="Texture" id=93]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0005.png" type="Texture" id=94]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0003.png" type="Texture" id=95]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0002.png" type="Texture" id=96]
-[ext_resource path="res://FightingGame/graphics/becca/run_0009.png" type="Texture" id=97]
-[ext_resource path="res://FightingGame/graphics/becca/run_0006.png" type="Texture" id=98]
-[ext_resource path="res://FightingGame/graphics/becca/jump_0002.png" type="Texture" id=99]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0001.png" type="Texture" id=100]
-[ext_resource path="res://FightingGame/graphics/becca/run_0003.png" type="Texture" id=101]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0006.png" type="Texture" id=102]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0001.png" type="Texture" id=103]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0007.png" type="Texture" id=104]
-[ext_resource path="res://FightingGame/graphics/becca/run_0001.png" type="Texture" id=105]
-[ext_resource path="res://FightingGame/graphics/becca/posing_0002.png" type="Texture" id=106]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0007.png" type="Texture" id=107]
-[ext_resource path="res://FightingGame/graphics/becca/jump_0000.png" type="Texture" id=108]
-[ext_resource path="res://FightingGame/graphics/becca/posing_0003.png" type="Texture" id=109]
-[ext_resource path="res://FightingGame/graphics/becca/jump_0001.png" type="Texture" id=110]
-[ext_resource path="res://FightingGame/graphics/becca/run_0005.png" type="Texture" id=111]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0002.png" type="Texture" id=112]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0005.png" type="Texture" id=113]
-[ext_resource path="res://FightingGame/graphics/becca/run_0007.png" type="Texture" id=114]
-[ext_resource path="res://FightingGame/graphics/becca/run_0002.png" type="Texture" id=115]
-[ext_resource path="res://FightingGame/graphics/becca/posing_0002a.png" type="Texture" id=116]
-[ext_resource path="res://FightingGame/graphics/becca/run_0008.png" type="Texture" id=117]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0002.png" type="Texture" id=118]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0003.png" type="Texture" id=119]
-[ext_resource path="res://FightingGame/graphics/becca/run_0010.png" type="Texture" id=120]
-[ext_resource path="res://FightingGame/graphics/becca/posing_0001a.png" type="Texture" id=121]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0007.png" type="Texture" id=122]
-[ext_resource path="res://FightingGame/graphics/becca/kick_low_0003.png" type="Texture" id=123]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0001.png" type="Texture" id=124]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0004.png" type="Texture" id=125]
-[ext_resource path="res://FightingGame/graphics/becca/kick_mid_0005.png" type="Texture" id=126]
-[ext_resource path="res://FightingGame/graphics/becca/block_0001.png" type="Texture" id=127]
-[ext_resource path="res://FightingGame/graphics/becca/guitar_smash_0004.png" type="Texture" id=128]
 
 [sub_resource type="CapsuleShape" id=1]
 radius = 0.4
@@ -164,7 +37,7 @@ graph_offset = Vector2( -15, -78 )
 [sub_resource type="AnimationNodeTimeScale" id=9]
 
 [sub_resource type="AnimationNodeBlendTree" id=10]
-graph_offset = Vector2( -80, 15 )
+graph_offset = Vector2( -22, 16 )
 nodes/blend/node = SubResource( 2 )
 nodes/blend/position = Vector2( 140, 240 )
 nodes/blender/node = SubResource( 3 )
@@ -181,149 +54,6 @@ node_connections = [ "speed", 0, "blender", "output", 0, "speed", "blender", 0, 
 [sub_resource type="RectangleShape2D" id=12]
 extents = Vector2( 17, 39 )
 
-[sub_resource type="SpriteFrames" id=13]
-animations = [ {
-"frames": [ ExtResource( 103 ), ExtResource( 118 ), ExtResource( 119 ), ExtResource( 128 ), ExtResource( 94 ), ExtResource( 102 ), ExtResource( 122 ), ExtResource( 122 ), ExtResource( 91 ), ExtResource( 91 ), ExtResource( 91 ) ],
-"loop": true,
-"name": "10a_guitar_smash",
-"speed": 22.0
-}, {
-"frames": [ ExtResource( 99 ) ],
-"loop": true,
-"name": "02c_jump3",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 26 ) ],
-"loop": true,
-"name": "04_dash",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 50 ), ExtResource( 49 ), ExtResource( 52 ), ExtResource( 51 ), ExtResource( 43 ) ],
-"loop": true,
-"name": "12_crouch_tail",
-"speed": 22.0
-}, {
-"frames": [ ExtResource( 46 ) ],
-"loop": true,
-"name": "11a_crouch",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 124 ), ExtResource( 96 ), ExtResource( 95 ), ExtResource( 125 ), ExtResource( 126 ), ExtResource( 126 ), ExtResource( 107 ), ExtResource( 107 ), ExtResource( 107 ), ExtResource( 107 ) ],
-"loop": true,
-"name": "08a_kick_mid",
-"speed": 22.0
-}, {
-"frames": [ ExtResource( 3 ), ExtResource( 16 ), ExtResource( 38 ), ExtResource( 7 ), ExtResource( 87 ), ExtResource( 67 ) ],
-"loop": true,
-"name": "07c_claws_high",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 21 ), ExtResource( 32 ), ExtResource( 25 ), ExtResource( 35 ), ExtResource( 29 ), ExtResource( 23 ), ExtResource( 42 ), ExtResource( 36 ), ExtResource( 45 ), ExtResource( 11 ), ExtResource( 15 ), ExtResource( 9 ), ExtResource( 9 ), ExtResource( 9 ), ExtResource( 9 ) ],
-"loop": true,
-"name": "06_backflip",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 85 ), ExtResource( 85 ), ExtResource( 85 ), ExtResource( 85 ), ExtResource( 85 ), ExtResource( 85 ), ExtResource( 85 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 70 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ), ExtResource( 82 ) ],
-"loop": true,
-"name": "15c_grab_ohno",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 44 ) ],
-"loop": true,
-"name": "05_backstep",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 73 ), ExtResource( 62 ), ExtResource( 56 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ), ExtResource( 61 ) ],
-"loop": true,
-"name": "14a_cord_throw",
-"speed": 16.0
-}, {
-"frames": [ ExtResource( 22 ), ExtResource( 24 ), ExtResource( 40 ), ExtResource( 34 ), ExtResource( 89 ), ExtResource( 68 ) ],
-"loop": true,
-"name": "07a_claws_mid",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 100 ), ExtResource( 112 ), ExtResource( 123 ), ExtResource( 92 ), ExtResource( 113 ), ExtResource( 113 ), ExtResource( 104 ), ExtResource( 104 ), ExtResource( 104 ), ExtResource( 104 ) ],
-"loop": true,
-"name": "08b_kick_low",
-"speed": 22.0
-}, {
-"frames": [ ExtResource( 13 ), ExtResource( 10 ), ExtResource( 8 ), ExtResource( 12 ), ExtResource( 14 ), ExtResource( 14 ), ExtResource( 5 ), ExtResource( 5 ), ExtResource( 5 ), ExtResource( 5 ) ],
-"loop": true,
-"name": "08c_kick_high",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 6 ), ExtResource( 18 ), ExtResource( 4 ), ExtResource( 17 ), ExtResource( 84 ), ExtResource( 86 ) ],
-"loop": true,
-"name": "07b_claws_low",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 77 ), ExtResource( 77 ), ExtResource( 65 ), ExtResource( 83 ), ExtResource( 64 ), ExtResource( 74 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 55 ), ExtResource( 63 ), ExtResource( 63 ), ExtResource( 63 ), ExtResource( 63 ), ExtResource( 63 ) ],
-"loop": true,
-"name": "14c_cord_grab",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 108 ) ],
-"loop": true,
-"name": "02a_jump",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 110 ) ],
-"loop": true,
-"name": "02b_jump2",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 105 ), ExtResource( 115 ), ExtResource( 101 ), ExtResource( 90 ), ExtResource( 111 ), ExtResource( 98 ), ExtResource( 114 ), ExtResource( 117 ), ExtResource( 97 ), ExtResource( 120 ) ],
-"loop": true,
-"name": "00_run",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 66 ) ],
-"loop": true,
-"name": "15a_grab_caught",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 85 ) ],
-"loop": true,
-"name": "15b_grab_pulled",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 41 ), ExtResource( 37 ), ExtResource( 48 ), ExtResource( 39 ), ExtResource( 54 ), ExtResource( 30 ), ExtResource( 27 ), ExtResource( 27 ), ExtResource( 53 ), ExtResource( 53 ), ExtResource( 53 ), ExtResource( 53 ) ],
-"loop": true,
-"name": "10b_guitar_swing",
-"speed": 18.0
-}, {
-"frames": [ ExtResource( 93 ), ExtResource( 121 ), ExtResource( 106 ), ExtResource( 116 ), ExtResource( 109 ), ExtResource( 116 ), ExtResource( 106 ), ExtResource( 121 ) ],
-"loop": true,
-"name": "01a_pose",
-"speed": 9.0
-}, {
-"frames": [ ExtResource( 47 ), ExtResource( 33 ), ExtResource( 28 ), ExtResource( 31 ), ExtResource( 31 ), ExtResource( 20 ), ExtResource( 20 ), ExtResource( 20 ) ],
-"loop": true,
-"name": "13_crouch_kick",
-"speed": 24.0
-}, {
-"frames": [ ExtResource( 127 ) ],
-"loop": true,
-"name": "03_block",
-"speed": 5.0
-}, {
-"frames": [ ExtResource( 19 ), ExtResource( 79 ), ExtResource( 69 ), ExtResource( 88 ), ExtResource( 57 ), ExtResource( 71 ), ExtResource( 72 ), ExtResource( 75 ), ExtResource( 76 ), ExtResource( 81 ), ExtResource( 58 ), ExtResource( 59 ) ],
-"loop": true,
-"name": "01b_idle",
-"speed": 10.0
-}, {
-"frames": [ ExtResource( 80 ), ExtResource( 60 ), ExtResource( 78 ) ],
-"loop": false,
-"name": "11b_crouching",
-"speed": 22.0
-}, {
-"frames": [ ExtResource( 77 ) ],
-"loop": true,
-"name": "14b_cord_pull",
-"speed": 5.0
-} ]
-
 [node name="actor" type="Node"]
 script = ExtResource( 2 )
 
@@ -338,12 +68,9 @@ __meta__ = {
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.903641, 0 )
 shape = SubResource( 1 )
 
-[node name="mesh" parent="body3D" instance=ExtResource( 1 )]
-
 [node name="AnimationTree" type="AnimationTree" parent="body3D"]
 tree_root = SubResource( 10 )
 anim_player = NodePath("../mesh/AnimationPlayer")
-active = true
 parameters/blender/blend_amount = 1.0
 parameters/machine/playback = SubResource( 11 )
 parameters/speed/scale = 1.0
@@ -403,13 +130,4 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="AnimatedSprite" type="AnimatedSprite" parent="body2D"]
-position = Vector2( -3.41807, -13.7128 )
-scale = Vector2( 0.0741575, 0.0741575 )
-frames = SubResource( 13 )
-animation = "08b_kick_low"
-frame = 8
-playing = true
-__meta__ = {
-"_edit_lock_": true
-}
+[node name="sprite" type="AnimatedSprite" parent="body2D"]

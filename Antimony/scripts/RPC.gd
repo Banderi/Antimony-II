@@ -20,15 +20,23 @@ var sync_next_update = 10 # in milliseconds!
 
 ### NOTE BECAUSE I'M STUPID: is_network_master() doesn't work here, this node is unique and it's ALWAYS owned by the client!
 
-remote func RPC_receive_player(peer, player_name, color): # somebody else is trying to sync their player data with me!
+remote func RPC_receive_player(peer, peer_info): # somebody else is trying to sync their player data with me!
 	if !game.have_actor(peer):
-		game.new_actor(peer, player_name, color)
+		game.new_actor(peer, peer_info.actor_scene)
+
+	# TODO: store this stuff (name, color, etc.)
+	# >>>> peer_info
+
 	status_refresh()
-func RPC_sync_my_player(peer = null, player_name = "", color = null): # I received a connect signal, so I'm sending the my player data over!
-	game.player.name = "PLAYER_" + str(my_peer)
-	game.player.peer = my_peer
-	game.player.set_network_master(my_peer)
-	rpc("RPC_receive_player", my_peer, game.player.player_name, game.player.player_color)
+func RPC_sync_my_player(): # I received a connect signal, so I'm sending OUR player data over!
+	# TODO:
+#	game.player.name = "PLAYER_" + str(my_peer)
+#	game.player.peer = my_peer
+#	game.player.set_network_master(my_peer)
+	var peer_info = {
+		# TODO
+	}
+	rpc("RPC_receive_player", my_peer, peer_info)
 	status_refresh()
 
 func am_connected():
@@ -64,7 +72,7 @@ remote func RPC_chat_message(message, timestamp = 0, peer = my_peer):
 	UI.chat_push(message, timestamp, a.player_name)
 
 func on_client_connect(peer):
-	RPC_sync_my_player() # transmit back your player data to the new connected friend!
+	RPC_sync_my_player() # transmit back OUR player data to the friend who just connected!
 func on_client_disconnect(peer):
 	game.destroy_actor(peer)
 func on_server_connected():

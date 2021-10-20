@@ -2,6 +2,8 @@ extends Node
 
 ###
 
+onready var SCENE_ACTOR = preload("res://Antimony/scenes/actor.tscn")
+
 var root
 
 var player
@@ -186,11 +188,11 @@ func is_2D():
 			return true
 	return false
 
-func spawn_player():
+func spawn_player(actor_scene):
 	randomize()
-	player = new_actor(1,
-		"[DRONE %04d]" % [rand_range(0,9999)],
-		Color(rand_range(0,1), rand_range(0,1), rand_range(0,1)))
+	var rand_name = "[DRONE %04d]" % [rand_range(0,9999)]
+	var rand_color = Color(rand_range(0,1), rand_range(0,1), rand_range(0,1))
+	player = new_actor(1, actor_scene) # OUR (local) peer is always 1!
 	player.ping = 0
 	controller.target = player.pos
 
@@ -207,24 +209,39 @@ func switch_character(): # switch characters in single player
 			game.player = game.actors[0]
 			$"UI/c2/sel".visible = false
 			$"UI/c1/sel".visible = true
-func new_actor(peer, player_name, color): # this will ONLY spawn a new actor on a this machine
-	var a = preload("res://scenes/actor.tscn").instance()
-	a.set_name(player_name)
-	a.set_color(color)
+func new_actor(peer, actor_scene): # this will ONLY spawn a new actor on a this machine
+	var a = SCENE_ACTOR.instance()
+#	a.set_name(player_name)
+#	a.set_color(color)
 	a.name = "PLAYER_" + str(peer) # <--- this is the NODE's name, not the player's name!
 	a.peer = peer
 	if peer:
 		a.set_network_master(peer)
-	while level == null:
+
+	# load the actor assets
+	var ass = load("res://scenes/actors/" + actor_scene).instance()
+	if is_2D() && ass is AnimatedSprite:
+		ass.name = "sprite"
+		a.remove_child(a.body3D)
+		a.get_node("body2D").add_child(ass)
+	elif !is_2D() && ass is Spatial:
+		ass.name = "mesh"
+		a.remove_child(a.body2D)
+		a.get_node("body3D").add_child(ass)
+	else:
+		print("ERROR: Could not load actor!")
+		a.free()
+		return
+
+	while level == null: # wait for the game level to be ready and loaded!
 		pass
 	level.add_child(a)
 
+	# move to spawn point!
 	if is_2D():
 		a.body2D.position = level.get_node("player_spawner").position
-		a.remove_child(a.body3D)
 	else:
 		a.body3D.translation = level.get_node("player_spawner").translation
-		a.remove_child(a.body2D)
 	return a
 func have_actor(peer):
 	return level.has_node("PLAYER_" + str(peer))

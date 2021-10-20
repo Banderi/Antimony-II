@@ -74,7 +74,7 @@ func _on_rb_body_entered(body):
 		body.prop_has_collided = true
 
 func release():
-	rb.transform = actor.get_global_transform() * \
+	rb.transform = actor.body3D.get_global_transform() * \
 		Transform().rotated(Vector3(0,1,0), PI).translated(Vector3(0, 1.6, -0.5))
 	.release()
 
@@ -116,8 +116,8 @@ func _physics_process(delta):
 	if actor != null:
 		sleep()
 		var pick = $rb.get_node("mesh").get_aabb().position
-		rb.transform = actor.get_global_transform() * \
-			actor.get_node("mesh/Armature/Skeleton").get_bone_global_pose(5).translated(
+		rb.transform = actor.body3D.get_global_transform() * \
+			actor.body3D.get_node("mesh/Armature/Skeleton").get_bone_global_pose(5).translated(
 				Vector3(0.2, -pick.y - 0.1, pick.z + 0.2))
 		rb.rotation.z = 0
 	else:

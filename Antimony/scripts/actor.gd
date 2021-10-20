@@ -15,7 +15,7 @@ onready var animtree = body3D.get_node("AnimationTree")
 onready var statemachine = animtree.get("parameters/machine/playback")
 
 onready var body2D = get_node("body2D")
-onready var animsprite = body2D.get_node("AnimatedSprite")
+onready var animsprite = body2D.get_node("sprite")
 onready var animframes = animsprite.frames
 
 var current_anim = ""
@@ -129,7 +129,7 @@ func prop_interact():
 			return false
 		0: # ladder
 			state = states.ladder
-			$collision_capsule.disabled = true
+			$body3D/collision_capsule.disabled = true
 			if prop_to_reach.climb_or_nah(pos): # descending, or ascending?
 				body3D.translation.y = pos.y + 1
 				path = prop_to_reach.p_up.duplicate()
