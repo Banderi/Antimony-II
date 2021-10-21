@@ -84,6 +84,7 @@ disabled = true
 [node name="collision_cylinder_low" type="CollisionShape" parent="body3D"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.903641, 0 )
 shape = SubResource( 14 )
+disabled = true
 
 [node name="AnimationTree" type="AnimationTree" parent="body3D"]
 tree_root = SubResource( 11 )
