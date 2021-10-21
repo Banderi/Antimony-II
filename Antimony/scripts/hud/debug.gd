@@ -70,7 +70,29 @@ func render():
 			"lines": [],
 			"paths": {}
 		}
+func padinfo(paired, paddings, values):
+	var txt = ""
+	for i in values.size():
+		var s = str(values[i])
+		var p = 0 # default: 0
 
+		var pad_i = i # default
+		if paired:
+			pad_i = (i - 1) / 2
+
+		if paddings.size() > pad_i && (!paired || i % 2 != 0): # to make sure the first array is long enough
+			p = paddings[pad_i]
+		var string_length = s.length()
+
+		# add text to buffer!
+		txt += s
+		for w in range(0, p - string_length):
+			txt += " "
+		txt += " " # add a trailing space as default
+	return txt
+func logpaddedinfo(txt, paired, paddings, values):
+	debug_text += str(txt) + padinfo(paired, paddings, values)
+	debug_text += "\n"
 func loginfo(txt, txt2 = ""):
 	debug_text += str(txt) + str(txt2)
 	debug_text += "\n"

@@ -101,44 +101,65 @@ func update_raycast():
 		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
 		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
-		# first raycast - from 1000 units behind camera to 1000 in front
-		var from = proj_origin - proj_normal * 1000
-		var to = from + proj_normal * 2000
-		var result = game.space_state.intersect_ray(from, to, [], masks, true, true)
+		match game.GAMEMODE:
+			game.gm.fps:
 
-		# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
-		if result:
-			if ((proj_origin - result.position).normalized() - proj_normal).length() < 1:
-				from = proj_origin # if collision was behind camera, do again from the camera
-			else:
-				from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
-			to = from + proj_normal * 1000
-			var result2 = game.space_state.intersect_ray(from, to, [], masks, true, true)
+				# first raycast - from camera to 1000 in front
+				var from = proj_origin
+				var to = from + proj_normal * 1000
+				var result = game.space_state.intersect_ray(from, to, [], masks, true, true)
 
-			# final, correct collision point!
-			if result2:
-				pick[0] = result2.duplicate()
-			else:
-				pick[0] = result.duplicate()
-				pick[1] = result2.duplicate()
+				# hit!
+				if result:
+					pick[0] = result.duplicate()
+					update_cursor(false)
+				else:
+					pick = [{},{},{}]
+					cursor.visible = false
 
-			# mouse hover over props
-			get_tree().call_group_flags(2, "props", "highlight", false)
-			hl_prop = null
-			var m = pick[0].collider.collision_layer
-#			debug.loginfo(str(m))
-			match m:
-				4, 8:
-					hl_prop = pick[0].collider.get_parent()
-					hl_prop.highlight(true)
-#				8:
-#					hl_prop = pick[0].collider
-#					pick[0].collider.highlight(true)
-			update_cursor(false)
-		else:
-			pick = [{},{},{}]
-			cursor.visible = false
+			game.gm.rts, game.gm.ludcorp:
+				# first raycast - from 1000 units behind camera to 1000 in front
+				var from = proj_origin - proj_normal * 1000
+				var to = from + proj_normal * 2000
+				var result = game.space_state.intersect_ray(from, to, [], masks, true, true)
+
+				# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
+				if result:
+					if ((proj_origin - result.position).normalized() - proj_normal).length() < 1:
+						from = proj_origin # if collision was behind camera, do again from the camera
+					else:
+						from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
+					to = from + proj_normal * 1000
+					var result2 = game.space_state.intersect_ray(from, to, [], masks, true, true)
+
+					# final, correct collision point!
+					if result2:
+						pick[0] = result2.duplicate()
+					else:
+						pick[0] = result.duplicate()
+						pick[1] = result2.duplicate()
+
+					# mouse hover over props
+					get_tree().call_group_flags(2, "props", "highlight", false)
+					hl_prop = null
+					var m = pick[0].collider.collision_layer
+		#			debug.loginfo(str(m))
+					match m:
+						4, 8:
+							hl_prop = pick[0].collider.get_parent()
+							hl_prop.highlight(true)
+		#				8:
+		#					hl_prop = pick[0].collider
+		#					pick[0].collider.highlight(true)
+					update_cursor(false)
+				else:
+					pick = [{},{},{}]
+					cursor.visible = false
 func update_cursor(snap):
+	match game.GAMEMODE:
+		game.gm.fps:
+			cursor.visible = false
+			return
 	cursor.visible = true
 
 	var cur_pos = Vector3()
@@ -377,21 +398,21 @@ func _process(delta):
 
 	# update 2D camera
 	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff)
-#	cam2D.position += (target2D - cam2D.position) * camera_2d_coeff
 	cam2D.position.y += game.player.velocity.y * camera_2d_vertical_compensation
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 
 	# debugging info
-	if !pick[0].empty():
-		debug.point(pick[0].position, Color(1, 1, 0))
-		debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
-	if !pick[1].empty():
-		debug.point(pick[1].position, Color(1, 0, 0))
-		debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
+	match game.GAMEMODE:
+		game.gm.fps, game.gm.ludcorp:
+			if !pick[0].empty():
+				debug.point(pick[0].position, Color(1, 1, 0))
+				debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
+			if !pick[1].empty():
+				debug.point(pick[1].position, Color(1, 0, 0))
+				debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
+			debug.point(command_point, Color(0,1,0))
 
-	debug.point(command_point, Color(0,1,0))
-
-	debug.loginfo("camera:     3D:" + str(cam.translation) + " 2D:" + str(cam2D.position) + " zoom: " + str(zoom))
+	debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
 	debug.loginfo("colliders:  ", pick[0])
 	debug.loginfo("            ", pick[1])
 	debug.loginfo("            ", pick[2])

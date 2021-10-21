@@ -41,6 +41,7 @@ var can_crouch = true
 var can_sneak = true
 var can_sprint = true
 var can_dash_while_crouching = false
+var max_step_height = 0.5
 
 var character = 0
 #var hotbar_sel = 0

@@ -9,6 +9,7 @@ var peer
 var ping = 200
 
 onready var body3D = get_node("body3D")
+onready var coll_cylinder_low = get_node("body3D/collision_cylinder_low")
 onready var mesh = body3D.get_node("mesh")
 onready var animset = (null if mesh == null else mesh.get_node("AnimationPlayer"))
 #onready var animset = mesh.get_node("AnimationPlayer")
@@ -33,9 +34,6 @@ var pos2D = Vector2()
 var pos = Vector3()
 var velocity = Vector3()
 var dir = Vector3()
-var dir_tilt = Vector3()
-var angle_tilt = 0
-var angle_normal = 0
 var rot = -PI * 0.5
 var lookat = Vector3()
 
@@ -201,6 +199,14 @@ func get_angle_from_vector(v, n):
 
 	return angle * direction
 
+var dir_tilt = Vector3()
+#var angle_tilt = 0
+#var angle_normal = 0
+var ground_collider = null
+var ground_grip_dist = Vector3()
+var ground_angle = 0
+var ground_angle_expected = 0
+var stairing = false
 func travel(d):
 	if !busy:
 		path = game.navmesh.get_simple_path(pos, d)
@@ -259,25 +265,93 @@ func slope_correction():
 		var rayend = pos - up
 		if velocity.y < -1:
 			rayend = pos - up * abs(velocity.y)
-		var result = space_state.intersect_ray(raypos, rayend)
-		var normal = up
-		if result.has("normal") && result.normal != up:
-			normal = result.normal
-			var c = up.cross(normal)
-			var a = acos(up.dot(normal))
-			m = m.rotated(c.normalized(), a)
-			dir_tilt = m.xform(dir) # movement vector but tilted along the ground
 
-		# check upcoming slopes
-		result = space_state.intersect_ray(raypos + dir_tilt * 0.5, rayend + dir_tilt * 0.5)
-		var normal_soon = up
-		if (result.has("normal") && result.normal != up):
-			normal_soon = result.normal
-		var inters_n = Vector3()
-		if (result.has("position")):
-			inters_n = result.position
-		angle_normal = normal_soon.angle_to(up) # upcoming slope's normal angle
-		angle_tilt = normal_soon.angle_to((dir).normalized()) # upcoming slope's tilt relative to current tilt
+		ground_collider = body3D.get_slide_collision(0)
+		stairing = false
+		var normal = up
+		if true: # NEW: using actual collision data
+			if onground && ground_collider != null:
+
+				ground_grip_dist = (ground_collider.position - pos)
+				var coll_dir = ground_grip_dist.normalized()
+				debug.line(pos, pos + coll_dir, Color(0, 0, 0))
+
+
+				# check for ground steepness -- limit is game.max_step_height (staircase step)
+				if ground_grip_dist.y <= 0.03: # slopes!
+					normal = ground_collider.normal
+					raypos = ground_collider.position + up
+
+					# debugging
+					debug.point(ground_collider.position, Color(1, 0, 1))
+					debug.line(ground_collider.position, ground_collider.position + ground_collider.normal, Color(1, 0, 1))
+					debug.point(pos, Color(0, 0.7, 0.7))
+					debug.line(ground_collider.position, pos, Color(0, 0.7, 0.7))
+
+				elif ground_grip_dist.y <= game.max_step_height: # stairs!
+
+					# construct raycaster
+					var offs = ground_collider.position + coll_dir * 0.05
+					raypos = offs + up
+					rayend = offs - up
+					debug.point(raypos, Color(0, 0, 0))
+					debug.point(rayend, Color(0, 0, 0))
+
+					# check the plaftorm's collision, normal and angle
+					var result = space_state.intersect_ray(raypos, rayend, [body3D])
+					var plat_hit = Vector3()
+					if (result.has("position")):
+						plat_hit = result.position
+					var plat_normal = up
+					if (result.has("normal") && result.normal != up):
+						plat_normal = result.normal
+					var plat_angle = plat_normal.angle_to(up) # upcoming slope's normal angle
+
+					# first, exclude edge cases (hehe)
+					var nostep = false
+					if plat_hit.y < ground_collider.position.y - 0.1:
+						nostep = true
+					if plat_hit.y - pos.y > game.max_step_height + 0.001:
+						nostep = true
+
+					# valid staircase step?
+					if !nostep && plat_angle < 0.25 * PI && dir != Vector3():
+						normal = (plat_normal + ground_collider.normal).normalized()
+						stairing = true
+					else:
+						stairing = false
+
+
+					# debugging
+					debug.point(plat_hit, Color(0.5, 1, 0))
+					debug.line(plat_hit, plat_hit + plat_normal, Color(0.5, 1, 0))
+
+					debug.point(ground_collider.position, Color(1, 0.5, 0))
+					debug.line(ground_collider.position, ground_collider.position + ground_collider.normal, Color(1, 0.5, 0))
+					debug.point(pos, Color(1, 0.5, 0))
+					debug.line(ground_collider.position, pos, Color(1, 0.5, 0))
+				else: # walls/ceiling/etc.
+					# debugging
+					debug.point(ground_collider.position, Color(1, 0, 0))
+					debug.line(ground_collider.position, ground_collider.position + ground_collider.normal, Color(1, 0, 0))
+					debug.point(pos, Color(1, 0, 0))
+					debug.line(ground_collider.position, pos, Color(1, 0, 0))
+			else:
+				stairing = false
+		else: # OLD: casting a single ray under the actor
+			var result = space_state.intersect_ray(raypos, rayend)
+			if result.has("normal") && result.normal != up:
+				normal = result.normal
+
+		# disable lower cylinder collision when stairing
+		coll_cylinder_low.disabled = stairing
+
+		var c = up.cross(normal)
+		var a = acos(up.dot(normal))
+		m = m.rotated(c.normalized(), a)
+		dir_tilt = m.xform(dir) # movement vector but tilted along the ground
+		ground_angle = normal.angle_to(up) # slope angle
+
 func face_direction():
 	if game.is_2D():
 		return
@@ -328,7 +402,7 @@ func touch_ground(): # teleport player to the ground below if below threshold
 		result = game.space_state.intersect_ray(pos + up, pos - up * 100, [], 1 + 4)
 
 		# is it close enough to the ground??
-		if !body3D.is_on_floor():
+		if !stairing && !body3D.is_on_floor():
 			if result.has("position"):
 				var d = result.position - pos
 				if d.length() > 0.001 && d.length() < 0.01:
@@ -793,9 +867,15 @@ func _process(delta):
 
 	# debugging info
 	debug.loginfo("pos:        3D:" + str(pos) + " 2D:" + str(pos2D))
+	debug.loginfo("lookat:     ", lookat)
 	debug.loginfo("dir:        " + str(dir) + "     lastdir: " + str(last_dir))
 	debug.loginfo("rot:        ", rot)
-	debug.loginfo("lookat:     ", lookat)
+	if ground_collider == null:
+		debug.loginfo("collision:  object: ", ground_collider)
+	else:
+		debug.logpaddedinfo("collision:  ", true, [20, 10, 10], ["object:", ground_collider, "pos:", ground_collider.position, "normal:", ground_collider.normal])
+	debug.loginfo("grip_dist:  ", ground_grip_dist)
+	debug.loginfo("grip_angle: ", ground_angle)
 	debug.loginfo("velocity:   ", velocity)
 
 	debug.loginfo("")
@@ -810,6 +890,7 @@ func _process(delta):
 	debug.loginfo("sprinting:  ", sprinting)
 	debug.loginfo("crouching:  ", crouching)
 	debug.loginfo("onground:   ", onground)
+	debug.loginfo("stairing:   ", stairing)
 	debug.loginfo("busy:       ", busy)
 	debug.loginfo("stuck:      ", stuck_timer)
 
@@ -942,37 +1023,9 @@ func _physics_process(delta):
 				if jump_force > 0 && velocity.y > 0:
 					velocity.y = 0
 
-			# DASHING
-#			if dashing:
-#				dash_timer += delta # update dashing timer
-#				var max_dash_timer
-#				match dash_direction:
-#					1: max_dash_timer = game.dash_length
-#					-1: max_dash_timer = game.dash_length
-#					2: max_dash_timer = game.flips_length
-#					-2: max_dash_timer = game.flips_length
-#				if dash_timer <= max_dash_timer:
-#					dir = last_dir
-#					match dash_direction:
-#						1: speed = game.dash_speed
-#						-1: speed = game.backstep_speed
-#						2: speed = game.frontflip_speed
-#						-2: speed = game.backflip_speed
-#				else:
-#					# reset dashing
-#					dashing = false
-#					busy = false
-#					dash_timer = 0
-#					dash_direction = null
-#					if onground:
-#						state = states.idle
-#				if !onground:
-#					speed *= 4;
-
 			slope_correction()
 			face_direction() # rotates the mesh accordingly
 			movement = dir_tilt * speed # actual movement vector scaled with speed
-
 
 #			movement = dir * speed # actual movement vector scaled with speed
 			if !onground:
@@ -997,8 +1050,8 @@ func _physics_process(delta):
 				speed = 1.5
 			movement = dir_tilt * speed
 #			print(movement)
-			if (angle_tilt > PI * 0.5 && angle_normal > PI * 0.25): # for climbing, max angle was 1
-				movement = Vector3() # fix walking on ripid slopes
+#			if (ground_angle > PI * 0.5 && angle_normal > PI * 0.25): # for climbing, max angle was 1
+#				movement = Vector3() # fix walking on ripid slopes
 			if (!body3D.is_on_floor() && velocity.y <= 0):
 				movement = movement + up * (velocity.y - 50 * delta) # add gravity if falling
 
