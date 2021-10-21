@@ -377,7 +377,7 @@ camera_thirdperson={
 
 [physics]
 
-3d/physics_engine="Bullet"
+3d/physics_engine="GodotPhysics"
 2d/default_gravity=3000
 
 [rendering]

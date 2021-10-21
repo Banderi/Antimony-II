@@ -12,8 +12,9 @@ var up = Vector3(0, 1, 0)
 
 var offset = Vector3(0, 1, 0) # height off of the ground
 var crouch_offset = Vector3(0, 0.75, 0) # height off of the ground
+var smooth_offset = offset
 var target = Vector3(0, 0, 0) # interpolation target
-var lookat = target + offset
+var lookat = target + smooth_offset
 
 var target2D = Vector2(0, 0) # for 2D camera
 
@@ -308,7 +309,7 @@ func _process(delta):
 						dir += Vector3(-1, 0, 0)
 					if Input.is_action_pressed("move_right"):
 						dir += Vector3(1, 0, 0)
-					var speed_coeff = game.player.velocity.length() / game.sprint_speed
+					var speed_coeff = game.player.velocity.length() / game.run_speed
 					camera_tilt = delta_interpolate(camera_tilt, -dir.x * camera_tilt_max * speed_coeff, 0.25)
 					if dir != Vector3():
 						dir = dir.rotated(Vector3(0, 1, 0), phi)
@@ -368,21 +369,22 @@ func _process(delta):
 	var lookat_offset = offset
 	if game.can_sneak && game.player.crouching:
 		lookat_offset = crouch_offset
-	var new_lookat = target + lookat_offset
+	smooth_offset = delta_interpolate(smooth_offset, lookat_offset, 0.3)
+	var new_lookat = target + smooth_offset
 	var new_zoom = zoom_target
 	match game.GAMEMODE:
 		game.gm.fps:
-			new_lookat = game.player.pos + lookat_offset
+			new_lookat = game.player.pos + smooth_offset
 			if alt_camera:
 				new_zoom = alt_camera_zoom
 			else:
 				new_zoom = zoom_target
 		_: # default case
 			if alt_camera:
-				new_lookat = game.player.pos + lookat_offset #game.player.pos
+				new_lookat = game.player.pos + smooth_offset #game.player.pos
 				new_zoom = alt_camera_zoom
 			else:
-				new_lookat = target + lookat_offset
+				new_lookat = target + smooth_offset
 				new_zoom = zoom_target
 
 	lookat = delta_interpolate(lookat, new_lookat, camera_3d_coeff)
