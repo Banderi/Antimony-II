@@ -2,6 +2,7 @@ extends Node
 
 onready var follow = get_node("follow")
 onready var cam = get_node("follow/camera")
+onready var cam_secondary = get_node("follow/camera/ViewportContainer/Viewport/cameraChild")
 onready var cursor = get_node("cursor")
 
 onready var follow2D = get_node("follow2D")
@@ -397,6 +398,9 @@ func _process(delta):
 		Transform(Basis()).rotated(Vector3(1, 0, 0), theta).rotated(Vector3(0, 0, 1), camera_tilt).rotated(up, phi).basis,
 		Vector3(0,0,0)))
 	follow.global_translate(lookat)
+
+	# update secondary camera
+#	cam_secondary.global_transform = cam.global_transform
 
 	# update 2D camera
 	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff)

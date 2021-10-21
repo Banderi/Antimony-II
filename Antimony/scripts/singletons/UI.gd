@@ -439,6 +439,12 @@ func load_UI(mode): # load hud scene node and set UI mode
 	menu(ms.gestures, false)
 	menu(ms.scoreboard, false)
 	menu(ms.chat, false)
+
+	# doesn't work....?
+#	if game.is_2D():
+#		game.controller.cam.current = false
+#	else:
+#		game.controller.cam2D.current = false
 func is_ui_valid():
 	if hud == null || game.GAMEMODE == game.gm.none:
 		return false
@@ -453,6 +459,13 @@ func register_inv_hotbar_slots(tot_slots, hbar_slots): # register hotbar slots
 func game_text_set(wname, pmenu, sub = ""):
 	OS.set_window_title(wname)
 	m_pause.get_node("Panel/Label").text = pmenu
+func load_3D_weaps(scene = "weaps"):
+	var weaps = load("res://scenes/hud/" + scene + ".tscn").instance()
+	weaps.name = "weaps"
+#	game.controller.cam.add_child(weaps)
+	game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
+#	game.controller.cam.get_node("ViewportContainer/Viewport").add_child(weaps)
+
 
 ###
 
