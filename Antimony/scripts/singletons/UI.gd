@@ -462,9 +462,7 @@ func game_text_set(wname, pmenu, sub = ""):
 func load_3D_weaps(scene = "weaps"):
 	var weaps = load("res://scenes/hud/" + scene + ".tscn").instance()
 	weaps.name = "weaps"
-#	game.controller.cam.add_child(weaps)
 	game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
-#	game.controller.cam.get_node("ViewportContainer/Viewport").add_child(weaps)
 
 
 ###

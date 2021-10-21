@@ -1,14 +1,7 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=5 format=2]
 
 [ext_resource path="res://Antimony/scripts/controller.gd" type="Script" id=1]
 [ext_resource path="res://Antimony/graphics/hud_sel.png" type="Texture" id=2]
-
-[sub_resource type="Environment" id=3]
-background_mode = 1
-background_color = Color( 0.443137, 0.215686, 0.215686, 1 )
-
-[sub_resource type="World" id=4]
-environment = SubResource( 3 )
 
 [sub_resource type="QuadMesh" id=1]
 
@@ -41,7 +34,6 @@ __meta__ = {
 
 [node name="Viewport" type="Viewport" parent="follow/camera/ViewportContainer"]
 size = Vector2( 1300, 1024 )
-world = SubResource( 4 )
 transparent_bg = true
 handle_input_locally = false
 render_direct_to_screen = true

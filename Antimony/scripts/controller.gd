@@ -400,7 +400,7 @@ func _process(delta):
 	follow.global_translate(lookat)
 
 	# update secondary camera
-#	cam_secondary.global_transform = cam.global_transform
+	cam_secondary.global_transform = cam.global_transform
 
 	# update 2D camera
 	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff)
