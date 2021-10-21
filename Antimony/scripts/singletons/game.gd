@@ -10,6 +10,7 @@ var player
 var controller
 var navmesh
 var level
+var weaps # toolbelt
 
 var space_state
 var space_state2D
@@ -72,46 +73,41 @@ onready var settings = {
 		"equip_on_pickup" : false
 	}
 }
-				#    0                      1       2  3            4   5      6      7      8
-var items = {	#						  ammo quantity            stackable     autoequip
-				#	 name					ammo    |  slot       layer  |  removable  |    effects
-	"shkl2":		["Shackles", 			1,     -1, [2,3],		1,	false, false, true,	 [1]],
-	"gsmsk1": 		["Gasmask", 			2,    100, [0],			1,	false, true,  false, [2]],
-	"chst1":		["Chastity belt",		1,     -1, [3],			1,	false, false, true,  [3]],
-	"googun":		["Goo gun",				3,    100, [1],			1,	false, true,  false, []],
 
-	"battery":		["Energy cell",			4,     50, null], # total "energy" pool is sum of items max ammo
-	"goocan":		["Goo canister",		3,    100, null],
-	"oxygen": 		["Oxygen tank",			2,    100, null],
-
-#	"0":			["Ladder"],
-	"1":			["Goo cannon"],
-
-	"target":		["Practice target"],
-
-	"mech1":		["Heavy-lifting Mech Frame"]
+var items = {
+	# ...
 }
 
 var characters = {
 	# ...
 }
 
+var gamestate = {
+	# ...
+}
+
+enum ivs {
+	simple,		# bog standard dictionary stored above, ez pz
+	rpg			# used in games like Project K - has a fixed inventory menu and a hotbar/toolbelt that receives the props
+}
+var invsystem = ivs.simple
+
 func in_inv(item): # return -1 if not in invequip - return parent's item array index if so
 	var r = -1
-	var items = UI.hh_invequip[item[3][0]].items
+	var items = UI.hh_invequip[item.slot[0]].items # check in slot
 	for i in items.size(): # still, use first slot for now
 		var hi = items[i]
-		if game.items[hi.prop.itemid][4] == item[4]:
+		if game.items[hi.prop.itemid].layer == item.layer:
 			r = i
 	return r
 func can_equip(item):
 	var s = in_inv(item)
-	if !item[5] && s > -1: # cannot be equip! (not stackable)
+	if !item.stackable && s > -1: # cannot be equip! (not stackable)
 		return false
 	return true
 func eyed_slot(item): # return the would-be slot offset index of the new item, or 0 if cannot equip
 	var s = in_inv(item) + 1 # no item defaults to -1, so minimum is 0
-	if s > 0 && !item[5]: # cannot be stacked!
+	if s > 0 && !item.stackable: # cannot be stacked!
 		return [3, s - 1] # e.g. item is at slot 4 --> return -5
 	return [2, s]
 func first_free_invslot():
@@ -122,16 +118,16 @@ func first_free_invslot():
 func equip(prop): # updates stats, actor equipment slots (3d models) etc.
 	prop.RPC_hide() # easier to put this call here? hacky, but it's fine...
 	var item = items[prop.itemid]
-	if item[3] != null:
+	if item.slot != null:
 		game.player.rpc("RPC_equip", prop.itemid, true)
-	match item[1]:
+	match item.ammo:
 		1: # lockable gear
 			pass
 		2: # gasmask/oxygen tank
 			var diff = 1000 - game.player.oxygen
-			var accept = min(diff, prop.custom_item[2])
+			var accept = min(diff, prop.custom_item.quantity)
 			game.player.oxygen += accept # add ammo quantity to store
-			prop.custom_item[2] -= accept
+			prop.custom_item.quantity -= accept
 			pass
 		3: # goo gun/canister
 			pass
@@ -139,20 +135,25 @@ func equip(prop): # updates stats, actor equipment slots (3d models) etc.
 			pass
 func unequip(prop):
 	var item = items[prop.itemid]
-	if item[3] != null:
+	if item.slot != null:
 		game.player.rpc("RPC_equip", prop.itemid, false)
 func giveitem(prop):
 	var item = game.items[prop.itemid]
-	var s = first_free_invslot()
-	if settings["controls"]["equip_on_pickup"]: # autoequip
-		if can_equip(item):
-			s = item[3][0] + 3
-		elif item[2] > -1: # has ammo value - add to the ammo store!
-			s = -3
-	if s == -1:
-		return false
 
-	var hi = UI.insert_HUDitem(prop, s)
+	match invsystem:
+		ivs.simple:
+			pass
+		ivs.rpg:
+			var s = first_free_invslot()
+			if settings["controls"]["equip_on_pickup"]: # autoequip
+				if can_equip(item):
+					s = item.slot[0] + 3
+				elif item.magazine > -1: # has ammo value - add to the ammo store!
+					s = -3
+			if s == -1:
+				return false
+
+			var hi = UI.insert_HUDitem(prop, s)
 
 	return true
 func dropitem(hi):

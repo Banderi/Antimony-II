@@ -300,6 +300,26 @@ func _process(delta):
 		match game.GAMEMODE:
 			game.gm.fps:
 				if UI.state <= 0: # not in menus
+					# fire action
+					if Input.is_action_just_pressed("shoot"):
+						game.weaps.fire(0)
+					if Input.is_action_just_pressed("shoot_secondary"):
+						game.weaps.fire(1)
+					if Input.is_action_just_pressed("shoot_tertiary"):
+						game.weaps.fire(2)
+
+					# use items
+					# TODO
+
+					# fire selection
+					# TODO
+
+					# weapon selection
+					# TODO
+
+					# item selection
+					# TODO
+
 					# movement
 					var dir = Vector3()
 					if Input.is_action_pressed("move_up"):
@@ -406,6 +426,9 @@ func _process(delta):
 	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff)
 	cam2D.position.y += game.player.velocity.y * camera_2d_vertical_compensation
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
+
+	# update weapon & camera bobbing
+	game.weaps.rotation.x = camera_tilt
 
 	# debugging info
 	match game.GAMEMODE:

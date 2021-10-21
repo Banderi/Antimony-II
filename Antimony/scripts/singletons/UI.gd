@@ -39,6 +39,10 @@ var h_effects
 var h_itemname
 var h_propicon
 
+var h_ammoname
+var h_mag
+var h_tot
+
 var h_invpanel
 var h_invdroparea
 
@@ -295,11 +299,11 @@ func inv_items_update():
 
 			if HUD_dragging.hbox.slot < 3: # dragging an item from invbar
 				var item = game.items[HUD_dragging.prop.itemid]
-				slot_hover = item[3][0] + 3
+				slot_hover = item.slot[0] + 3
 				hbox(slot_hover).selector(game.eyed_slot(item))
 				if !game.can_equip(item):
 					slot_hover = -2
-					if item[2] > -1: # has ammo value - add to the ammo store!
+					if item.quantity > -1: # has ammo value - add to the ammo store!
 						slot_hover = -3
 
 		if Input.is_action_just_pressed("item_drop"):
@@ -314,7 +318,7 @@ func inv_items_update():
 			var s = game.first_free_invslot()
 			var item = game.items[HUD_hover.prop.itemid]
 			if HUD_hover.hbox.slot < 3:
-				s = item[3][0] + 3
+				s = item.slot[0] + 3
 			if s > -1:
 				hbox(s).focus(true)
 				if s < 3:
@@ -419,6 +423,14 @@ func update_status_icons():
 		Actor.states.asleep:
 			h_effects[8].visible = true
 
+func update_weap_ammo_counters():
+	var weapid = game.gamestate.curr_weapon
+	var weap_data = game.items[weapid]
+	h_itemname.text = str(weap_data.name)
+	h_ammoname.text = str(game.items[weap_data.ammo].name)
+	h_mag.text = str(game.gamestate.inventory[weapid])
+	h_tot.text = str(game.gamestate.inventory[weap_data.ammo])
+
 ###
 
 func load_UI(mode): # load hud scene node and set UI mode
@@ -463,6 +475,7 @@ func load_3D_weaps(scene = "weaps"):
 	var weaps = load("res://scenes/hud/" + scene + ".tscn").instance()
 	weaps.name = "weaps"
 	game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
+	game.weaps = weaps
 
 
 ###
