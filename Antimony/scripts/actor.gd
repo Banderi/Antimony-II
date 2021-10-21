@@ -348,6 +348,11 @@ func slope_correction():
 		else:
 			stairing = false
 
+#		if stairing || !onground:
+#			coll_cylinder_low.disabled = true
+#		else:
+#			coll_cylinder_low.disabled = false
+
 		var c = up.cross(normal)
 		if normal == up:
 			c = Vector3(1, 0, 0)
@@ -1005,8 +1010,7 @@ func _physics_process(delta):
 				if abs(velocity.x) > game.air_speed_max:
 					movement.x = 0
 
-			var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
-			movement += up * (max_fall_speed_falloff * game.gravity - jump_force) # add gravity / jumping force
+			movement -= up * jump_force
 		game.gm.fps:
 			speed = game.walk_speed # normal moving speed
 			if game.always_run:
@@ -1048,8 +1052,7 @@ func _physics_process(delta):
 				if abs(velocity.z) > game.air_speed_max:
 					movement.z = 0
 
-			var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
-			movement += -up * (max_fall_speed_falloff * game.gravity - jump_force) # add gravity / jumping force
+			movement += up * jump_force
 		game.gm.ludcorp:
 			# speed calc
 			if state != states.ladder:
@@ -1059,8 +1062,8 @@ func _physics_process(delta):
 			else:
 				speed = 1.5
 			movement = dir_tilt * speed
-#			print(movement)
-			if (tilt_angle > PI * 0.2): # for climbing, max angle was 1
+
+			if (tilt_angle > game.max_slope_angle): # for climbing, max angle was 1
 				movement = Vector3() # fix walking on ripid slopes
 			if (!body3D.is_on_floor() && velocity.y <= 0):
 				movement = movement + up * (velocity.y - 50 * delta) # add gravity if falling
@@ -1070,12 +1073,19 @@ func _physics_process(delta):
 		if body2D.is_on_floor():
 			velocity = Vector3() # infinite friction while on floor -- do this before calculations
 								 # to maintain instant velocity later for state updates and checks
+		# gravity
+		var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
+		movement += up * (max_fall_speed_falloff * game.gravity) # add gravity / jumping force
+
+		# add up velocities!
 		var mov2D = Vector2(movement.x, movement.y)
 		var vel2D = Vector2(velocity.x, velocity.y)
-		velocity = body2D.move_and_slide(vel2D + mov2D, up2D)
+		if onground && mov2D == Vector2():
+			velocity = body2D.move_and_slide(vel2D + mov2D, up2D, true) # on-ground movement
+		else:
+			velocity = body2D.move_and_slide(vel2D + mov2D, up2D) # mid-air movement
 		velocity *= drag_coeff # add optional drag due to floating / etc.
 
-#		if body2D.is_on_floor():
 		if !touch_ground(): # update ground check
 			onground = false
 			velocity = (-velocity * up2D) + (game.air_drag * velocity * hor2D) # air drag
@@ -1085,12 +1095,18 @@ func _physics_process(delta):
 		if touch_ground():
 			velocity = Vector3() # infinite friction while on floor -- do this before calculations
 								 # to maintain instant velocity later for state updates and checks
+		# gravity
+		var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
+		var gravity = -up * (max_fall_speed_falloff * game.gravity)
 
-		velocity = body3D.move_and_slide(velocity + movement, up) # mid-air movement
+		# add up velocities!
+		if onground && movement == Vector3():
+			velocity = body3D.move_and_slide(velocity + movement + gravity, up, true) # on-ground movement
+		else:
+			velocity = body3D.move_and_slide(velocity + movement + gravity, up) # mid-air movement
 		var drag_coeff3D = Vector3(drag_coeff.x, drag_coeff.y, drag_coeff.x)
 		velocity *= drag_coeff3D # add optional drag due to floating / etc.
 
-#		if body3D.is_on_floor():
 		if !touch_ground(): # update ground check
 			onground = false
 			velocity = (velocity * up) + ((1.0 - game.air_drag) * velocity * hor)
