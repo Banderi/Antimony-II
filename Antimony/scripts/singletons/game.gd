@@ -80,28 +80,29 @@ onready var settings = {
 	}
 }
 
-var items = {
-	# ...
+var db = {
+	"items" : {
+		# ...
+	},
+	"weapons" : {
+		# ...
+	},
+	"characters" : {
+		# ...
+	}
 }
 
-var weapons = {
-	# ...
-}
-
-var characters = {
-	# ...
-}
-
+func get_db_element(database, id):
+	if id in database && database[id].size() > 1:
+		return database[id]
+	else:
+		return null
 func get_item_data(itemid):
-	if itemid in items && items[itemid].size() > 1:
-		return items[itemid]
-	else:
-		return null
+	return get_db_element(db.items, itemid)
 func get_weap_data(weapid):
-	if weapid in weapons && weapons[weapid].size() > 1:
-		return weapons[weapid]
-	else:
-		return null
+	return get_db_element(db.weapons, weapid)
+func get_character_data(charid):
+	return get_db_element(db.characters, charid)
 
 ###
 

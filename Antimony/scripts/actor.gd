@@ -827,7 +827,7 @@ func set_color(color):
 func refresh_equip():
 	# only in 3D for now!
 	if !Game.is_2D():
-		for m in Game.items:
+		for m in Game.db.items:
 			var n = mesh.get_node("Armature/Skeleton/" + m)
 			if n != null:
 				n.visible = false
