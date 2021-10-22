@@ -47,6 +47,10 @@ var max_step_height = 0.5
 var max_slope_angle = 0.2 * PI
 var crouch_height_diff = 0.75
 
+var camera_fov = 70
+var camera_fov_scope = 20
+var camera_weapon_shake_force = Vector2(0.0015, 0.01)
+
 var character = 0
 #var hotbar_sel = 0
 #var inventory = [null, null, null] # these are HUD_item nodes! they are handled by the UI class!
@@ -71,7 +75,8 @@ onready var settings = {
 		"zoom_sens": 1.2,
 		"switch_on_new": true,
 		"equip_on_pickup": false,
-		"auto_reload": true
+		"auto_reload": true,
+		"aim_toggle": true
 	}
 }
 

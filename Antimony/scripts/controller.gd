@@ -51,6 +51,23 @@ var hl_prop = null
 var command_point = Vector3()
 var max_height_diff = 0.5
 
+var camera_shake_force = Vector2()
+func weapon_shake(strength):
+	camera_shake_force.x = strength * (2.0 * randf() - 1.0) * game.camera_weapon_shake_force.x
+	camera_shake_force.y = strength * randf() * game.camera_weapon_shake_force.y
+func shake_update(delta):
+	phi += camera_shake_force.x * 60 * delta
+	theta += camera_shake_force.y * 60 * delta
+	while phi < 0:
+		phi += 2 * PI
+	while phi > 2 * PI:
+		phi -= 2 * PI
+	theta = max(min_height, theta)
+	theta = min(max_height, theta)
+
+	camera_shake_force.x = delta_interpolate(camera_shake_force.x, 0, 0.1, delta)
+	camera_shake_force.y = delta_interpolate(camera_shake_force.y, 0, 0.1, delta)
+
 func zoom(z):
 	zoom_target += z
 	zoom_target = max(zoom_target, min_zoom)
@@ -67,6 +84,8 @@ func move_pan(x, y, s = 1.0):
 	move3D(Vector3(x, 0, y).rotated(Vector3(1, 0, 0), theta+0.5*PI).rotated(up, phi), s)
 	move2D(x, y, s * 100)
 func orbit(x, y, s = 1.0):
+	# adjust sensitivity by camera FOV
+	s *= cam.fov / game.camera_fov
 	phi += x * s
 	theta += y * s
 	while phi < 0:
@@ -403,6 +422,9 @@ func _process(delta):
 
 		if locked: # follow player
 			center()
+
+	# update certain special physics (camera shakes)
+	shake_update(delta)
 
 	# how do the LookAt and Camera origin behave? (GAME-specific logic)
 	var lookat_offset = offset

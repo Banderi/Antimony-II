@@ -44,6 +44,9 @@ var h_mag
 var h_tot
 var h_mag_slash
 
+var u_crosshairs
+var u_scopes
+
 var h_invpanel
 var h_invdroparea
 
@@ -425,6 +428,27 @@ func update_status_icons():
 		Actor.states.asleep:
 			h_effects[8].visible = true
 
+func update_weap_hud():
+	var weapid = game.gamestate.curr_weapon
+	var weap_data = game.weapons[weapid]
+
+	# crosshair
+	for n in u_crosshairs.get_children():
+		n.visible = false
+	if "crosshair" in weap_data:
+		u_crosshairs.get_node(weap_data.crosshair).visible = true
+
+	# sniper scope
+	for n in u_scopes.get_children():
+		n.visible = false
+	game.weaps.visible = true
+	game.controller.cam.fov = game.camera_fov
+	if "scope" in weap_data && game.weaps.scope_enabled:
+		u_scopes.get_node(weap_data.scope).visible = true
+		game.weaps.visible = false
+		game.controller.cam.fov = game.camera_fov_scope
+
+	update_weap_ammo_counters()
 func update_weap_ammo_counters():
 	var weapid = game.gamestate.curr_weapon
 	var weap_data = game.weapons[weapid]
@@ -486,6 +510,8 @@ func load_3D_weaps(scene = "weaps"):
 	weaps.name = "weaps"
 	game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
 	game.weaps = weaps
+
+	update_weap_hud()
 
 
 ###

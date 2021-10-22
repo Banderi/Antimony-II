@@ -13,16 +13,18 @@ var trigger_timers = [0, 0, 0]
 
 var scope_enabled = false
 var scope_zoom = 0.0
-func scope(function):
-	match function:
-		0: # disable scope
-			pass
-		1: # activate scope
-			pass
-		2: # zoom out
-			pass
-		3: # zoom in
-			pass
+func scope(tstate):
+	if game.settings.controls.aim_toggle:
+		if tstate == 1:
+			scope_enabled = !scope_enabled
+	else:
+		if tstate == 1:
+			scope_enabled = true
+		elif tstate == 3:
+			scope_enabled = false
+	UI.update_weap_hud()
+func scope_zoom(z):
+	pass # TODO
 
 func spawn_bullet(bullet):
 	# TODO
@@ -38,15 +40,21 @@ enum fa {
 	charge
 }
 var firing = false
-func fire_action(action, t, bullet, q, rof):
+func fire_action(action, tstate, bullet, q, rof):
 	# no matter the action or weapon - do not fire while reloading
 	if reload_timer > 0:
 		return
 
+	var weapid = game.gamestate.curr_weapon
+	var weap_data = game.weapons[weapid]
+
+	###
+
+
 	# logic for different kinds of firing actions
 	match action:
 		fa.semi:
-			if rof_cooldown <= 0 && triggers[t] == 1:
+			if rof_cooldown <= 0 && tstate == 1:
 				firing = true
 		fa.auto:
 			if rof_cooldown <= 0:
@@ -55,12 +63,13 @@ func fire_action(action, t, bullet, q, rof):
 	# fire...??
 	if firing:
 		var missing = 0
-		missing = game.consume_weapon_ammo(game.gamestate.curr_weapon, q) # attempts consuming first, returns results
+		missing = game.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
 		if !missing:
+			game.controller.weapon_shake(weap_data.shake_strength)
 			spawn_bullet(bullet) # FIRE!!!!!!
 			rof_cooldown = rof
 		else:
-			if reload_timer <= 0 && game.settings["controls"]["auto_reload"]:
+			if reload_timer <= 0 && game.settings.controls.auto_reload:
 				reload(false)
 			firing = false
 func fire(t):
@@ -137,9 +146,13 @@ func update_anims(delta):
 
 func press_trigger(t, pressed):
 	if pressed: # FIRING ??
+		if triggers[t] != 0: # accidental input bleeding!
+			return
 		triggers[t] = 1
 		fire(t)
 	else:
+		if triggers[t] != 2: # accidental input bleeding!
+			return
 		triggers[t] = 3
 		fire(t)
 		trigger_timers[t] = 0.0 # trigger released -- cease fire and reset the trigger timer
