@@ -44,10 +44,11 @@ config/icon="res://icon.png"
 
 [autoload]
 
-game="*res://Antimony/scripts/singletons/game.gd"
+Game="*res://Antimony/scripts/singletons/game.gd"
 RPC="*res://Antimony/scripts/RPC.gd"
 UI="*res://Antimony/scripts/singletons/UI.gd"
-debug="*res://Antimony/scripts/hud/debug.gd"
+Debug="*res://Antimony/scripts/hud/debug.gd"
+Inventory="*res://Antimony/scripts/inventory.gd"
 
 [display]
 
