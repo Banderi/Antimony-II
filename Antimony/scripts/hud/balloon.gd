@@ -9,5 +9,5 @@ func _process(delta):
 	if life <= 0:
 		queue_free()
 
-	var proj = game.controller.cam.unproject_position(pos)
+	var proj = Game.controller.cam.unproject_position(pos)
 	rect_position = proj

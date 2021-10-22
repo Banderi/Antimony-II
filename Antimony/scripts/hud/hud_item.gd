@@ -44,7 +44,7 @@ func _process(delta):
 		UI.update_hotbar()
 
 	# update debug info visibility
-	match debug.display:
+	match Debug.display:
 		1:
 			dbg.visible = true
 		_:

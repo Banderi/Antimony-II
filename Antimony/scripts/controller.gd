@@ -53,8 +53,8 @@ var max_height_diff = 0.5
 
 var camera_shake_force = Vector2()
 func weapon_shake(strength):
-	camera_shake_force.x = strength * (2.0 * randf() - 1.0) * game.camera_weapon_shake_force.x
-	camera_shake_force.y = strength * randf() * game.camera_weapon_shake_force.y
+	camera_shake_force.x = strength * (2.0 * randf() - 1.0) * Game.camera_weapon_shake_force.x
+	camera_shake_force.y = strength * randf() * Game.camera_weapon_shake_force.y
 func shake_update(delta):
 	phi += camera_shake_force.x * 60 * delta
 	theta += camera_shake_force.y * 60 * delta
@@ -85,7 +85,7 @@ func move_pan(x, y, s = 1.0):
 	move2D(x, y, s * 100)
 func orbit(x, y, s = 1.0):
 	# adjust sensitivity by camera FOV
-	s *= cam.fov / game.camera_fov
+	s *= cam.fov / Game.camera_fov
 	phi += x * s
 	theta += y * s
 	while phi < 0:
@@ -105,30 +105,30 @@ func move2D(x, y, s = 100.0):
 	target2D += Vector2(x, y) * s * (0.75 + zoom_curve * 0.95)
 
 func center():
-	if game.is_2D():
-		match game.GAMEMODE:
-			game.gm.plat:
-				target2D = game.player.pos2D
-			game.gm.fighting:
-				target2D = game.player.pos2D # temp
+	if Game.is_2D():
+		match Game.GAMEMODE:
+			Game.gm.plat:
+				target2D = Game.player.pos2D
+			Game.gm.fighting:
+				target2D = Game.player.pos2D # temp
 	else:
-		target = game.player.pos
+		target = Game.player.pos
 
 func update_raycast():
-	if game.is_2D():
+	if Game.is_2D():
 		cursor.visible = false
 	else:
 		var masks = 1 + 4 + 8
 		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
 		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
-		match game.GAMEMODE:
-			game.gm.fps:
+		match Game.GAMEMODE:
+			Game.gm.fps:
 
 				# first raycast - from camera to 1000 in front
 				var from = proj_origin
 				var to = from + proj_normal * 1000
-				var result = game.space_state.intersect_ray(from, to, [], masks, true, true)
+				var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
 
 				# hit!
 				if result:
@@ -138,11 +138,11 @@ func update_raycast():
 					pick = [{},{},{}]
 					cursor.visible = false
 
-			game.gm.rts, game.gm.ludcorp:
+			Game.gm.rts, Game.gm.ludcorp:
 				# first raycast - from 1000 units behind camera to 1000 in front
 				var from = proj_origin - proj_normal * 1000
 				var to = from + proj_normal * 2000
-				var result = game.space_state.intersect_ray(from, to, [], masks, true, true)
+				var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
 
 				# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
 				if result:
@@ -151,7 +151,7 @@ func update_raycast():
 					else:
 						from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
 					to = from + proj_normal * 1000
-					var result2 = game.space_state.intersect_ray(from, to, [], masks, true, true)
+					var result2 = Game.space_state.intersect_ray(from, to, [], masks, true, true)
 
 					# final, correct collision point!
 					if result2:
@@ -164,7 +164,7 @@ func update_raycast():
 					get_tree().call_group_flags(2, "props", "highlight", false)
 					hl_prop = null
 					var m = pick[0].collider.collision_layer
-		#			debug.loginfo(str(m))
+		#			Debug.loginfo(str(m))
 					match m:
 						4, 8:
 							hl_prop = pick[0].collider.get_parent()
@@ -177,8 +177,8 @@ func update_raycast():
 					pick = [{},{},{}]
 					cursor.visible = false
 func update_cursor(snap):
-	match game.GAMEMODE:
-		game.gm.fps:
+	match Game.GAMEMODE:
+		Game.gm.fps:
 			cursor.visible = false
 			return
 	cursor.visible = true
@@ -201,39 +201,39 @@ func _input(event):
 		return
 
 	# GAME-specific logic
-	match game.GAMEMODE:
-		game.gm.fps:
+	match Game.GAMEMODE:
+		Game.gm.fps:
 			if UI.state <= 0: # not in menus
 				# mouse movement
 				if event is InputEventMouseMotion:
 	#				if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
-	#					zoom(game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
+	#					zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
 	#				if Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
 	#					move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
 	#				else:
-					orbit(-event.relative.x, -event.relative.y, game.settings["controls"]["mouse_sens"] * 0.0035)
+					orbit(-event.relative.x, -event.relative.y, Game.settings["controls"]["mouse_sens"] * 0.0035)
 	#			if Input.is_action_pressed("camera_zoomin"):
-	#				zoom(-game.settings["controls"]["zoom_sens"])
+	#				zoom(-Game.settings["controls"]["zoom_sens"])
 	#			if Input.is_action_pressed("camera_zoomout"):
-	#				zoom(game.settings["controls"]["zoom_sens"])
+	#				zoom(Game.settings["controls"]["zoom_sens"])
 
 				# fire action
 				if Input.is_action_just_pressed("shoot"):
-					game.weaps.press_trigger(0, true)
+					Game.weaps.press_trigger(0, true)
 				elif Input.is_action_just_released("shoot"):
-					game.weaps.press_trigger(0, false)
+					Game.weaps.press_trigger(0, false)
 				if Input.is_action_just_pressed("shoot_secondary"):
-					game.weaps.press_trigger(1, true)
+					Game.weaps.press_trigger(1, true)
 				elif Input.is_action_just_released("shoot_secondary"):
-					game.weaps.press_trigger(1, false)
+					Game.weaps.press_trigger(1, false)
 				if Input.is_action_just_pressed("shoot_tertiary"):
-					game.weaps.press_trigger(2, true)
+					Game.weaps.press_trigger(2, true)
 				elif Input.is_action_just_released("shoot_tertiary"):
-					game.weaps.press_trigger(2, false)
+					Game.weaps.press_trigger(2, false)
 
 				# reloading
 				if Input.is_action_just_pressed("weap_reload"):
-					game.weaps.reload(false)
+					Game.weaps.reload(false)
 
 				# use items
 				# TODO
@@ -249,96 +249,96 @@ func _input(event):
 
 				# crouching
 				if Input.is_action_pressed("crouch"):
-					game.player.crouch(true)
+					Game.player.crouch(true)
 				if Input.is_action_just_released("crouch"):
-					game.player.crouch(false)
+					Game.player.crouch(false)
 				# sprinting
 				if Input.is_action_just_pressed("sprint"):
-					game.player.sprint(true)
+					Game.player.sprint(true)
 				if Input.is_action_just_released("sprint"):
-					game.player.sprint(false)
+					Game.player.sprint(false)
 
 				# camera
 				if Input.is_action_just_pressed("camera_thirdperson"):
 					alt_camera = !alt_camera
-		game.gm.rts, game.gm.ludcorp:
+		Game.gm.rts, Game.gm.ludcorp:
 			# mouse movement
 			if event is InputEventMouseMotion:
 				if Input.is_action_pressed("camera_orbit"): # orbit camera
 					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
-						zoom(game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
+						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
 					elif Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
 						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
 					else:
-						orbit(-event.relative.x, -event.relative.y, game.settings["controls"]["mouse_sens"] * 0.0075)
+						orbit(-event.relative.x, -event.relative.y, Game.settings["controls"]["mouse_sens"] * 0.0075)
 
 			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
 			if !alt_camera:
 				if Input.is_action_pressed("camera_zoomin"):
-					zoom(-game.settings["controls"]["zoom_sens"])
+					zoom(-Game.settings["controls"]["zoom_sens"])
 				if Input.is_action_pressed("camera_zoomout"):
-					zoom(game.settings["controls"]["zoom_sens"])
+					zoom(Game.settings["controls"]["zoom_sens"])
 			# only if mouse is NOT on inv. panels
 			if UI.handle_input <= 0:
 				if Input.is_action_just_released("player_command") && !pick[0].empty(): # send actor on an adventure!
 					if hl_prop != null:
-						game.player.reach_prop(hl_prop)
+						Game.player.reach_prop(hl_prop)
 					else:
 						command_point = pick[0].position
 						command_point += pick[0].normal * 0.2 # offset by normal
-						game.player.travel(command_point)
+						Game.player.travel(command_point)
 				if Input.is_action_just_released("player_cancel"): # cancel adventure....
-					game.player.cancel()
+					Game.player.cancel()
 				if Input.is_action_just_pressed("character_switch"): # switch available character
-					game.switch_character()
+					Game.switch_character()
 					center()
 				if !alt_camera: # camera locking / centering / etc.
 					if Input.is_action_pressed("camera_center"):
 						center()
 					if Input.is_action_just_pressed("camera_follow"):
 						locked = !locked
-		game.gm.fighting:
+		Game.gm.fighting:
 			# crouching
 			if Input.is_action_pressed("crouch"):
-				game.player.crouch(true)
+				Game.player.crouch(true)
 			if Input.is_action_just_released("crouch"):
-				game.player.crouch(false)
+				Game.player.crouch(false)
 			# blocking
 			if Input.is_action_just_pressed("block"):
-				game.player.block(true)
+				Game.player.block(true)
 			if Input.is_action_just_released("block"):
-				game.player.block(false)
+				Game.player.block(false)
 			# attacks
-			if game.player.crouching: # crouched attacks
+			if Game.player.crouching: # crouched attacks
 				if Input.is_action_just_pressed("attack_0"): # light attack (tail sweep)
-					game.player.attack_start(9)
+					Game.player.attack_start(9)
 				if Input.is_action_just_pressed("attack_1"): # heavy attack (double kick)
-					game.player.attack_start(10)
-			elif game.player.onground: # standing attacks
+					Game.player.attack_start(10)
+			elif Game.player.onground: # standing attacks
 				if Input.is_action_just_pressed("attack_0"): # light attacks (claws)
 					if Input.is_action_pressed("move_up"):
-						game.player.attack_start(2) # high claws
+						Game.player.attack_start(2) # high claws
 					elif Input.is_action_pressed("move_down"):
-						game.player.attack_start(1) # low claws
+						Game.player.attack_start(1) # low claws
 					else:
-						game.player.attack_start(0) # mid claws
+						Game.player.attack_start(0) # mid claws
 				if Input.is_action_just_pressed("attack_1"): # heavy attacks (kicks)
 					if Input.is_action_pressed("move_up"):
-						game.player.attack_start(5) # high kick
+						Game.player.attack_start(5) # high kick
 					elif Input.is_action_pressed("move_down"):
-						game.player.attack_start(4) # low kick
+						Game.player.attack_start(4) # low kick
 					else:
-						game.player.attack_start(3) # mid kick
+						Game.player.attack_start(3) # mid kick
 				if Input.is_action_just_pressed("attack_2"): # special attacks
 					if Input.is_action_pressed("move_up"):
-						game.player.attack_start(7) # guitar golf swing
+						Game.player.attack_start(7) # guitar golf swing
 					else:
-						game.player.attack_start(6) # guitar smash
+						Game.player.attack_start(6) # guitar smash
 				if Input.is_action_just_pressed("attack_3"): # grabs
-					game.player.attack_start(8) # cord grab
+					Game.player.attack_start(8) # cord grab
 			else: # mid-air attacks
 				if Input.is_action_just_pressed("attack_2"): # special attacks
-					game.player.attack_start(6) # guitar smash
+					Game.player.attack_start(6) # guitar smash
 
 func _process(delta):
 	if !UI.paused:
@@ -347,8 +347,8 @@ func _process(delta):
 			update_raycast()
 
 		# GAME-specific logic
-		match game.GAMEMODE:
-			game.gm.fps:
+		match Game.GAMEMODE:
+			Game.gm.fps:
 				if UI.state <= 0: # not in menus
 
 					# movement
@@ -363,7 +363,7 @@ func _process(delta):
 						dir += Vector3(1, 0, 0)
 
 					# update camera tilt
-					var speed_coeff = game.player.velocity.length() / game.run_speed
+					var speed_coeff = Game.player.velocity.length() / Game.run_speed
 					camera_tilt.x = delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25, delta)
 					camera_tilt.y = delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
 					camera_tilt.z = delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
@@ -371,18 +371,18 @@ func _process(delta):
 					# final movement calc
 					if dir != Vector3():
 						dir = dir.rotated(Vector3(0, 1, 0), phi)
-						game.player.move_from_controls(dir.x, dir.y, dir.z)
+						Game.player.move_from_controls(dir.x, dir.y, dir.z)
 
 					# jumping
-					if (Input.is_action_pressed("jump") && game.jump_spam) || Input.is_action_just_pressed("jump"):
-						game.player.jump(true)
+					if (Input.is_action_pressed("jump") && Game.jump_spam) || Input.is_action_just_pressed("jump"):
+						Game.player.jump(true)
 					if Input.is_action_just_released("jump"):
-						game.player.jump(false)
-			game.gm.ludcorp:
+						Game.player.jump(false)
+			Game.gm.ludcorp:
 				if Input.is_action_pressed("shoot"):
-					match game.player.state:
+					match Game.player.state:
 						Actor.states.turret:
-							game.player.prop_inuse.fire()
+							Game.player.prop_inuse.fire()
 
 				var s = 0.25 # TODO: camera sensitivity
 				if !locked:
@@ -394,31 +394,31 @@ func _process(delta):
 						move_naive(-s, 0)
 					if Input.is_action_pressed("move_right"):
 						move_naive(s, 0)
-			game.gm.plat, game.gm.fighting:
+			Game.gm.plat, Game.gm.fighting:
 				# movement
 				if Input.is_action_pressed("move_left"):
-					game.player.move_from_controls(-1, 0, 0)
+					Game.player.move_from_controls(-1, 0, 0)
 				if Input.is_action_pressed("move_right"):
-					game.player.move_from_controls(1, 0, 0)
+					Game.player.move_from_controls(1, 0, 0)
 				# jumping
-				if (Input.is_action_pressed("jump") && game.jump_spam) || Input.is_action_just_pressed("jump"):
-					game.player.jump(true)
+				if (Input.is_action_pressed("jump") && Game.jump_spam) || Input.is_action_just_pressed("jump"):
+					Game.player.jump(true)
 				if Input.is_action_just_released("jump"):
-					game.player.jump(false)
+					Game.player.jump(false)
 				# dash
 				if Input.is_action_just_pressed("dash"):
-					match game.player.state:
+					match Game.player.state:
 						Actor.states.idle:
 							if Input.is_action_pressed("move_up"):
-								game.player.dash(game.player.last_dir, -2) # backflip (cartwheel)
+								Game.player.dash(Game.player.last_dir, -2) # backflip (cartwheel)
 							else:
-								game.player.dash(game.player.last_dir, -1) # back-step
+								Game.player.dash(Game.player.last_dir, -1) # back-step
 						Actor.states.transit:
 							if Input.is_action_pressed("move_up"):
-#								game.player.dash(game.player.last_dir, 2) # frontflip while sneaking?
+#								Game.player.dash(Game.player.last_dir, 2) # frontflip while sneaking?
 								pass
 							else:
-								game.player.dash(game.player.last_dir, 1) # forward dash
+								Game.player.dash(Game.player.last_dir, 1) # forward dash
 
 		if locked: # follow player
 			center()
@@ -428,21 +428,21 @@ func _process(delta):
 
 	# how do the LookAt and Camera origin behave? (GAME-specific logic)
 	var lookat_offset = offset
-	if game.can_sneak && game.player.crouching:
+	if Game.can_sneak && Game.player.crouching:
 		lookat_offset = crouch_offset
 	smooth_offset = delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 	var new_lookat = target + smooth_offset
 	var new_zoom = zoom_target
-	match game.GAMEMODE:
-		game.gm.fps:
-			new_lookat = game.player.pos + smooth_offset
+	match Game.GAMEMODE:
+		Game.gm.fps:
+			new_lookat = Game.player.pos + smooth_offset
 			if alt_camera:
 				new_zoom = alt_camera_zoom
 			else:
 				new_zoom = zoom_target
 		_: # default case
 			if alt_camera:
-				new_lookat = game.player.pos + smooth_offset #game.player.pos
+				new_lookat = Game.player.pos + smooth_offset #Game.player.pos
 				new_zoom = alt_camera_zoom
 			else:
 				new_lookat = target + smooth_offset
@@ -471,30 +471,30 @@ func _process(delta):
 
 	# update 2D camera
 	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
-	cam2D.position.y += game.player.velocity.y * camera_2d_vertical_compensation
+	cam2D.position.y += Game.player.velocity.y * camera_2d_vertical_compensation
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 
 	# update weapon & camera bobbing
-	game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
+	Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
 
 	# debugging info
-	match game.GAMEMODE:
-		game.gm.fps, game.gm.ludcorp:
+	match Game.GAMEMODE:
+		Game.gm.fps, Game.gm.ludcorp:
 			if !pick[0].empty():
-				debug.point(pick[0].position, Color(1, 1, 0))
-				debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
+				Debug.point(pick[0].position, Color(1, 1, 0))
+				Debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
 			if !pick[1].empty():
-				debug.point(pick[1].position, Color(1, 0, 0))
-				debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
-			debug.point(command_point, Color(0,1,0))
+				Debug.point(pick[1].position, Color(1, 0, 0))
+				Debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
+			Debug.point(command_point, Color(0,1,0))
 
-	debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
-	debug.loginfo("colliders:  ", pick[0])
-	debug.loginfo("            ", pick[1])
-	debug.loginfo("            ", pick[2])
+	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
+	Debug.loginfo("colliders:  ", pick[0])
+	Debug.loginfo("            ", pick[1])
+	Debug.loginfo("            ", pick[2])
 
 func _ready():
-	game.controller = self
+	Game.controller = self
 
 #	cam.set_as_toplevel(true)
 	cursor.set_as_toplevel(true)

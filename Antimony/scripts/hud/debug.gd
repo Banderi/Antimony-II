@@ -42,34 +42,34 @@ func path(p, v, c):
 func render():
 	if im == null:
 		return
-	if debug:
-#		im.clear()
-		im.begin(Mesh.PRIMITIVE_POINTS, null)
-		for e in todraw["points"]:
+#	if debug:
+##		im.clear()
+	im.begin(Mesh.PRIMITIVE_POINTS, null)
+	for e in todraw["points"]:
+		im.set_color(e[1])
+		im.add_vertex(e[0])
+	im.end()
+
+	for e in todraw["lines"]:
+		im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
+		im.set_color(e[2])
+		im.add_vertex(e[0])
+		im.set_color(e[3])
+		im.add_vertex(e[1])
+		im.end()
+
+	for p in todraw["paths"]:
+		im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
+		for e in todraw["paths"][p]:
 			im.set_color(e[1])
 			im.add_vertex(e[0])
 		im.end()
 
-		for e in todraw["lines"]:
-			im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
-			im.set_color(e[2])
-			im.add_vertex(e[0])
-			im.set_color(e[3])
-			im.add_vertex(e[1])
-			im.end()
-
-		for p in todraw["paths"]:
-			im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
-			for e in todraw["paths"][p]:
-				im.set_color(e[1])
-				im.add_vertex(e[0])
-			im.end()
-
-		todraw = {
-			"points": [],
-			"lines": [],
-			"paths": {}
-		}
+	todraw = {
+		"points": [],
+		"lines": [],
+		"paths": {}
+	}
 func padinfo(paired, paddings, values):
 	var txt = ""
 	for i in values.size():
@@ -144,7 +144,7 @@ func _process(delta):
 					h.dbg.text = "(%d,%d)" % [h.eyed_slot[0],h.eyed_slot[1]]
 				for hi in h.items:
 					if hi is HUDItem:
-						hi.dbg.text = "%d: %s\n%s" % [hi.hbox.slot, game.items[hi.prop.itemid][0], hi.prop]
+						hi.dbg.text = "%d: %s\n%s" % [hi.hbox.slot, Game.items[hi.prop.itemid][0], hi.prop]
 		_:
 #			im.clear()
 			todraw = {

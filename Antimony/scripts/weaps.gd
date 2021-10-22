@@ -13,16 +13,18 @@ var trigger_timers = [0, 0, 0]
 
 var scope_enabled = false
 var scope_zoom = 0.0
-func scope(tstate):
-	if game.settings.controls.aim_toggle:
+func scope(enabled):
+	scope_enabled = enabled
+	UI.update_weap_hud()
+func scope_trigger(tstate):
+	if Game.settings.controls.aim_toggle:
 		if tstate == 1:
-			scope_enabled = !scope_enabled
+			scope(!scope_enabled)
 	else:
 		if tstate == 1:
-			scope_enabled = true
+			scope(true)
 		elif tstate == 3:
-			scope_enabled = false
-	UI.update_weap_hud()
+			scope(false)
 func scope_zoom(z):
 	pass # TODO
 
@@ -45,8 +47,8 @@ func fire_action(action, tstate, bullet, q, rof):
 	if reload_timer > 0:
 		return
 
-	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.weapons[weapid]
+	var weapid = Inventory.curr_weapon
+	var weap_data = Game.get_weap_data(weapid)
 
 	###
 
@@ -63,13 +65,13 @@ func fire_action(action, tstate, bullet, q, rof):
 	# fire...??
 	if firing:
 		var missing = 0
-		missing = game.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
+		missing = Inventory.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
 		if !missing:
-			game.controller.weapon_shake(weap_data.shake_strength)
+			Game.controller.weapon_shake(weap_data.shake_strength)
 			spawn_bullet(bullet) # FIRE!!!!!!
 			rof_cooldown = rof
 		else:
-			if reload_timer <= 0 && game.settings.controls.auto_reload:
+			if reload_timer <= 0 && Game.settings.controls.auto_reload:
 				reload(false)
 			firing = false
 func fire(t):
@@ -81,35 +83,38 @@ func reload(finished):
 	if !finished && reload_timer > 0:
 		return
 
-	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.weapons[weapid]
+	var weapid = Inventory.curr_weapon
+	var weap_data = Game.get_weap_data(weapid)
 
 	var ammoid = weap_data.ammo
-	var curr_mag = game.gamestate.magazines[weapid]
-	var curr_tot = game.gamestate.inventory[ammoid]
+	var curr_mag = Inventory.db.magazines[weapid]
+	var curr_tot = Inventory.db.items[ammoid]
 	var max_mag = weap_data.mag_max
 
 	###
 
 	if !weap_data.use_mag || curr_mag >= max_mag || curr_tot <= 0:
 		return
+
+	scope(false) # reset scope while reloading
+
 	if !finished:
 		var cooldown = float(weap_data.reload_cooldown)
 		reload_timer = cooldown
 	else:
 		var requesting = max_mag - curr_mag
 		var missing = 0
-#		var missing = game.consume_amount(ammoid, requesting) # naughty!!! consuming amounts BEFORE figuring out how much to take!
+#		var missing = Game.consume_amount(ammoid, requesting) # naughty!!! consuming amounts BEFORE figuring out how much to take!
 		var given = requesting - missing
-		game.reload_amount(weapid, given)
+		Inventory.reload_amount(weapid, given)
 		UI.update_weap_ammo_counters()
 
 func delta_interpolate(old, new, s, delta):
 	return old + (new - old) * s * 60 * delta
 var anim_firing_z_offset = 0
 func update_anims(delta):
-	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.weapons[weapid]
+	var weapid = Inventory.curr_weapon
+	var weap_data = Game.get_weap_data(weapid)
 
 	###
 
@@ -132,7 +137,7 @@ func update_anims(delta):
 	animation_tilt.z += -0.03 * reload_anim_coeff_3 + 0.02 * reload_anim_coeff_2
 
 	# vertical speed
-	animation_offset.y += 1 * (game.player.velocity.y / game.max_fall_speed)
+	animation_offset.y += 1 * (Game.player.velocity.y / Game.max_fall_speed)
 
 	# update muzzle flash
 	var muzzle_flash = get_node(weapid).get_node("muzzle_flash")
@@ -185,8 +190,8 @@ func _process(delta):
 	rotation = camera_tilt + animation_tilt
 	translation = animation_offset
 
-	debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
-	debug.logpaddedinfo("firing:     ", false, [7, 10], [firing, rof_cooldown, reload_timer])
+	Debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
+	Debug.logpaddedinfo("firing:     ", false, [7, 10], [firing, rof_cooldown, reload_timer])
 
 	# reset FIRING states
 	firing = false

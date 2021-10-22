@@ -42,7 +42,7 @@ func release():
 
 func init_mesh_array():
 	meshnodes = []
-	var nodes = game.get_all_childs(self) # needs to be set beforehand - the "for in" loop evaluates EVERY TIME >:C
+	var nodes = Game.get_all_childs(self) # needs to be set beforehand - the "for in" loop evaluates EVERY TIME >:C
 	for n in nodes:
 		if n is MeshInstance &&\
 		n.get_surface_material(0) != null && \

@@ -141,9 +141,10 @@ func _ready():
 	transform = Transform()
 
 	# pickup-able item vs interactible/physics room prop
-	if game.items.has(itemid) && game.items[itemid].size() > 1:
+	var item_data = Game.get_item_data(itemid)
+	if item_data != null:
 		type = 1000
 	else:
 		type = 999
 
-	custom_item = game.items[itemid].duplicate()
+	custom_item = item_data.duplicate()

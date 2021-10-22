@@ -92,124 +92,16 @@ var characters = {
 	# ...
 }
 
-var gamestate = {
-	# ...
-}
-
-enum ivs {
-	simple,		# bog standard dictionary stored above, ez pz
-	rpg			# used in games like Project K - has a fixed inventory menu and a hotbar/toolbelt that receives the props
-}
-var invsystem = ivs.simple
-
-func in_inv(item): # return -1 if not in invequip - return parent's item array index if so
-	var r = -1
-	var items = UI.hh_invequip[item.slot[0]].items # check in slot
-	for i in items.size(): # still, use first slot for now
-		var hi = items[i]
-		if game.items[hi.prop.itemid].layer == item.layer:
-			r = i
-	return r
-func can_equip(item):
-	var s = in_inv(item)
-	if !item.stackable && s > -1: # cannot be equip! (not stackable)
-		return false
-	return true
-func eyed_slot(item): # return the would-be slot offset index of the new item, or 0 if cannot equip
-	var s = in_inv(item) + 1 # no item defaults to -1, so minimum is 0
-	if s > 0 && !item.stackable: # cannot be stacked!
-		return [3, s - 1] # e.g. item is at slot 4 --> return -5
-	return [2, s]
-func first_free_invslot():
-	for s in range(0,3):
-		if !UI.hh_invbar[s].has_items():
-			return s
-	return -1
-func equip(prop): # updates stats, actor equipment slots (3d models) etc.
-	prop.RPC_hide() # easier to put this call here? hacky, but it's fine...
-	var item = items[prop.itemid]
-	if item.slot != null:
-		game.player.rpc("RPC_equip", prop.itemid, true)
-	match item.ammo:
-		1: # lockable gear
-			pass
-		2: # gasmask/oxygen tank
-			var diff = 1000 - game.player.oxygen
-			var accept = min(diff, prop.custom_item.quantity)
-			game.player.oxygen += accept # add ammo quantity to store
-			prop.custom_item.quantity -= accept
-			pass
-		3: # goo gun/canister
-			pass
-		4: # energy gear/cell
-			pass
-func unequip(prop):
-	var item = items[prop.itemid]
-	if item.slot != null:
-		game.player.rpc("RPC_equip", prop.itemid, false)
-func giveitem(prop):
-	var item = game.items[prop.itemid]
-
-	match invsystem:
-		ivs.simple:
-			pass
-		ivs.rpg:
-			var s = first_free_invslot()
-			if settings["controls"]["equip_on_pickup"]: # autoequip
-				if can_equip(item):
-					s = item.slot[0] + 3
-				elif item.magazine > -1: # has ammo value - add to the ammo store!
-					s = -3
-			if s == -1:
-				return false
-
-			var hi = UI.insert_HUDitem(prop, s)
-
-	return true
-func dropitem(hi):
-	UI.pop_HUDitem(hi)
-func despawn(hi):
-	hi.get_parent().get_parent().remove_item(hi)
-	hi.prop.queue_free()
-	hi.queue_free()
-
-func reload_amount(weapid, amount):
-	match invsystem:
-		ivs.simple:
-			var available_space = weapons[weapid].mag_max - gamestate.magazines[weapid]
-			var accepted = min(available_space, amount)
-			var refused = amount - available_space
-			gamestate.magazines[weapid] += accepted
-			return refused
-func give_amount(itemid, amount):
-	match invsystem:
-		ivs.simple:
-			var available_space = items[itemid].quantity_max - gamestate.inventory[itemid]
-			var accepted = min(available_space, amount)
-			var refused = amount - available_space
-			gamestate.inventory[itemid] += accepted
-			return refused
-func consume_weapon_ammo(weapid, amount):
-	match invsystem:
-		ivs.simple:
-			var weap_data = weapons[weapid]
-			var missing = 0
-			if weap_data.use_mag:
-				var available = min(gamestate.magazines[weapid], amount)
-				missing = amount - available
-				if missing == 0: # do not fire if not enough ammo "rounds" are available
-					gamestate.magazines[weapid] -= available
-			else:
-				missing = consume_amount(weap_data.ammo, amount, false)
-			return missing
-func consume_amount(itemid, amount, consume_if_missing = true):
-	match invsystem:
-		ivs.simple:
-			var available = min(gamestate.inventory[itemid], amount)
-			var missing = amount - available
-			if missing == 0 || consume_if_missing:
-				gamestate.inventory[itemid] -= available
-			return missing
+func get_item_data(itemid):
+	if itemid in items && items[itemid].size() > 1:
+		return items[itemid]
+	else:
+		return null
+func get_weap_data(weapid):
+	if weapid in weapons && weapons[weapid].size() > 1:
+		return weapons[weapid]
+	else:
+		return null
 
 ###
 
@@ -251,15 +143,15 @@ func spawn_player(actor_scene):
 
 func switch_character(): # switch characters in single player
 	return # temporarily disabled
-	match game.character:
+	match Game.character:
 		0:
-			game.character = 1
-			game.player = game.actors[1]
+			Game.character = 1
+			Game.player = Game.actors[1]
 			$"UI/c1/sel".visible = false
 			$"UI/c2/sel".visible = true
 		1:
-			game.character = 0
-			game.player = game.actors[0]
+			Game.character = 0
+			Game.player = Game.actors[0]
 			$"UI/c2/sel".visible = false
 			$"UI/c1/sel".visible = true
 func new_actor(peer, actor_scene): # this will ONLY spawn a new actor on a this machine
@@ -313,20 +205,20 @@ func get_playername():
 
 func load_level(map):
 	# unload current level
-	game.root.remove_child(game.root.get_node("level"))
-	game.level = null
+	Game.root.remove_child(Game.root.get_node("level"))
+	Game.level = null
 
 	# load next level
 	var next_level = load(str("res://scenes/", map, ".tscn")).instance()
 	next_level.set_name("level")
-	game.root.add_child(next_level)
+	Game.root.add_child(next_level)
 
 	# set level nodes
-	game.level = game.root.get_node("level")
-	game.navmesh = game.level.get_node("navigation")
+	Game.level = Game.root.get_node("level")
+	Game.navmesh = Game.level.get_node("navigation")
 
 	# boot level script
-	game.level.start()
+	Game.level.start()
 
 func new_game():
 	pass

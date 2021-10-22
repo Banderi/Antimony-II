@@ -90,7 +90,7 @@ func about_btn():
 func credits_btn():
 	UI.menu(UI.ms.credits)
 func quit_btn():
-	game.quit_game()
+	Game.quit_game()
 func chat_enter(txt):
 	if txt.strip_edges(true, true) == "":
 		return
@@ -103,7 +103,7 @@ func _on_chat_exit():
 	inchat = false
 
 func _on_auto_equip_toggled(button_pressed):
-	game.settings["controls"]["equip_on_pickup"] = button_pressed
+	Game.settings["controls"]["equip_on_pickup"] = button_pressed
 
 ###
 
@@ -151,7 +151,7 @@ func menu(m, open = true):	# toggle menu visibility and update state correctly
 		show(_m)
 		state = m
 		if arr[5]:
-			game.controller.alt_camera = true
+			Game.controller.alt_camera = true
 	else:
 		hide(_m)
 		if arr[1] != null:
@@ -159,7 +159,7 @@ func menu(m, open = true):	# toggle menu visibility and update state correctly
 		else:
 			state = prevstate # ms.ingame # else, return to normal "ingame" state
 		if arr[5]:
-			game.controller.alt_camera = false
+			Game.controller.alt_camera = false
 func buildmenustruct(): # ...the overly complicated moronic system
 	#					 0: linked menu node							3: hold key to keep menu open
 	#							1: upper menu this will only work in		   4: can only be closed with escape
@@ -188,8 +188,8 @@ func insert_HUDitem(prop, s):
 	# update hotbar element icon for slots within hotbar
 	if s < 3:
 		if s == -3: # -3 is ammo!
-			game.equip(hi.prop)
-			return game.despawn(hi)
+			Game.equip(hi.prop)
+			return Game.despawn(hi)
 		hh_hotbar[s].get_node("icon").visible = true
 	return hi
 func pop_HUDitem(hi):
@@ -208,12 +208,12 @@ func pop_HUDitem(hi):
 func drop_HUDitem(hi, s = slot_hover):
 	handle_input = 2
 	if s == -3: # adding ammo to store and nothing else
-		game.equip(hi.prop)
-		return game.despawn(hi)
+		Game.equip(hi.prop)
+		return Game.despawn(hi)
 	if s < -1 || s > 6:
 		return # uhhhh this is wrong.
 	if s == -1: # outside inventory -- drop item!
-		return game.dropitem(hi)
+		return Game.dropitem(hi)
 
 	var hbox = hbox(s)
 	if s < 3:
@@ -238,7 +238,7 @@ func move_HUDitem(hi, s):
 func spawn_balloon(message, peer):
 	var b = preload("res://Antimony/scenes/hud/balloon.tscn").instance()
 	b.get_node("txt").text = message
-	b.pos = game.level.get_node("PLAYER_" + str(peer)).get_global_transform().origin + Vector3(0, 2, 0)
+	b.pos = Game.level.get_node("PLAYER_" + str(peer)).get_global_transform().origin + Vector3(0, 2, 0)
 	UI_root.add_child(b)
 func chat_push(message, timestamp, player):
 	var b = preload("res://Antimony/scenes/hud/chat_msg.tscn").instance()
@@ -303,12 +303,12 @@ func inv_items_update():
 				hbox(s).focus(true)
 
 			if HUD_dragging.hbox.slot < 3: # dragging an item from invbar
-				var item = game.items[HUD_dragging.prop.itemid]
-				slot_hover = item.slot[0] + 3
-				hbox(slot_hover).selector(game.eyed_slot(item))
-				if !game.can_equip(item):
+				var item_data = Game.get_item_data(HUD_dragging.prop.itemid)
+				slot_hover = item_data.slot[0] + 3
+				hbox(slot_hover).selector(Game.eyed_slot(item_data))
+				if !Game.can_equip(item_data):
 					slot_hover = -2
-					if item.quantity > -1: # has ammo value - add to the ammo store!
+					if item_data.quantity > -1: # has ammo value - add to the ammo store!
 						slot_hover = -3
 
 		if Input.is_action_just_pressed("item_drop"):
@@ -320,17 +320,17 @@ func inv_items_update():
 	elif HUD_hover != null:
 
 		if Input.is_action_pressed("item_quickequip"):
-			var s = game.first_free_invslot()
-			var item = game.items[HUD_hover.prop.itemid]
+			var s = Game.first_free_invslot()
+			var item_data = Game.get_item_data(HUD_hover.prop.itemid)
 			if HUD_hover.hbox.slot < 3:
-				s = item.slot[0] + 3
+				s = item_data.slot[0] + 3
 			if s > -1:
 				hbox(s).focus(true)
 				if s < 3:
 					hbox(s).selector(1)
 				else:
-					hbox(s).selector(game.eyed_slot(item))
-					if !game.can_equip(item):
+					hbox(s).selector(Game.eyed_slot(item_data))
+					if !Game.can_equip(item_data):
 						s = -2
 				slot_hover = s
 
@@ -367,24 +367,25 @@ func update_hotbar():
 		h.focus(false)
 
 	# update item name label & focus
-	var i = ""
-	var p = game.player.prop_inuse
+	var itemid = ""
+	var p = Game.player.prop_inuse
 	var hbox = hh_invbar[hotbar_sel]
 	if p == null: # player is not interacting with a prop
 		h_propicon.visible = false
 		if hbox.has_items():
-			i = hbox.items[0].prop.itemid
+			itemid = hbox.items[0].prop.itemid
 		hh_hotbar[hotbar_sel].focus(true)
 	else:
 		h_propicon.visible = true
 		if p.type == -1 || p.type >= 999:
-			i = p.itemid # use itemid in the general case
+			itemid = p.itemid # use itemid in the general case
 		else:
-			i = str(p.type) # use "type" of base prop class - really hacky, but eh
+			itemid = str(p.type) # use "type" of base prop class - really hacky, but eh
 
 	# get item/prop name, if it exists in database
-	if i != "" && game.items.has(i):
-		h_itemname.text = game.items[i][0]
+	var item_data = Game.get_item_data(itemid)
+	if item_data != null:
+		h_itemname.text = item_data.name
 	else:
 		h_itemname.text = ""
 		h_propicon.visible = false
@@ -393,7 +394,7 @@ func update_hotbar():
 	for s in range(0,3):
 		if hh_invbar[s].has_items():
 			hh_hotbar[s].get_node("icon").visible = true
-			if hotbar_sel == s && game.player.prop_inuse == null:
+			if hotbar_sel == s && Game.player.prop_inuse == null:
 				hh_invbar[s].items[0].prop.RPC_show()
 			else:
 				hh_invbar[s].items[0].prop.RPC_hide()
@@ -403,63 +404,70 @@ func update_status_icons():
 	for i in h_effects:
 		i.visible = false
 
-	if game.controller.locked || game.controller.alt_camera:
+	if Game.controller.locked || Game.controller.alt_camera:
 		h_effects[0].visible = true
-	if game.player.oxygen > 0:
+	if Game.player.oxygen > 0:
 		h_effects[1].visible = true
-		h_effects[1].get_node("Label").text = "%d" % [game.player.oxygen]
-#	if game.player.busy:
+		h_effects[1].get_node("Label").text = "%d" % [Game.player.oxygen]
+#	if Game.player.busy:
 #		h_effects[2].visible = true
-	if game.player.mutagen > 0:
+	if Game.player.mutagen > 0:
 		h_effects[6].visible = true
-	if game.player.hypnotized:
+	if Game.player.hypnotized:
 		h_effects[7].visible = true
 
-	match game.player.state:
+	match Game.player.state:
 		Actor.states.ladder:
 			h_effects[2].visible = true
 		Actor.states.stuck:
 			h_effects[2].visible = true
 			h_effects[3].visible = true
 			h_effects[5].visible = true
-			h_effects[5].get_node("Label").text = "%d" % [game.player.stuck_timer]
+			h_effects[5].get_node("Label").text = "%d" % [Game.player.stuck_timer]
 		Actor.states.restrained:
 			h_effects[3].visible = true
 		Actor.states.asleep:
 			h_effects[8].visible = true
 
 func update_weap_hud():
-	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.weapons[weapid]
 
-	# crosshair
+	# reset first
 	for n in u_crosshairs.get_children():
 		n.visible = false
+	for n in u_scopes.get_children():
+		n.visible = false
+
+	###
+
+	var weapid = Inventory.curr_weapon
+	var weap_data = Game.get_weap_data(weapid)
+	if weapid == "" || weap_data == null:
+		return # no valid weapon equipped
+
+	# crosshair
 	if "crosshair" in weap_data:
 		u_crosshairs.get_node(weap_data.crosshair).visible = true
 
 	# sniper scope
-	for n in u_scopes.get_children():
-		n.visible = false
-	game.weaps.visible = true
-	game.controller.cam.fov = game.camera_fov
-	if "scope" in weap_data && game.weaps.scope_enabled:
+	Game.weaps.visible = true
+	Game.controller.cam.fov = Game.camera_fov
+	if "scope" in weap_data && Game.weaps.scope_enabled:
 		u_scopes.get_node(weap_data.scope).visible = true
-		game.weaps.visible = false
-		game.controller.cam.fov = game.camera_fov_scope
+		Game.weaps.visible = false
+		Game.controller.cam.fov = Game.camera_fov_scope
 
 	update_weap_ammo_counters()
 func update_weap_ammo_counters():
-	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.weapons[weapid]
-	var witem_data = game.items[weapid]
+	var weapid = Inventory.curr_weapon
+	var weap_data = Game.get_weap_data(weapid)
+	var witem_data = Game.get_item_data(weapid)
 	h_itemname.text = str(witem_data.name)
-	h_ammoname.text = str(game.items[weap_data.ammo].name)
-	h_tot.text = str(game.gamestate.inventory[weap_data.ammo])
+	h_ammoname.text = str(Game.get_item_data(weap_data.ammo).name)
+	h_tot.text = str(Inventory.db.items[weap_data.ammo])
 	if weap_data.use_mag:
 		h_mag.visible = true
 		h_mag_slash.visible = true
-		h_mag.text = str(game.gamestate.magazines[weapid])
+		h_mag.text = str(Inventory.db.magazines[weapid])
 	else:
 		h_mag.visible = false
 		h_mag_slash.visible = false
@@ -469,14 +477,14 @@ func update_weap_ammo_counters():
 func load_UI(mode): # load hud scene node and set UI mode
 	# delete previously loaded hud, first
 	UI_root.remove_child($hud)
-	var mode_name = game.gm.keys()[mode]
+	var mode_name = Game.gm.keys()[mode]
 	var hud_node = load("res://scenes/hud/" + mode_name + ".tscn").instance()
 	hud_node.set_name("hud")
 	UI_root.add_child(hud_node)
 	UI_root.move_child(hud_node, 0)
 
 	# set UI mode and build the node struct for toggling
-	game.GAMEMODE = mode
+	Game.GAMEMODE = mode
 	buildmenustruct()
 
 	# close all menus when starting the game
@@ -487,12 +495,12 @@ func load_UI(mode): # load hud scene node and set UI mode
 	menu(ms.chat, false)
 
 	# doesn't work....?
-#	if game.is_2D():
-#		game.controller.cam.current = false
+#	if Game.is_2D():
+#		Game.controller.cam.current = false
 #	else:
-#		game.controller.cam2D.current = false
+#		Game.controller.cam2D.current = false
 func is_ui_valid():
-	if hud == null || game.GAMEMODE == game.gm.none:
+	if hud == null || Game.GAMEMODE == Game.gm.none:
 		return false
 	return true
 func register_inv_hotbar_slots(tot_slots, hbar_slots): # register hotbar slots
@@ -508,8 +516,8 @@ func game_text_set(wname, pmenu, sub = ""):
 func load_3D_weaps(scene = "weaps"):
 	var weaps = load("res://scenes/hud/" + scene + ".tscn").instance()
 	weaps.name = "weaps"
-	game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
-	game.weaps = weaps
+	Game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
+	Game.weaps = weaps
 
 	update_weap_hud()
 
@@ -525,16 +533,16 @@ func _input(event):
 		handle_input -= 1
 
 	# GAME_mode-specific logic
-	match game.GAMEMODE:
-		game.gm.fps:
+	match Game.GAMEMODE:
+		Game.gm.fps:
 			# keep mouse centered when menus aren't open
 			if state <= 0:
 				Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 			else:
 				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-		game.gm.ludcorp:
+		Game.gm.ludcorp:
 			# update hotbar selection
-			if game.player.prop_inuse == null && !UI.paused: # player is not interacting with a prop
+			if Game.player.prop_inuse == null && !UI.paused: # player is not interacting with a prop
 				if Input.is_action_just_pressed("item_prev"):
 					hotbar_sel -= 1
 				elif Input.is_action_just_pressed("item_next"):
@@ -545,7 +553,7 @@ func _input(event):
 					hotbar_sel = 0
 			### m_inv ###
 			inv_items_update()
-			debug.loginfo(str(slot_hover))
+			Debug.loginfo(str(slot_hover))
 
 	# to future, sober deri:
 	# do not touch this, or I will kill you
@@ -599,8 +607,8 @@ func _process(delta):
 	paused = m_main.visible || m_pause.visible || m_gestures.visible || h_chatbox.has_focus()
 
 	# GAME_mode-specific logic
-	match game.GAMEMODE:
-		game.gm.ludcorp:
+	match Game.GAMEMODE:
+		Game.gm.ludcorp:
 			# update status icons
 			update_status_icons()
 

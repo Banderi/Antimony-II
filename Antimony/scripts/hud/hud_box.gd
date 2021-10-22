@@ -89,13 +89,13 @@ func add_item(hi):
 	items.push_back(hi)
 	rearrange()
 	if slot > 2:
-		game.equip(hi.prop)
+		Game.equip(hi.prop)
 func remove_item(hi):
 	hi.hbox = null
 	hi_node.remove_child(hi)
 	items.erase(hi)
 	if slot > 2:
-		game.unequip(hi.prop)
+		Game.unequip(hi.prop)
 func has_items():
 	return items.size() > 0
 
@@ -145,7 +145,7 @@ func _process(delta):
 				bb.rect_size.x = 70
 
 	# update debug info visibility
-	match debug.display:
+	match Debug.display:
 		1:
 			dbg.visible = true
 			bb.modulate.a = 1

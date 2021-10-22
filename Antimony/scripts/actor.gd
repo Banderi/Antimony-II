@@ -146,10 +146,10 @@ func prop_interact():
 			# all things considered, I think I'll leave the PhysProp entity
 			# present, just hidden. it's better to have them ready at all
 			# time in case they are dropped on the ground, and load all the
-			# models in for them at the start of the game.
+			# models in for them at the start of the Game.
 
 			# pick up item if free slot available - otherwise hold in hand
-			if game.giveitem(prop_to_reach):
+			if Game.giveitem(prop_to_reach):
 				prop_to_reach.RPC_hide()
 				return release_prop() # super hacky hack jank ( ͡° ͜ʖ ͡°)
 			# prop_inuse is't set yet, so the prop won't release the actor -
@@ -175,7 +175,7 @@ func cancel(become_stuck = false):
 				return
 			states.turret:
 				get_parent().remove_child(self)
-				game.level.add_child(self)
+				Game.level.add_child(self)
 				rot = prop_inuse.phi + prop_inuse.rotation.y - PI * 0.5
 				body3D.transform = prop_inuse.transform.translated(Vector3(0,0,-1.35).rotated(up,prop_inuse.phi)) # move back actor to the turret's position
 		release_prop()
@@ -210,14 +210,14 @@ var tilt_angle = 0
 var stairing = false
 func travel(d):
 	if !busy:
-		path = game.navmesh.get_simple_path(pos, d)
+		path = Game.navmesh.get_simple_path(pos, d)
 		path.remove(0) # no need for current position to be the first path node
 		destination = d
 func path_update():
 	# ignore for now if player controlled
-	if self == game.player:
-		match game.GAMEMODE:
-			game.gm.fps, game.gm.plat, game.gm.fighting:
+	if self == Game.player:
+		match Game.GAMEMODE:
+			Game.gm.fps, Game.gm.plat, Game.gm.fighting:
 				return
 
 	match state:
@@ -225,7 +225,7 @@ func path_update():
 			var reached_prop = false
 			if path.size() > 0 && prop_to_reach != null: # check
 				var dist = ((prop_to_reach.path_origin - pos) * hor)
-				debug.loginfo(str(dist.length()))
+				Debug.loginfo(str(dist.length()))
 				if prop_has_collided || \
 						dist.length() < prop_to_reach.distance || \
 						(path.size() < 2 && dist.length() < prop_to_reach.distance * 2):
@@ -255,7 +255,7 @@ func path_update():
 					release_prop()
 	dir = dir.normalized() # dir is only used for direction!
 func slope_correction():
-	if game.is_2D(): # todo
+	if Game.is_2D(): # todo
 		pass
 	else:
 		# tilt movement following slopes
@@ -279,30 +279,30 @@ func slope_correction():
 		var result = space_state.intersect_ray(raypos, rayend, [body3D])
 		if result.has("normal"):
 			tilt_angle = result.normal.angle_to(up) # slope angle
-			if tilt_angle < game.max_slope_angle: # ignore STEEP slopes
+			if tilt_angle < Game.max_slope_angle: # ignore STEEP slopes
 				normal = result.normal
 			else:
 				var c = up.cross(normal).normalized()
 				if normal == up:
 					c = Vector3(0, 1, 0)
-				normal = up.rotated(c, game.max_slope_angle)
+				normal = up.rotated(c, Game.max_slope_angle)
 
 		# collision?
 		if collider != null:
 			collider_angle = collider.normal.angle_to(up) # slope angle
 			ground_grip_dist = (collider.position - pos)
 			var coll_dir = ground_grip_dist.normalized()
-			debug.line(pos, pos + coll_dir, Color(0, 0, 0))
+			Debug.line(pos, pos + coll_dir, Color(0, 0, 0))
 
 			if onground:
-				if tilt_angle < game.max_slope_angle && ground_grip_dist.y <= game.max_step_height + sin(tilt_angle): # check for stairs & ramps
+				if tilt_angle < Game.max_slope_angle && ground_grip_dist.y <= Game.max_step_height + sin(tilt_angle): # check for stairs & ramps
 
 					# construct raycaster
 					var offs = collider.position + coll_dir * 0.05
 					raypos = offs + up
 					rayend = offs - up
-					debug.point(raypos, Color(0, 0, 0))
-					debug.point(rayend, Color(0, 0, 0))
+					Debug.point(raypos, Color(0, 0, 0))
+					Debug.point(rayend, Color(0, 0, 0))
 
 					# check the plaftorm's collision, normal and angle
 					result = space_state.intersect_ray(raypos, rayend, [body3D])
@@ -320,11 +320,11 @@ func slope_correction():
 						nostep = true
 					if plat_hit.y < collider.position.y - 0.1:
 						nostep = true
-					if plat_hit.y - pos.y > game.max_step_height + 0.001:
+					if plat_hit.y - pos.y > Game.max_step_height + 0.001:
 						nostep = true
 
 					# valid staircase step?
-					if !nostep && plat_angle < game.max_slope_angle && dir != Vector3():
+					if !nostep && plat_angle < Game.max_slope_angle && dir != Vector3():
 						normal = (plat_normal + collider.normal).normalized()
 						stairing = true
 					else:
@@ -332,19 +332,19 @@ func slope_correction():
 
 
 					# debugging
-					debug.point(plat_hit, Color(0.5, 1, 0))
-					debug.line(plat_hit, plat_hit + plat_normal, Color(0.5, 1, 0))
+					Debug.point(plat_hit, Color(0.5, 1, 0))
+					Debug.line(plat_hit, plat_hit + plat_normal, Color(0.5, 1, 0))
 
-					debug.point(collider.position, Color(1, 0.5, 0))
-					debug.line(collider.position, collider.position + collider.normal, Color(1, 0.5, 0))
-					debug.point(pos, Color(1, 0.5, 0))
-					debug.line(collider.position, pos, Color(1, 0.5, 0))
+					Debug.point(collider.position, Color(1, 0.5, 0))
+					Debug.line(collider.position, collider.position + collider.normal, Color(1, 0.5, 0))
+					Debug.point(pos, Color(1, 0.5, 0))
+					Debug.line(collider.position, pos, Color(1, 0.5, 0))
 				else: # walls/ceiling/etc.
 					# debugging
-					debug.point(collider.position, Color(1, 0, 0))
-					debug.line(collider.position, collider.position + collider.normal, Color(1, 0, 0))
-					debug.point(pos, Color(1, 0, 0))
-					debug.line(collider.position, pos, Color(1, 0, 0))
+					Debug.point(collider.position, Color(1, 0, 0))
+					Debug.line(collider.position, collider.position + collider.normal, Color(1, 0, 0))
+					Debug.point(pos, Color(1, 0, 0))
+					Debug.line(collider.position, pos, Color(1, 0, 0))
 		else:
 			stairing = false
 
@@ -361,11 +361,11 @@ func slope_correction():
 		dir_tilt = m.xform(dir) # movement vector but tilted along the ground
 
 func face_direction():
-	if game.is_2D():
+	if Game.is_2D():
 		return
-#	match game.GAMEMODE:
-#		game.gm.fps:
-#			lookat = (game.controller.follow.get_global_transform().origin - game.controller.cam.get_global_transform().origin).normalized()
+#	match Game.GAMEMODE:
+#		Game.gm.fps:
+#			lookat = (Game.controller.follow.get_global_transform().origin - Game.controller.cam.get_global_transform().origin).normalized()
 #			var lookat_hor = (lookat * Vector3(1, 0, 1))
 #			var lookat_rot = get_angle_from_vector(lookat_hor, up)
 #			var input_rot = get_angle_from_vector(dir, up)
@@ -399,7 +399,7 @@ func face_direction():
 func touch_ground(): # teleport player to the ground below if below threshold
 	# poll space_state for raycasting
 	var result
-	if game.is_2D():
+	if Game.is_2D():
 		if !body2D.is_on_floor():
 			return false
 	else:
@@ -448,9 +448,9 @@ func jump(pressed):
 		jump_force = 0
 		jumping_timer = 0
 		if onground:
-			canjump = game.available_jumps
+			canjump = Game.available_jumps
 func dash(v, direction):
-	if dash_timer > 0 || blocking || (crouching && !game.can_dash_while_crouching): # can not dash!
+	if dash_timer > 0 || blocking || (crouching && !Game.can_dash_while_crouching): # can not dash!
 		return
 	dash_direction = direction
 	dashing = true
@@ -570,8 +570,8 @@ func get_attack(type): # get attack info from game database
 	]
 	if type != -1 && attacks_TEMP.size() > type:
 		return attacks_TEMP[type]
-#	if type != -1 && game.characters[character]["attacks"].size() > type:
-#		return game.characters[character]["attacks"][type]
+#	if type != -1 && Game.characters[character]["attacks"].size() > type:
+#		return Game.characters[character]["attacks"][type]
 	return {
 		"name": "none",
 		"length": 0.0,
@@ -639,7 +639,7 @@ func block_update(delta):
 		block_timer += delta
 
 func crouch(pressed):
-	if !game.can_crouch:
+	if !Game.can_crouch:
 		crouching = false
 		return
 	if blocking: # can not crouch!
@@ -652,9 +652,9 @@ func crouch(pressed):
 		crouching = false
 
 	if crouching:
-		coll_capsule.shape.height = 1.0 - game.crouch_height_diff
+		coll_capsule.shape.height = 1.0 - Game.crouch_height_diff
 		if onground:
-			coll_capsule.translation.y = 0.904 - 0.5 * game.crouch_height_diff
+			coll_capsule.translation.y = 0.904 - 0.5 * Game.crouch_height_diff
 	else:
 		coll_capsule.shape.height = 1.0
 		coll_capsule.translation.y = 0.904
@@ -689,12 +689,12 @@ func state_update(delta): # neverending headache
 
 	# update animation playback speed blending? (for 3D animation)
 	var mov_speed = velocity.length()
-	if !game.is_2D():
+	if !Game.is_2D():
 		animset.playback_default_blend_time = 0.1
 
 	# if attacking while mid-air, counter gravity a bit?
 	if state == states.attacking && !onground:
-		drag_coeff = Vector2(1, 1) - game.midair_attack_float_drag
+		drag_coeff = Vector2(1, 1) - Game.midair_attack_float_drag
 	elif dashing && !onground:
 		drag_coeff = Vector2(1, 0)
 	else:
@@ -774,7 +774,7 @@ func anim_update():
 		animtree.set("parameters/blender/blend_amount", 0)
 
 	# 2D sprite mirroring
-	if game.is_2D():
+	if Game.is_2D():
 		if last_dir.x > 0:
 			animsprite.flip_h = true
 		if last_dir.x < 0:
@@ -786,7 +786,7 @@ func anim_update():
 func setAnimation(anim, speed = 1.0): # smart select animation based on name
 
 	# 2D animations
-	if game.is_2D():
+	if Game.is_2D():
 		for a in animframes.get_animation_names():
 			if anim in a:
 				anim = a
@@ -819,15 +819,15 @@ func set_name(n):
 	player_name = n
 func set_color(color):
 	player_color = color
-	var nodes = game.get_all_childs($body3D/mesh) # this fires before _ready so we can't poll the "mesh" var
+	var nodes = Game.get_all_childs($body3D/mesh) # this fires before _ready so we can't poll the "mesh" var
 	for n in nodes:
 		if n is MeshInstance && n.get_surface_material(0):
 			n.get_surface_material(0).albedo_color = color
 
 func refresh_equip():
 	# only in 3D for now!
-	if !game.is_2D():
-		for m in game.items:
+	if !Game.is_2D():
+		for m in Game.items:
 			var n = mesh.get_node("Armature/Skeleton/" + m)
 			if n != null:
 				n.visible = false
@@ -872,62 +872,62 @@ remotesync func RPC_equip(equip, on):
 ###
 
 func _process(delta):
-	if game.controller.zoom <= 0.1:
+	if Game.controller.zoom <= 0.1:
 		body3D.visible = false
 	else:
 		body3D.visible = true
 
 	# debugging info
-	debug.loginfo("pos:        3D:" + str(pos) + " 2D:" + str(pos2D))
-	debug.loginfo("lookat:     ", lookat)
-	debug.loginfo("dir:        " + str(dir) + "     lastdir: " + str(last_dir))
-	debug.loginfo("rot:        ", rot)
+	Debug.loginfo("pos:        3D:" + str(pos) + " 2D:" + str(pos2D))
+	Debug.loginfo("lookat:     ", lookat)
+	Debug.loginfo("dir:        " + str(dir) + "     lastdir: " + str(last_dir))
+	Debug.loginfo("rot:        ", rot)
 	if collider == null:
-		debug.loginfo("collision:  object: ", collider)
+		Debug.loginfo("collision:  object: ", collider)
 	else:
-		debug.logpaddedinfo("collision:  ", true, [28, 34], ["object:", collider, "pos:", collider.position, "normal:", collider.normal])
-	debug.loginfo("grip_dist:  ", ground_grip_dist)
-	debug.loginfo("coll_angle: ", collider_angle)
-	debug.loginfo("tilt_angle: ", tilt_angle)
-	debug.loginfo("velocity:   ", velocity)
-	debug.loginfo("ups:        ", velocity.length())
+		Debug.logpaddedinfo("collision:  ", true, [28, 34], ["object:", collider, "pos:", collider.position, "normal:", collider.normal])
+	Debug.loginfo("grip_dist:  ", ground_grip_dist)
+	Debug.loginfo("coll_angle: ", collider_angle)
+	Debug.loginfo("tilt_angle: ", tilt_angle)
+	Debug.loginfo("velocity:   ", velocity)
+	Debug.loginfo("ups:        ", velocity.length())
 
-	debug.loginfo("")
+	Debug.loginfo("")
 
-	if game.is_2D():
-		debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animsprite.speed_scale) + " mirror: " + str(animsprite.flip_h) + ")")
+	if Game.is_2D():
+		Debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animsprite.speed_scale) + " mirror: " + str(animsprite.flip_h) + ")")
 	else:
-		debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animset.playback_speed) + " blending: " + str(animset.playback_default_blend_time) + ")")
-	debug.loginfo("state:      ", states.keys()[state])
-	debug.loginfo("jumping:    ", jumping)
-	debug.loginfo("dashing:    ", dashing)
-	debug.loginfo("sprinting:  ", sprinting)
-	debug.loginfo("crouching:  ", crouching)
-	debug.loginfo("onground:   ", onground)
-	debug.loginfo("stairing:   ", stairing)
-	debug.loginfo("busy:       ", busy)
-	debug.loginfo("stuck:      ", stuck_timer)
+		Debug.loginfo("anim:       " + str(current_anim) + " (speed: " + str(animset.playback_speed) + " blending: " + str(animset.playback_default_blend_time) + ")")
+	Debug.loginfo("state:      ", states.keys()[state])
+	Debug.loginfo("jumping:    ", jumping)
+	Debug.loginfo("dashing:    ", dashing)
+	Debug.loginfo("sprinting:  ", sprinting)
+	Debug.loginfo("crouching:  ", crouching)
+	Debug.loginfo("onground:   ", onground)
+	Debug.loginfo("stairing:   ", stairing)
+	Debug.loginfo("busy:       ", busy)
+	Debug.loginfo("stuck:      ", stuck_timer)
 
-	debug.loginfo("")
+	Debug.loginfo("")
 
-	debug.loginfo("canjump:    ", canjump)
-	debug.loginfo("jump_timer: ", jumping_timer)
-	debug.loginfo("jump_force: ", jump_force)
-	debug.loginfo("dash_timer: ", dash_timer)
-	debug.loginfo("dash_dir:   ", dash_direction)
+	Debug.loginfo("canjump:    ", canjump)
+	Debug.loginfo("jump_timer: ", jumping_timer)
+	Debug.loginfo("jump_force: ", jump_force)
+	Debug.loginfo("dash_timer: ", dash_timer)
+	Debug.loginfo("dash_dir:   ", dash_direction)
 
-	debug.loginfo("")
+	Debug.loginfo("")
 
 	var attack_info = get_attack(current_attack)
-	debug.loginfo("attack:     " + str(current_attack) + " (" + attack_info["name"] + ")")
-	debug.loginfo("cancancel:  ", attack_info["can_cancel"])
-	debug.loginfo("att_timer:  " + str(attack_timer) + "/" + str(attack_info["length"]))
-	debug.loginfo("att_active: ", attack_damage_active)
-	debug.loginfo("firing:     ", firing)
-	debug.loginfo("blocking:   ", blocking)
-	debug.loginfo("blck_timer: ", block_timer)
+	Debug.loginfo("attack:     " + str(current_attack) + " (" + attack_info["name"] + ")")
+	Debug.loginfo("cancancel:  ", attack_info["can_cancel"])
+	Debug.loginfo("att_timer:  " + str(attack_timer) + "/" + str(attack_info["length"]))
+	Debug.loginfo("att_active: ", attack_damage_active)
+	Debug.loginfo("firing:     ", firing)
+	Debug.loginfo("blocking:   ", blocking)
+	Debug.loginfo("blck_timer: ", block_timer)
 
-	debug.loginfo("")
+	Debug.loginfo("")
 
 func _physics_process(delta):
 	body3D.collision_mask = 1 # collision is set to "disabled" by certain props
@@ -937,7 +937,7 @@ func _physics_process(delta):
 		anim_update()
 		return
 
-	if game.is_2D():
+	if Game.is_2D():
 		pos2D = body2D.get_global_transform().origin
 	else:
 		pos = body3D.get_global_transform().origin
@@ -946,7 +946,7 @@ func _physics_process(delta):
 	anim_update()
 
 	# reset certain states after animation
-	game.player.firing = false
+	Game.player.firing = false
 
 #	if !busy || state == states.ladder:
 	path_update() # P A T H F I N D I N G
@@ -955,25 +955,25 @@ func _physics_process(delta):
 	var movement = Vector3()
 
 	# game-specific logic (gravity, jumping etc.)
-	match game.GAMEMODE:
-		game.gm.plat, game.gm.fighting:
-			speed = game.walk_speed # normal moving speed
+	match Game.GAMEMODE:
+		Game.gm.plat, Game.gm.fighting:
+			speed = Game.walk_speed # normal moving speed
 
 			# SNEAKING
-			if !dashing && !jumping && crouching && !game.can_sneak:
-				speed = game.sneak_speed
+			if !dashing && !jumping && crouching && !Game.can_sneak:
+				speed = Game.sneak_speed
 
 			# BLOCKING
 			if blocking:
-				speed = game.block_walk_speed
+				speed = Game.block_walk_speed
 
 			# JUMP
 			if jumping:
 				jumping_timer += delta # update jumping timer
 
 				# start at full force, then reduce to zero
-				var j_max = game.gravity + game.jump_strength
-				jump_force = max(0, j_max - sqrt(jumping_timer) * game.jump_falloff) # gets smaller and smaller
+				var j_max = Game.gravity + Game.jump_strength
+				jump_force = max(0, j_max - sqrt(jumping_timer) * Game.jump_falloff) # gets smaller and smaller
 				if jump_force > 0 && velocity.y > 0:
 					velocity.y = 0
 
@@ -982,17 +982,17 @@ func _physics_process(delta):
 				dash_timer += delta # update dashing timer
 				var max_dash_timer
 				match dash_direction:
-					1: max_dash_timer = game.dash_length
-					-1: max_dash_timer = game.dash_length
-					2: max_dash_timer = game.flips_length
-					-2: max_dash_timer = game.flips_length
+					1: max_dash_timer = Game.dash_length
+					-1: max_dash_timer = Game.dash_length
+					2: max_dash_timer = Game.flips_length
+					-2: max_dash_timer = Game.flips_length
 				if dash_timer <= max_dash_timer:
 					dir = last_dir
 					match dash_direction:
-						1: speed = game.dash_speed
-						-1: speed = game.backstep_speed
-						2: speed = game.frontflip_speed
-						-2: speed = game.backflip_speed
+						1: speed = Game.dash_speed
+						-1: speed = Game.backstep_speed
+						2: speed = Game.frontflip_speed
+						-2: speed = Game.backflip_speed
 				else:
 					# reset dashing
 					dashing = false
@@ -1006,37 +1006,37 @@ func _physics_process(delta):
 
 			movement = dir * speed # actual movement vector scaled with speed
 			if !onground:
-				movement *= game.air_speed_coeff
-				if abs(velocity.x) > game.air_speed_max:
+				movement *= Game.air_speed_coeff
+				if abs(velocity.x) > Game.air_speed_max:
 					movement.x = 0
 
 			movement -= up * jump_force
-		game.gm.fps:
-			speed = game.walk_speed # normal moving speed
-			if game.always_run:
-				speed = game.run_speed
+		Game.gm.fps:
+			speed = Game.walk_speed # normal moving speed
+			if Game.always_run:
+				speed = Game.run_speed
 
 			# SNEAKING
-			if !dashing && !jumping && crouching && game.can_sneak:
-				speed = game.sneak_speed
+			if !dashing && !jumping && crouching && Game.can_sneak:
+				speed = Game.sneak_speed
 
 			# SPRINTING
-			if !dashing && !crouching && sprinting && game.can_sprint:
-				speed = game.run_speed
-				if game.always_run:
-					speed = game.walk_speed
+			if !dashing && !crouching && sprinting && Game.can_sprint:
+				speed = Game.run_speed
+				if Game.always_run:
+					speed = Game.walk_speed
 
 			# BLOCKING
 			if blocking:
-				speed = game.block_walk_speed
+				speed = Game.block_walk_speed
 
 			# JUMP
 			if jumping:
 				jumping_timer += delta # update jumping timer
 
 				# start at full force, then reduce to zero
-				var j_max = game.gravity + game.jump_strength
-				jump_force = max(0, j_max - sqrt(jumping_timer) * game.jump_falloff) # gets smaller and smaller
+				var j_max = Game.gravity + Game.jump_strength
+				jump_force = max(0, j_max - sqrt(jumping_timer) * Game.jump_falloff) # gets smaller and smaller
 				if jump_force > 0 && velocity.y > 0:
 					velocity.y = 0
 
@@ -1046,14 +1046,14 @@ func _physics_process(delta):
 
 #			movement = dir * speed # actual movement vector scaled with speed
 			if !touch_ground():
-				movement *= game.air_speed_coeff
-				if abs(velocity.x) > game.air_speed_max:
+				movement *= Game.air_speed_coeff
+				if abs(velocity.x) > Game.air_speed_max:
 					movement.x = 0
-				if abs(velocity.z) > game.air_speed_max:
+				if abs(velocity.z) > Game.air_speed_max:
 					movement.z = 0
 
 			movement += up * jump_force
-		game.gm.ludcorp:
+		Game.gm.ludcorp:
 			# speed calc
 			if state != states.ladder:
 				speed = 6
@@ -1063,19 +1063,19 @@ func _physics_process(delta):
 				speed = 1.5
 			movement = dir_tilt * speed
 
-			if (tilt_angle > game.max_slope_angle): # for climbing, max angle was 1
+			if (tilt_angle > Game.max_slope_angle): # for climbing, max angle was 1
 				movement = Vector3() # fix walking on ripid slopes
 			if (!body3D.is_on_floor() && velocity.y <= 0):
 				movement = movement + up * (velocity.y - 50 * delta) # add gravity if falling
 
 	# finalize the movement!
-	if game.is_2D():
+	if Game.is_2D():
 		if body2D.is_on_floor():
 			velocity = Vector3() # infinite friction while on floor -- do this before calculations
 								 # to maintain instant velocity later for state updates and checks
 		# gravity
-		var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
-		movement += up * (max_fall_speed_falloff * game.gravity) # add gravity / jumping force
+		var max_fall_speed_falloff = (velocity.y / (Game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
+		movement += up * (max_fall_speed_falloff * Game.gravity) # add gravity / jumping force
 
 		# add up velocities!
 		var mov2D = Vector2(movement.x, movement.y)
@@ -1088,16 +1088,16 @@ func _physics_process(delta):
 
 		if !touch_ground(): # update ground check
 			onground = false
-			velocity = (-velocity * up2D) + (game.air_drag * velocity * hor2D) # air drag
-			if canjump == game.available_jumps: # if fell off platform, remove first jump!
+			velocity = (-velocity * up2D) + (Game.air_drag * velocity * hor2D) # air drag
+			if canjump == Game.available_jumps: # if fell off platform, remove first jump!
 				canjump -= 1
 	else:
 		if touch_ground():
 			velocity = Vector3() # infinite friction while on floor -- do this before calculations
 								 # to maintain instant velocity later for state updates and checks
 		# gravity
-		var max_fall_speed_falloff = (velocity.y / (game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
-		var gravity = -up * (max_fall_speed_falloff * game.gravity)
+		var max_fall_speed_falloff = (velocity.y / (Game.max_fall_speed * max(drag_coeff.y, 0.1))) + 1 # caps falling speed
+		var gravity = -up * (max_fall_speed_falloff * Game.gravity)
 
 		# add up velocities!
 		if onground && movement == Vector3():
@@ -1109,8 +1109,8 @@ func _physics_process(delta):
 
 		if !touch_ground(): # update ground check
 			onground = false
-			velocity = (velocity * up) + ((1.0 - game.air_drag) * velocity * hor)
-			if canjump == game.available_jumps: # if fell off platform, remove first jump!
+			velocity = (velocity * up) + ((1.0 - Game.air_drag) * velocity * hor)
+			if canjump == Game.available_jumps: # if fell off platform, remove first jump!
 				canjump -= 1
 
 	# value below epsilon threshold
@@ -1124,7 +1124,7 @@ func _physics_process(delta):
 		dir = Vector3()
 
 func _ready():
-	if !game.is_2D():
+	if !Game.is_2D():
 		for a in animset.get_animation_list():
 			animset.animation_set_next(a,a)
 		animset.animation_set_next("08_roll","06_crouch")

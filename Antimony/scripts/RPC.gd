@@ -21,8 +21,8 @@ var sync_next_update = 10 # in milliseconds!
 ### NOTE BECAUSE I'M STUPID: is_network_master() doesn't work here, this node is unique and it's ALWAYS owned by the client!
 
 remote func RPC_receive_player(peer, peer_info): # somebody else is trying to sync their player data with me!
-	if !game.have_actor(peer):
-		game.new_actor(peer, peer_info.actor_scene)
+	if !Game.have_actor(peer):
+		Game.new_actor(peer, peer_info.actor_scene)
 
 	# TODO: store this stuff (name, color, etc.)
 	# >>>> peer_info
@@ -30,9 +30,9 @@ remote func RPC_receive_player(peer, peer_info): # somebody else is trying to sy
 	status_refresh()
 func RPC_sync_my_player(): # I received a connect signal, so I'm sending OUR player data over!
 	# TODO:
-#	game.player.name = "PLAYER_" + str(my_peer)
-#	game.player.peer = my_peer
-#	game.player.set_network_master(my_peer)
+#	Game.player.name = "PLAYER_" + str(my_peer)
+#	Game.player.peer = my_peer
+#	Game.player.set_network_master(my_peer)
 	var peer_info = {
 		# TODO
 	}
@@ -46,7 +46,7 @@ func am_master(n):
 		return true
 	return n.is_network_master()
 func get_actor(peer):
-	return game.level.get_node("PLAYER_" + str(peer))
+	return Game.level.get_node("PLAYER_" + str(peer))
 
 func print_error(e):
 	match e: # it physically hurts to write this
@@ -74,7 +74,7 @@ remote func RPC_chat_message(message, timestamp = 0, peer = my_peer):
 func on_client_connect(peer):
 	RPC_sync_my_player() # transmit back OUR player data to the friend who just connected!
 func on_client_disconnect(peer):
-	game.destroy_actor(peer)
+	Game.destroy_actor(peer)
 func on_server_connected():
 	# hurray!!
 	status_refresh()
@@ -88,9 +88,9 @@ func on_server_failed():
 
 func status_refresh():
 	conn = controller.get_connection_status()
-	if debug.dbg == null:
+	if Debug.dbg == null:
 		return
-	debug.loginfo("hosting: " + str(hosting))
+	Debug.loginfo("hosting: " + str(hosting))
 	var t = "" # "Connection: "
 	match conn:
 		NetworkedMultiplayerPeer.CONNECTION_DISCONNECTED:
@@ -99,7 +99,7 @@ func status_refresh():
 			t += "CONNECTION_CONNECTING"
 		NetworkedMultiplayerPeer.CONNECTION_CONNECTED:
 			t += "CONNECTION_CONNECTED"
-	debug.loginfo(t)
+	Debug.loginfo(t)
 	if conn != NetworkedMultiplayerPeer.CONNECTION_DISCONNECTED:
 		my_peer = get_tree().get_network_unique_id()
 		peer_list = get_tree().get_network_connected_peers()
