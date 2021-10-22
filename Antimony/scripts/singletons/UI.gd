@@ -82,6 +82,7 @@ func connect_btn():
 func settings_btn():
 	UI.menu(UI.ms.settings)
 func about_btn():
+	return # TODO
 	UI.menu(UI.ms.about)
 func credits_btn():
 	UI.menu(UI.ms.credits)
@@ -426,14 +427,15 @@ func update_status_icons():
 
 func update_weap_ammo_counters():
 	var weapid = game.gamestate.curr_weapon
-	var weap_data = game.items[weapid]
-	h_itemname.text = str(weap_data.name)
+	var weap_data = game.weapons[weapid]
+	var witem_data = game.items[weapid]
+	h_itemname.text = str(witem_data.name)
 	h_ammoname.text = str(game.items[weap_data.ammo].name)
 	h_tot.text = str(game.gamestate.inventory[weap_data.ammo])
 	if weap_data.use_mag:
 		h_mag.visible = true
 		h_mag_slash.visible = true
-		h_mag.text = str(game.gamestate.inventory[weapid])
+		h_mag.text = str(game.gamestate.magazines[weapid])
 	else:
 		h_mag.visible = false
 		h_mag_slash.visible = false
@@ -447,6 +449,7 @@ func load_UI(mode): # load hud scene node and set UI mode
 	var hud_node = load("res://scenes/hud/" + mode_name + ".tscn").instance()
 	hud_node.set_name("hud")
 	UI_root.add_child(hud_node)
+	UI_root.move_child(hud_node, 0)
 
 	# set UI mode and build the node struct for toggling
 	game.GAMEMODE = mode

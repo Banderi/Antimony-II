@@ -76,8 +76,8 @@ func orbit(x, y, s = 1.0):
 	theta = max(min_height, theta)
 	theta = min(max_height, theta)
 
-func delta_interpolate(old, new, s = 1.0):
-	return old + (new - old) * s
+func delta_interpolate(old, new, s, delta):
+	return old + (new - old) * s * 60 * delta
 
 # compensate for zoom levels
 func move3D(r, s = 1.0):
@@ -200,17 +200,21 @@ func _input(event):
 
 				# fire action
 				if Input.is_action_just_pressed("shoot"):
-					game.weaps.trigger(0, true)
+					game.weaps.press_trigger(0, true)
 				elif Input.is_action_just_released("shoot"):
-					game.weaps.trigger(0, false)
+					game.weaps.press_trigger(0, false)
 				if Input.is_action_just_pressed("shoot_secondary"):
-					game.weaps.trigger(1, true)
+					game.weaps.press_trigger(1, true)
 				elif Input.is_action_just_released("shoot_secondary"):
-					game.weaps.trigger(1, false)
+					game.weaps.press_trigger(1, false)
 				if Input.is_action_just_pressed("shoot_tertiary"):
-					game.weaps.trigger(2, true)
+					game.weaps.press_trigger(2, true)
 				elif Input.is_action_just_released("shoot_tertiary"):
-					game.weaps.trigger(2, false)
+					game.weaps.press_trigger(2, false)
+
+				# reloading
+				if Input.is_action_just_pressed("weap_reload"):
+					game.weaps.reload(false)
 
 				# use items
 				# TODO
@@ -341,9 +345,9 @@ func _process(delta):
 
 					# update camera tilt
 					var speed_coeff = game.player.velocity.length() / game.run_speed
-					camera_tilt.x = delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25)
-					camera_tilt.y = delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25)
-					camera_tilt.z = delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25)
+					camera_tilt.x = delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25, delta)
+					camera_tilt.y = delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
+					camera_tilt.z = delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
 
 					# final movement calc
 					if dir != Vector3():
@@ -404,7 +408,7 @@ func _process(delta):
 	var lookat_offset = offset
 	if game.can_sneak && game.player.crouching:
 		lookat_offset = crouch_offset
-	smooth_offset = delta_interpolate(smooth_offset, lookat_offset, 0.3)
+	smooth_offset = delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 	var new_lookat = target + smooth_offset
 	var new_zoom = zoom_target
 	match game.GAMEMODE:
@@ -422,8 +426,8 @@ func _process(delta):
 				new_lookat = target + smooth_offset
 				new_zoom = zoom_target
 
-	lookat = delta_interpolate(lookat, new_lookat, camera_3d_coeff)
-	zoom = delta_interpolate(zoom, new_zoom, zoom_delta_speed)
+	lookat = delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
+	zoom = delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
 	zoom_curve = 0.0075 * zoom * zoom
 	cam.translation.z = 20.0 * zoom_curve
 
@@ -444,12 +448,12 @@ func _process(delta):
 	cam_secondary.global_transform = cam.global_transform
 
 	# update 2D camera
-	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff)
+	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
 	cam2D.position.y += game.player.velocity.y * camera_2d_vertical_compensation
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 
 	# update weapon & camera bobbing
-	game.weaps.rotation = camera_tilt * Vector3(-1, -1, 1)
+	game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
 
 	# debugging info
 	match game.GAMEMODE:

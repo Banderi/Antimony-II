@@ -66,15 +66,20 @@ enum gm { # "game mode" for different sub-engines
 var GAMEMODE = gm.none
 
 onready var settings = {
-	"controls" : {
-		"mouse_sens" : 1.0,
-		"zoom_sens" : 1.2,
-		"switch_on_new" : true,
-		"equip_on_pickup" : false
+	"controls": {
+		"mouse_sens": 1.0,
+		"zoom_sens": 1.2,
+		"switch_on_new": true,
+		"equip_on_pickup": false,
+		"auto_reload": true
 	}
 }
 
 var items = {
+	# ...
+}
+
+var weapons = {
 	# ...
 }
 
@@ -163,12 +168,42 @@ func despawn(hi):
 	hi.prop.queue_free()
 	hi.queue_free()
 
-func consume_amount(itemid, amount):
+func reload_amount(weapid, amount):
 	match invsystem:
 		ivs.simple:
-			var available = min(game.gamestate.inventory[itemid], amount)
+			var available_space = weapons[weapid].mag_max - gamestate.magazines[weapid]
+			var accepted = min(available_space, amount)
+			var refused = amount - available_space
+			gamestate.magazines[weapid] += accepted
+			return refused
+func give_amount(itemid, amount):
+	match invsystem:
+		ivs.simple:
+			var available_space = items[itemid].quantity_max - gamestate.inventory[itemid]
+			var accepted = min(available_space, amount)
+			var refused = amount - available_space
+			gamestate.inventory[itemid] += accepted
+			return refused
+func consume_weapon_ammo(weapid, amount):
+	match invsystem:
+		ivs.simple:
+			var weap_data = weapons[weapid]
+			var missing = 0
+			if weap_data.use_mag:
+				var available = min(gamestate.magazines[weapid], amount)
+				missing = amount - available
+				if missing == 0: # do not fire if not enough ammo "rounds" are available
+					gamestate.magazines[weapid] -= available
+			else:
+				missing = consume_amount(weap_data.ammo, amount, false)
+			return missing
+func consume_amount(itemid, amount, consume_if_missing = true):
+	match invsystem:
+		ivs.simple:
+			var available = min(gamestate.inventory[itemid], amount)
 			var missing = amount - available
-			game.gamestate.inventory[itemid] -= available
+			if missing == 0 || consume_if_missing:
+				gamestate.inventory[itemid] -= available
 			return missing
 
 ###
