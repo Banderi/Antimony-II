@@ -35,8 +35,8 @@ var zoom_delta_speed = 0.9
 var min_zoom = 0.5
 var max_zoom = 50.0
 
-var camera_tilt = 0.0
-var camera_tilt_max = 0.03
+var camera_tilt = Vector3()
+var camera_tilt_max = Vector3(0.03, 0.03, 0.03)
 
 var camera_3d_coeff = Vector3(1, 1, 1)
 var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
@@ -197,6 +197,33 @@ func _input(event):
 	#				zoom(-game.settings["controls"]["zoom_sens"])
 	#			if Input.is_action_pressed("camera_zoomout"):
 	#				zoom(game.settings["controls"]["zoom_sens"])
+
+				# fire action
+				if Input.is_action_just_pressed("shoot"):
+					game.weaps.trigger(0, true)
+				elif Input.is_action_just_released("shoot"):
+					game.weaps.trigger(0, false)
+				if Input.is_action_just_pressed("shoot_secondary"):
+					game.weaps.trigger(1, true)
+				elif Input.is_action_just_released("shoot_secondary"):
+					game.weaps.trigger(1, false)
+				if Input.is_action_just_pressed("shoot_tertiary"):
+					game.weaps.trigger(2, true)
+				elif Input.is_action_just_released("shoot_tertiary"):
+					game.weaps.trigger(2, false)
+
+				# use items
+				# TODO
+
+				# fire selection
+				# TODO
+
+				# weapon selection
+				# TODO
+
+				# item selection
+				# TODO
+
 				# crouching
 				if Input.is_action_pressed("crouch"):
 					game.player.crouch(true)
@@ -300,25 +327,6 @@ func _process(delta):
 		match game.GAMEMODE:
 			game.gm.fps:
 				if UI.state <= 0: # not in menus
-					# fire action
-					if Input.is_action_just_pressed("shoot"):
-						game.weaps.fire(0)
-					if Input.is_action_just_pressed("shoot_secondary"):
-						game.weaps.fire(1)
-					if Input.is_action_just_pressed("shoot_tertiary"):
-						game.weaps.fire(2)
-
-					# use items
-					# TODO
-
-					# fire selection
-					# TODO
-
-					# weapon selection
-					# TODO
-
-					# item selection
-					# TODO
 
 					# movement
 					var dir = Vector3()
@@ -330,8 +338,14 @@ func _process(delta):
 						dir += Vector3(-1, 0, 0)
 					if Input.is_action_pressed("move_right"):
 						dir += Vector3(1, 0, 0)
+
+					# update camera tilt
 					var speed_coeff = game.player.velocity.length() / game.run_speed
-					camera_tilt = delta_interpolate(camera_tilt, -dir.x * camera_tilt_max * speed_coeff, 0.25)
+					camera_tilt.x = delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25)
+					camera_tilt.y = delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25)
+					camera_tilt.z = delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25)
+
+					# final movement calc
 					if dir != Vector3():
 						dir = dir.rotated(Vector3(0, 1, 0), phi)
 						game.player.move_from_controls(dir.x, dir.y, dir.z)
@@ -414,8 +428,15 @@ func _process(delta):
 	cam.translation.z = 20.0 * zoom_curve
 
 	# update camera transform
+	# for camera tilt:
+	# X comes from dir.Z and rotates around the Y axis ---> .rotated(Vector3(1, 0, 0),  dir.z)
+	# Z comes from dir.X and rotates around the Z axis ---> .rotated(Vector3(0, 0, 1), -dir.x)
 	follow.set_transform(Transform(
-		Transform(Basis()).rotated(Vector3(1, 0, 0), theta).rotated(Vector3(0, 0, 1), camera_tilt).rotated(up, phi).basis,
+		Transform(Basis()).rotated(Vector3(1, 0, 0), theta).rotated(
+			Vector3(1, 0, 0), camera_tilt.x).rotated(
+			Vector3(0, 0, 1), camera_tilt.z).rotated(
+#			Vector3(0, 1, 0), camera_tilt.y).rotated(
+			up, phi).basis,
 		Vector3(0,0,0)))
 	follow.global_translate(lookat)
 
@@ -428,7 +449,7 @@ func _process(delta):
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 
 	# update weapon & camera bobbing
-	game.weaps.rotation.x = camera_tilt
+	game.weaps.rotation = camera_tilt * Vector3(-1, -1, 1)
 
 	# debugging info
 	match game.GAMEMODE:

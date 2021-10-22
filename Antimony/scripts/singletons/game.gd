@@ -163,6 +163,14 @@ func despawn(hi):
 	hi.prop.queue_free()
 	hi.queue_free()
 
+func consume_amount(itemid, amount):
+	match invsystem:
+		ivs.simple:
+			var available = min(game.gamestate.inventory[itemid], amount)
+			var missing = amount - available
+			game.gamestate.inventory[itemid] -= available
+			return missing
+
 ###
 
 func get_all_childs(node):

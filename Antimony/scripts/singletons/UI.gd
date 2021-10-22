@@ -42,6 +42,7 @@ var h_propicon
 var h_ammoname
 var h_mag
 var h_tot
+var h_mag_slash
 
 var h_invpanel
 var h_invdroparea
@@ -428,8 +429,14 @@ func update_weap_ammo_counters():
 	var weap_data = game.items[weapid]
 	h_itemname.text = str(weap_data.name)
 	h_ammoname.text = str(game.items[weap_data.ammo].name)
-	h_mag.text = str(game.gamestate.inventory[weapid])
 	h_tot.text = str(game.gamestate.inventory[weap_data.ammo])
+	if weap_data.use_mag:
+		h_mag.visible = true
+		h_mag_slash.visible = true
+		h_mag.text = str(game.gamestate.inventory[weapid])
+	else:
+		h_mag.visible = false
+		h_mag_slash.visible = false
 
 ###
 
