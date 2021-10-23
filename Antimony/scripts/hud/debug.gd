@@ -1,6 +1,6 @@
 extends Node
 
-var display
+var display = 0
 
 var dbg
 var im

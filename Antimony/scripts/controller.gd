@@ -28,8 +28,6 @@ var min_height = - 0.5 * PI
 var phi = 0.5
 var theta = -0.5
 
-var global_normal = Vector3(0, 0, 1)
-
 var zoom = 13 # note: zoom works in reverse - lower value means closer to target! yes I know that's not how zoom works
 var zoom_curve = 1
 var zoom_target = zoom # zoom's interpolation target
@@ -43,8 +41,6 @@ var camera_tilt_max = Vector3(0.03, 0.03, 0.03)
 var camera_3d_coeff = Vector3(1, 1, 1)
 var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
 var camera_2d_vertical_compensation = 0.0175
-
-#var mouse_on_ui = false
 
 var pick = [
 	{}, {}, {}
@@ -118,8 +114,8 @@ func update_raycast():
 		cursor.visible = false
 	else:
 		var masks = 1 + 4 + 8
-		var proj_origin = cam.global_transform.origin
-		var proj_normal = global_normal
+		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
+		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
 		match Game.GAMEMODE:
 			Game.gm.fps:
@@ -455,12 +451,6 @@ func _process(delta):
 
 	# update weapon & camera bobbing
 	Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
-
-	# update quick camera normal
-	var cam_origin = cam.global_transform.origin
-	var cam_lookat_transformed = cam.global_transform.xform(Vector3(0, 0, -1))
-	global_normal = (cam_lookat_transformed - cam_origin).normalized()
-	Debug.point(cam_origin + global_normal, Color(1, 0, 1))
 
 	# refresh global physic space state
 	Game.update_physics_space_state()

@@ -80,14 +80,18 @@ onready var settings = {
 	}
 }
 
+# database placeholders
 var db = {
-	"items" : {
+	"items": {
 		# ...
 	},
-	"weapons" : {
+	"weapons": {
 		# ...
 	},
-	"characters" : {
+	"ammo": {
+		# ...
+	},
+	"characters": {
 		# ...
 	}
 }
@@ -101,6 +105,8 @@ func get_item_data(itemid):
 	return get_db_element(db.items, itemid)
 func get_weap_data(weapid):
 	return get_db_element(db.weapons, weapid)
+func get_ammo_data(ammoid):
+	return get_db_element(db.ammo, ammoid)
 func get_character_data(charid):
 	return get_db_element(db.characters, charid)
 

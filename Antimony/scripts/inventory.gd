@@ -1,10 +1,11 @@
 extends Node
 
+# database placeholders
 var db = {
-	"items" : {
+	"items": {
 		# ...
 	},
-	"magazines" : {
+	"magazines": {
 		# ...
 	}
 }

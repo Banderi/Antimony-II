@@ -30,24 +30,48 @@ func scope_zoom(z):
 
 var max_hit_history = 10
 var hits_history = []
-func draw_hit_decals():
-	var DECAL = load("res://Antimony/scenes/dummy.tscn")
-	for h in hits_history:
-		var decal = DECAL.instance()
-		decal.translation = h.position
-		Game.level.add_child(decal)
-#		Debug.point(h.position, Color())
-func add_hit(hit):
-	hits_history.push_back(hit)
+func decals_update():
+	# remove old decals
 	if hits_history.size() > max_hit_history:
+		var old = hits_history[0]
+		# TODO: potential bug?
+		# the node sometimes becomes invalid before
+		# this line is called...
+		if weakref(old.node).get_ref() != null:
+			old.node.queue_free()
 		hits_history.pop_front()
-func fire_bullet(bullet):
-	spawn_bullet(bullet)
+func add_hit(hit_result, ammoid):
+	var ammo_data = Game.get_ammo_data(ammoid)
 
-	if bullet == null: # no physical bullet -- hit instantaneously
-		var hit_results = Game.controller.pick[0]
-		if hit_results.size() != 0 && hit_results.has("position"):
-			add_hit(hit_results)
+	###
+
+	# add decals
+	var DECAL = load("res://scenes/decals/" + ammoid + ".tscn")
+	var decal = DECAL.instance()
+
+	var rand_decal_index = randi() % ammo_data.decal_files_max
+	decal.get_node("mesh").get("material/0").albedo_texture = load("res://textures/decals/" + ammoid + "/" + str(rand_decal_index) + ".png")
+	decal.get_node("mesh").rotation.z = randf() * 2 * PI
+
+	Game.level.add_child(decal)
+	decal.look_at(hit_result.normal, Vector3(1, 1, 1))
+	decal.translation = hit_result.position
+
+	# add to history
+	hit_result["node"] = decal
+	hits_history.push_back(hit_result)
+
+func fire_bullet(ammoid):
+	var ammo_data = Game.get_ammo_data(ammoid)
+
+	###
+
+	spawn_bullet(ammo_data.bullet) # this is what exits the gun...
+
+	if ammo_data.bullet == null: # no physical bullet -- hit instantaneously
+		var hit_result = Game.controller.pick[0]
+		if hit_result.size() != 0 && hit_result.has("position"):
+			add_hit(hit_result, ammoid)
 func spawn_bullet(bullet):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
@@ -211,7 +235,7 @@ func _process(delta):
 	translation = animation_offset
 
 	# draw decals & hits
-	draw_hit_decals()
+	decals_update()
 
 	Debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
 	Debug.logpaddedinfo("firing:     ", false, [7, 10], [firing, rof_cooldown, reload_timer])

@@ -51,7 +51,7 @@ func _ready():
 #	UI.clear_chathistory()
 
 	# start game!!!
-	Debug.display = 1
+#	Debug.display = 1
 	UI.state = UI.ms.ingame
 
 	# initialize global space states
