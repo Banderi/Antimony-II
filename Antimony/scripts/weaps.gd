@@ -30,13 +30,17 @@ func scope_zoom(z):
 
 var max_hit_history = 10
 var hits_history = []
+func draw_hit_decals():
+	var DECAL = load("res://Antimony/scenes/dummy.tscn")
+	for h in hits_history:
+		var decal = DECAL.instance()
+		decal.translation = h.position
+		Game.level.add_child(decal)
+#		Debug.point(h.position, Color())
 func add_hit(hit):
 	hits_history.push_back(hit)
 	if hits_history.size() > max_hit_history:
 		hits_history.pop_front()
-func draw_hit_decals():
-	for h in hits_history:
-		Debug.point(h.position, Color())
 func fire_bullet(bullet):
 	spawn_bullet(bullet)
 
@@ -62,6 +66,9 @@ func fire_action(action, tstate, bullet, q, rof):
 	# no matter the action or weapon - do not fire while reloading
 	if reload_timer > 0:
 		return
+
+	# wait for the controller to finish updating
+	yield(Game.controller, "controller_update")
 
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)

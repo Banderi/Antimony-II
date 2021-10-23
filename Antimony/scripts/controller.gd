@@ -118,8 +118,6 @@ func update_raycast():
 		cursor.visible = false
 	else:
 		var masks = 1 + 4 + 8
-#		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
-#		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 		var proj_origin = cam.global_transform.origin
 		var proj_normal = global_normal
 
@@ -207,30 +205,11 @@ func _input(event):
 			if UI.state <= 0: # not in menus
 				# mouse movement
 				if event is InputEventMouseMotion:
-	#				if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
-	#					zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
-	#				if Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
-	#					move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
-	#				else:
 					orbit(-event.relative.x, -event.relative.y, Game.settings["controls"]["mouse_sens"] * 0.0035)
 	#			if Input.is_action_pressed("camera_zoomin"):
 	#				zoom(-Game.settings["controls"]["zoom_sens"])
 	#			if Input.is_action_pressed("camera_zoomout"):
 	#				zoom(Game.settings["controls"]["zoom_sens"])
-
-				# fire action
-				if Input.is_action_just_pressed("shoot"):
-					Game.weaps.press_trigger(0, true)
-				elif Input.is_action_just_released("shoot"):
-					Game.weaps.press_trigger(0, false)
-				if Input.is_action_just_pressed("shoot_secondary"):
-					Game.weaps.press_trigger(1, true)
-				elif Input.is_action_just_released("shoot_secondary"):
-					Game.weaps.press_trigger(1, false)
-				if Input.is_action_just_pressed("shoot_tertiary"):
-					Game.weaps.press_trigger(2, true)
-				elif Input.is_action_just_released("shoot_tertiary"):
-					Game.weaps.press_trigger(2, false)
 
 				# reloading
 				if Input.is_action_just_pressed("weap_reload"):
@@ -247,17 +226,6 @@ func _input(event):
 
 				# item selection
 				# TODO
-
-				# crouching
-				if Input.is_action_pressed("crouch"):
-					Game.player.crouch(true)
-				if Input.is_action_just_released("crouch"):
-					Game.player.crouch(false)
-				# sprinting
-				if Input.is_action_just_pressed("sprint"):
-					Game.player.sprint(true)
-				if Input.is_action_just_released("sprint"):
-					Game.player.sprint(false)
 
 				# camera
 				if Input.is_action_just_pressed("camera_thirdperson"):
@@ -341,11 +309,9 @@ func _input(event):
 				if Input.is_action_just_pressed("attack_2"): # special attacks
 					Game.player.attack_start(6) # guitar smash
 
+signal controller_update
 func _process(delta):
 	if !UI.paused:
-
-#		if UI.handle_input == 0:
-#			update_raycast()
 
 		# GAME-specific logic
 		match Game.GAMEMODE:
@@ -369,9 +335,6 @@ func _process(delta):
 					camera_tilt.y = Game.delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
 					camera_tilt.z = Game.delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
 
-#					if is_nan(camera_tilt.x):
-#						var a = 2
-
 					# final movement calc
 					if dir != Vector3():
 						dir = dir.rotated(Vector3(0, 1, 0), phi)
@@ -382,6 +345,18 @@ func _process(delta):
 						Game.player.jump(true)
 					if Input.is_action_just_released("jump"):
 						Game.player.jump(false)
+
+					# fire action
+					Game.weaps.press_trigger(0, Input.is_action_pressed("shoot"))
+					Game.weaps.press_trigger(1, Input.is_action_pressed("shoot_secondary"))
+					Game.weaps.press_trigger(2, Input.is_action_pressed("shoot_tertiary"))
+
+					# crouching
+					Game.player.crouch(Input.is_action_pressed("crouch"))
+
+					# sprinting
+					Game.player.sprint(Input.is_action_pressed("sprint"))
+
 			Game.gm.ludcorp:
 				if Input.is_action_pressed("shoot"):
 					match Game.player.state:
@@ -482,9 +457,10 @@ func _process(delta):
 	Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
 
 	# update quick camera normal
-	var cam_origin = cam.get_global_transform().origin
-	var cam_lookat_transformed = cam.get_global_transform().xform(Vector3(0, 0, -1))
+	var cam_origin = cam.global_transform.origin
+	var cam_lookat_transformed = cam.global_transform.xform(Vector3(0, 0, -1))
 	global_normal = (cam_lookat_transformed - cam_origin).normalized()
+	Debug.point(cam_origin + global_normal, Color(1, 0, 1))
 
 	# refresh global physic space state
 	Game.update_physics_space_state()
@@ -508,6 +484,8 @@ func _process(delta):
 	Debug.loginfo("colliders:  ", pick[0])
 	Debug.loginfo("            ", pick[1])
 	Debug.loginfo("            ", pick[2])
+
+	emit_signal("controller_update")
 
 func _ready():
 	Game.controller = self

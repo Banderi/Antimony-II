@@ -879,8 +879,6 @@ func _process(delta):
 		last_process_delta = delta # for stuff outside the _process calls...
 	last_velocity = (pos - last_pos) / last_process_delta
 	last_pos = pos
-#	if is_nan(last_velocity.x):
-#		var a = 2
 
 	if Game.controller.zoom <= 0.1:
 		body3D.visible = false
