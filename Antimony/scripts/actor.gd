@@ -33,7 +33,9 @@ var hor2D = Vector2(1, 0)
 var pos2D = Vector2()
 
 var pos = Vector3()
-var velocity = Vector3()
+var last_pos = Vector3()
+var velocity = Vector3() # do NOT use this for checking the player "current" velocity externally!
+var last_velocity = Vector3()
 var dir = Vector3()
 var rot = -PI * 0.5
 var lookat = Vector3()
@@ -95,7 +97,7 @@ var prop_has_collided = false
 var canjump = 1
 var jumping_timer = 0
 var jump_force = 0
-var onground = true
+var onground = false
 var drag_coeff = Vector2(0, 0)
 
 # TODO: move to more sensible place
@@ -259,7 +261,7 @@ func slope_correction():
 		pass
 	else:
 		# tilt movement following slopes
-		var space_state = body3D.get_world().direct_space_state
+#		var space_state = body3D.get_world().direct_space_state
 		dir_tilt = dir
 		var m = Basis()
 		collider_angle = -1
@@ -276,7 +278,7 @@ func slope_correction():
 		var normal = up
 
 		# default case - follow the ground tilt
-		var result = space_state.intersect_ray(raypos, rayend, [body3D])
+		var result = Game.space_state.intersect_ray(raypos, rayend, [body3D])
 		if result.has("normal"):
 			tilt_angle = result.normal.angle_to(up) # slope angle
 			if tilt_angle < Game.max_slope_angle: # ignore STEEP slopes
@@ -305,7 +307,7 @@ func slope_correction():
 					Debug.point(rayend, Color(0, 0, 0))
 
 					# check the plaftorm's collision, normal and angle
-					result = space_state.intersect_ray(raypos, rayend, [body3D])
+					result = Game.space_state.intersect_ray(raypos, rayend, [body3D])
 					var plat_hit = Vector3()
 					if (result.has("position")):
 						plat_hit = result.position
@@ -871,7 +873,15 @@ remotesync func RPC_equip(equip, on):
 
 ###
 
+var last_process_delta = 1
 func _process(delta):
+	if delta > 0:
+		last_process_delta = delta # for stuff outside the _process calls...
+	last_velocity = (pos - last_pos) / last_process_delta
+	last_pos = pos
+#	if is_nan(last_velocity.x):
+#		var a = 2
+
 	if Game.controller.zoom <= 0.1:
 		body3D.visible = false
 	else:
@@ -889,8 +899,8 @@ func _process(delta):
 	Debug.loginfo("grip_dist:  ", ground_grip_dist)
 	Debug.loginfo("coll_angle: ", collider_angle)
 	Debug.loginfo("tilt_angle: ", tilt_angle)
-	Debug.loginfo("velocity:   ", velocity)
-	Debug.loginfo("ups:        ", velocity.length())
+	Debug.loginfo("velocity:   ", last_velocity)
+	Debug.loginfo("ups:        ", last_velocity.length())
 
 	Debug.loginfo("")
 
@@ -1004,7 +1014,11 @@ func _physics_process(delta):
 				if !onground:
 					speed *= 4;
 
-			movement = dir * speed # actual movement vector scaled with speed
+
+			# actual movement vector scaled with speed
+			var delta_factor = last_process_delta * 60
+			movement = dir * speed * delta_factor
+
 			if !onground:
 				movement *= Game.air_speed_coeff
 				if abs(velocity.x) > Game.air_speed_max:
@@ -1040,9 +1054,13 @@ func _physics_process(delta):
 				if jump_force > 0 && velocity.y > 0:
 					velocity.y = 0
 
+			# update vectors, angles, normals, direction etc.
 			slope_correction()
-			face_direction() # rotates the mesh accordingly
-			movement = dir_tilt * speed # actual movement vector scaled with speed
+			face_direction()
+
+			# actual movement vector scaled with speed
+			var delta_factor = last_process_delta * 60
+			movement = dir_tilt * speed * delta_factor
 
 #			movement = dir * speed # actual movement vector scaled with speed
 			if !touch_ground():
@@ -1057,11 +1075,16 @@ func _physics_process(delta):
 			# speed calc
 			if state != states.ladder:
 				speed = 6
+
+				# update vectors, angles, normals, direction etc.
 				slope_correction()
-				face_direction() # rotates the mesh accordingly
+				face_direction()
 			else:
 				speed = 1.5
-			movement = dir_tilt * speed
+
+			# actual movement vector scaled with speed
+			var delta_factor = last_process_delta * 60
+			movement = dir_tilt * speed * delta_factor
 
 			if (tilt_angle > Game.max_slope_angle): # for climbing, max angle was 1
 				movement = Vector3() # fix walking on ripid slopes

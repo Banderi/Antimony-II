@@ -28,6 +28,8 @@ var min_height = - 0.5 * PI
 var phi = 0.5
 var theta = -0.5
 
+var global_normal = Vector3(0, 0, 1)
+
 var zoom = 13 # note: zoom works in reverse - lower value means closer to target! yes I know that's not how zoom works
 var zoom_curve = 1
 var zoom_target = zoom # zoom's interpolation target
@@ -65,8 +67,8 @@ func shake_update(delta):
 	theta = max(min_height, theta)
 	theta = min(max_height, theta)
 
-	camera_shake_force.x = delta_interpolate(camera_shake_force.x, 0, 0.1, delta)
-	camera_shake_force.y = delta_interpolate(camera_shake_force.y, 0, 0.1, delta)
+	camera_shake_force.x = Game.delta_interpolate(camera_shake_force.x, 0, 0.5, delta)
+	camera_shake_force.y = Game.delta_interpolate(camera_shake_force.y, 0, 0.5, delta)
 
 func zoom(z):
 	zoom_target += z
@@ -95,9 +97,6 @@ func orbit(x, y, s = 1.0):
 	theta = max(min_height, theta)
 	theta = min(max_height, theta)
 
-func delta_interpolate(old, new, s, delta):
-	return old + (new - old) * s * 60 * delta
-
 # compensate for zoom levels
 func move3D(r, s = 1.0):
 	target += r * s * (0.75 + zoom_curve * 0.95)
@@ -119,8 +118,10 @@ func update_raycast():
 		cursor.visible = false
 	else:
 		var masks = 1 + 4 + 8
-		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
-		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
+#		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
+#		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
+		var proj_origin = cam.global_transform.origin
+		var proj_normal = global_normal
 
 		match Game.GAMEMODE:
 			Game.gm.fps:
@@ -343,8 +344,8 @@ func _input(event):
 func _process(delta):
 	if !UI.paused:
 
-		if UI.handle_input == 0:
-			update_raycast()
+#		if UI.handle_input == 0:
+#			update_raycast()
 
 		# GAME-specific logic
 		match Game.GAMEMODE:
@@ -363,10 +364,13 @@ func _process(delta):
 						dir += Vector3(1, 0, 0)
 
 					# update camera tilt
-					var speed_coeff = Game.player.velocity.length() / Game.run_speed
-					camera_tilt.x = delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25, delta)
-					camera_tilt.y = delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
-					camera_tilt.z = delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
+					var speed_coeff = Game.player.last_velocity.length() / Game.run_speed
+					camera_tilt.x = Game.delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25, delta)
+					camera_tilt.y = Game.delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
+					camera_tilt.z = Game.delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
+
+#					if is_nan(camera_tilt.x):
+#						var a = 2
 
 					# final movement calc
 					if dir != Vector3():
@@ -430,7 +434,7 @@ func _process(delta):
 	var lookat_offset = offset
 	if Game.can_sneak && Game.player.crouching:
 		lookat_offset = crouch_offset
-	smooth_offset = delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
+	smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 	var new_lookat = target + smooth_offset
 	var new_zoom = zoom_target
 	match Game.GAMEMODE:
@@ -448,8 +452,8 @@ func _process(delta):
 				new_lookat = target + smooth_offset
 				new_zoom = zoom_target
 
-	lookat = delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
-	zoom = delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
+	lookat = Game.delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
+	zoom = Game.delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
 	zoom_curve = 0.0075 * zoom * zoom
 	cam.translation.z = 20.0 * zoom_curve
 
@@ -470,12 +474,24 @@ func _process(delta):
 	cam_secondary.global_transform = cam.global_transform
 
 	# update 2D camera
-	cam2D.position = delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
+	cam2D.position = Game.delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
 	cam2D.position.y += Game.player.velocity.y * camera_2d_vertical_compensation
 	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 
 	# update weapon & camera bobbing
 	Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
+
+	# update quick camera normal
+	var cam_origin = cam.get_global_transform().origin
+	var cam_lookat_transformed = cam.get_global_transform().xform(Vector3(0, 0, -1))
+	global_normal = (cam_lookat_transformed - cam_origin).normalized()
+
+	# refresh global physic space state
+	Game.update_physics_space_state()
+
+	# update reycasts & cursors
+	if UI.handle_input == 0:
+		update_raycast()
 
 	# debugging info
 	match Game.GAMEMODE:

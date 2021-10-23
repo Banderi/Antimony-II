@@ -28,10 +28,26 @@ func scope_trigger(tstate):
 func scope_zoom(z):
 	pass # TODO
 
+var max_hit_history = 10
+var hits_history = []
+func add_hit(hit):
+	hits_history.push_back(hit)
+	if hits_history.size() > max_hit_history:
+		hits_history.pop_front()
+func draw_hit_decals():
+	for h in hits_history:
+		Debug.point(h.position, Color())
+func fire_bullet(bullet):
+	spawn_bullet(bullet)
+
+	if bullet == null: # no physical bullet -- hit instantaneously
+		var hit_results = Game.controller.pick[0]
+		if hit_results.size() != 0 && hit_results.has("position"):
+			add_hit(hit_results)
 func spawn_bullet(bullet):
-	# TODO
-	if bullet == null:
-		return
+	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
+	# CHILD SCRIPT INHERITING THIS CLASS.
+	pass
 
 enum fa {
 	none,
@@ -52,8 +68,7 @@ func fire_action(action, tstate, bullet, q, rof):
 
 	###
 
-
-	# logic for different kinds of firing actions
+	# specific conditional logic for different firing actions
 	match action:
 		fa.semi:
 			if rof_cooldown <= 0 && tstate == 1:
@@ -68,7 +83,7 @@ func fire_action(action, tstate, bullet, q, rof):
 		missing = Inventory.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
 		if !missing:
 			Game.controller.weapon_shake(weap_data.shake_strength)
-			spawn_bullet(bullet) # FIRE!!!!!!
+			fire_bullet(bullet) # FIRE!!!!!!
 			rof_cooldown = rof
 		else:
 			if reload_timer <= 0 && Game.settings.controls.auto_reload:
@@ -109,8 +124,6 @@ func reload(finished):
 		Inventory.reload_amount(weapid, given)
 		UI.update_weap_ammo_counters()
 
-func delta_interpolate(old, new, s, delta):
-	return old + (new - old) * s * 60 * delta
 var anim_firing_z_offset = 0
 func update_anims(delta):
 	var weapid = Inventory.curr_weapon
@@ -124,7 +137,7 @@ func update_anims(delta):
 	# firing anim
 	if firing:
 		anim_firing_z_offset = 0.1
-	anim_firing_z_offset = delta_interpolate(anim_firing_z_offset, 0, 0.1, delta)
+	anim_firing_z_offset = Game.delta_interpolate(anim_firing_z_offset, 0, 0.1, delta)
 	animation_offset.z = anim_firing_z_offset
 
 	# reload anim
@@ -189,6 +202,9 @@ func _process(delta):
 	update_anims(delta)
 	rotation = camera_tilt + animation_tilt
 	translation = animation_offset
+
+	# draw decals & hits
+	draw_hit_decals()
 
 	Debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
 	Debug.logpaddedinfo("firing:     ", false, [7, 10], [firing, rof_cooldown, reload_timer])

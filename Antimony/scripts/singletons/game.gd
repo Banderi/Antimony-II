@@ -126,6 +126,31 @@ func get_type(t):
 		4:
 			return "string"
 
+func delta_interpolate(old, new, s, delta):
+	delta *= 60
+	var delta_factor = delta * s
+	if typeof(s) == TYPE_VECTOR3:
+		delta_factor.x = min(delta_factor.x, 1.0)
+		delta_factor.y = min(delta_factor.y, 1.0)
+		delta_factor.z = min(delta_factor.z, 1.0)
+#		return Vector3(
+#			lerp(old.x, new.x, s.x * delta),
+#			lerp(old.y, new.y, s.y * delta),
+#			lerp(old.z, new.z, s.z * delta)
+#		)
+	elif typeof(s) == TYPE_VECTOR2:
+		delta_factor.x = min(delta_factor.x, 1.0)
+		delta_factor.y = min(delta_factor.y, 1.0)
+#		return Vector2(
+#			lerp(old.x, new.x, s.x * delta),
+#			lerp(old.y, new.y, s.y * delta)
+#		)
+	elif typeof(s) == TYPE_REAL:
+		delta_factor = min(delta_factor, 1.0)
+#	return lerp(old, new, s * delta)
+#	var delta_factor = 60 / abs(new - old)
+	return old + (new - old) * s * delta_factor
+
 ###
 
 func is_2D():
@@ -203,6 +228,12 @@ func get_playername():
 #	return player.player_name
 
 ###
+
+func update_physics_space_state():
+	if is_2D():
+		space_state2D = level.get_world_2d().direct_space_state
+	else:
+		space_state = level.get_world().direct_space_state
 
 func load_level(map):
 	# unload current level

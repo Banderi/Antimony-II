@@ -2,11 +2,11 @@ extends Node
 
 ###
 
-func _physics_process(delta): # update global space state for access to physics from other nodes
-	if Game.is_2D():
-		Game.space_state2D = Game.level.get_world_2d().direct_space_state
-	else:
-		Game.space_state = Game.level.get_world().direct_space_state
+#func _physics_process(delta): # update global space state for access to physics from other nodes
+#	if Game.is_2D():
+#		Game.space_state2D = Game.level.get_world_2d().direct_space_state
+#	else:
+#		Game.space_state = Game.level.get_world().direct_space_state
 
 func _input(event):
 	if (Input.is_action_just_pressed("debug_quit")):
@@ -53,3 +53,6 @@ func _ready():
 	# start game!!!
 	Debug.display = 1
 	UI.state = UI.ms.ingame
+
+	# initialize global space states
+	Game.update_physics_space_state()
