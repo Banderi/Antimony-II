@@ -76,7 +76,9 @@ var settings = {
 		"equip_on_pickup": false,
 		"auto_reload": true,
 		"aim_toggle": true,
-		"always_run": true
+		"always_run": true,
+		"fast_weapon_switch": true,
+		"equip_empty_weapons": true
 	}
 }
 
@@ -85,28 +87,37 @@ var db = {
 	"items": {
 		# ...
 	},
-	"weapons": {
+#	"weapons": {
+#		# ...
+#	},
+#	"ammo": {
+#		# ...
+#	},
+	"weap_banks": [
 		# ...
-	},
-	"ammo": {
-		# ...
-	},
+	],
 	"characters": {
 		# ...
 	}
 }
 
 func get_db_element(database, id):
-	if id in database && database[id].size() > 1:
+	if id in database && database[id].size() > 0:
 		return database[id]
 	else:
 		return null
 func get_item_data(itemid):
 	return get_db_element(db.items, itemid)
 func get_weap_data(weapid):
-	return get_db_element(db.weapons, weapid)
+	var item_data = get_item_data(weapid)
+	if item_data != null && item_data.has("weapon_data"):
+		return item_data.weapon_data
+	return null
 func get_ammo_data(ammoid):
-	return get_db_element(db.ammo, ammoid)
+	var item_data = get_item_data(ammoid)
+	if item_data != null && item_data.has("ammo_data"):
+		return item_data.ammo_data
+	return null
 func get_character_data(charid):
 	return get_db_element(db.characters, charid)
 

@@ -462,13 +462,22 @@ func update_weap_ammo_counters():
 	var weap_data = Game.get_weap_data(weapid)
 	var witem_data = Game.get_item_data(weapid)
 	h_itemname.text = str(witem_data.name)
-	h_ammoname.text = str(Game.get_item_data(weap_data.ammo).name)
-	h_tot.text = str(Inventory.db.items[weap_data.ammo])
-	if weap_data.use_mag:
-		h_mag.visible = true
-		h_mag_slash.visible = true
-		h_mag.text = str(Inventory.db.magazines[weapid])
+	if weap_data.ammo != null:
+		h_ammoname.text = str(Game.get_item_data(weap_data.ammo).name)
+		if !weap_data.infinite_ammo:
+			h_tot.text = str(Inventory.db.items[weap_data.ammo])
+		else:
+			h_tot.text = "inf"
+		if weap_data.use_mag:
+			h_mag.visible = true
+			h_mag_slash.visible = true
+			h_mag.text = str(Inventory.db.magazines[weapid])
+		else:
+			h_mag.visible = false
+			h_mag_slash.visible = false
 	else:
+		h_ammoname.text = ""
+		h_tot.text = ""
 		h_mag.visible = false
 		h_mag_slash.visible = false
 

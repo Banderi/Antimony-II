@@ -40,7 +40,7 @@ func decals_update():
 		if weakref(old.node).get_ref() != null:
 			old.node.queue_free()
 		hits_history.pop_front()
-func add_hit(hit_result, ammoid):
+func invoke_hit(hit_result, ammoid):
 	var ammo_data = Game.get_ammo_data(ammoid)
 
 	###
@@ -59,16 +59,12 @@ func add_hit(hit_result, ammoid):
 		print(victim.data.health)
 
 	# add decals
-	var decal = ammo_data.decal_cached_scene.instance()
+	var decal = load("res://scenes/decals/" + ammoid + ".tscn").instance()
 
 	var rand_decal_index = randi() % ammo_data.decal_files_max
 	decal.get_node("mesh").get("material/0").albedo_texture = load("res://textures/decals/" + ammoid + "/" + str(rand_decal_index) + ".png")
 	decal.get_node("mesh").rotation.z = randf() * 2 * PI
-
-	# BUG: the first shot fired in the game, if it hits something,
-	# will not display a muzzle flash *IF* a decal is added to the tree.
-	# I have no idea how to fix this!!
-	victim_coll.add_child(decal)
+	victim_coll.add_child(decal) # add to the tree before facing the normal to avoid having the engine scream at me
 	decal.look_at_from_position(hit_result.position, hit_result.position + hit_result.normal, Vector3(1, 1, 1))
 
 	# sparkles
@@ -84,6 +80,7 @@ func add_hit(hit_result, ammoid):
 	hits_history.push_back(hit_result)
 
 func fire_bullet(ammoid):
+	print("shot!")
 	var ammo_data = Game.get_ammo_data(ammoid)
 
 	###
@@ -94,7 +91,7 @@ func fire_bullet(ammoid):
 	if ammo_data.bullet == null: # no physical bullet -- hit instantaneously
 		var hit_result = Game.controller.pick[0]
 		if hit_result.size() != 0 && hit_result.has("position"):
-			add_hit(hit_result, ammoid)
+			invoke_hit(hit_result, ammoid)
 func spawn_bullet(bullet):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
@@ -110,12 +107,9 @@ enum fa {
 }
 var firing = false
 func fire_action(action, tstate, bullet, q, rof):
-	# no matter the action or weapon - do not fire while reloading
-	if reload_timer > 0:
+	# no matter the action or weapon - do not fire while reloading or on cooldown
+	if busy():
 		return
-
-	# wait for the controller to finish updating
-	yield(Game.controller, "controller_update")
 
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)
@@ -125,11 +119,10 @@ func fire_action(action, tstate, bullet, q, rof):
 	# specific conditional logic for different firing actions
 	match action:
 		fa.semi:
-			if rof_cooldown <= 0 && tstate == 1:
+			if tstate == 1:
 				firing = true
 		fa.auto:
-			if rof_cooldown <= 0:
-				firing = true
+			firing = true
 
 	# fire...??
 	if firing:
@@ -140,16 +133,20 @@ func fire_action(action, tstate, bullet, q, rof):
 			fire_bullet(bullet) # FIRE!!!!!!
 			rof_cooldown = rof
 		else:
+			firing = false
 			if reload_timer <= 0 && Game.settings.controls.auto_reload:
 				reload(false)
-			firing = false
-func fire(t):
+func live_action(t):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
 	pass
 
+func busy():
+	if firing || reload_timer > 0 || rof_cooldown > 0:
+		return true
+
 func reload(finished):
-	if !finished && reload_timer > 0:
+	if !finished && busy():
 		return
 
 	var weapid = Inventory.curr_weapon
@@ -179,7 +176,17 @@ func reload(finished):
 		Inventory.reload_amount(weapid, given)
 		UI.update_weap_ammo_counters()
 
+func select_weapon(weapid):
+	anim_weapon_switching = 0.5
+	for n in get_children():
+		n.get_node("muzzle_flash").visible = false # just to be safe
+		if n.name == weapid:
+			n.visible = true
+		else:
+			n.visible = false
+
 var anim_firing_z_offset = 0
+var anim_weapon_switching = 0
 func update_anims(delta):
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)
@@ -192,42 +199,49 @@ func update_anims(delta):
 	# firing anim
 	if firing:
 		anim_firing_z_offset = 0.1
-	anim_firing_z_offset = Game.delta_interpolate(anim_firing_z_offset, 0, 0.1, delta)
+	anim_firing_z_offset = Game.delta_interpolate(anim_firing_z_offset, 0, 0.4, delta)
 	animation_offset.z = anim_firing_z_offset
 
 	# reload anim
-	var reload_anim_linear = reload_timer / weap_data.reload_cooldown
-	var reload_anim_coeff = sin(reload_anim_linear * PI)
-	var reload_anim_coeff_2 = sin(reload_anim_linear * PI * 2)
-	var reload_anim_coeff_3 = sin(reload_anim_linear * PI * 3)
-	animation_offset.y += -0.003 * reload_anim_coeff_3 - 0.01 * reload_anim_coeff_2 - 0.005 * reload_anim_coeff
-	animation_tilt.x += -0.25 * reload_anim_coeff
-	animation_tilt.z += -0.03 * reload_anim_coeff_3 + 0.02 * reload_anim_coeff_2
+	if weap_data.ammo != null:
+		var reload_anim_linear = reload_timer / weap_data.reload_cooldown
+		var reload_anim_coeff = sin(reload_anim_linear * PI)
+		var reload_anim_coeff_2 = sin(reload_anim_linear * PI * 2)
+		var reload_anim_coeff_3 = sin(reload_anim_linear * PI * 3)
+		animation_offset.y += -0.003 * reload_anim_coeff_3 - 0.01 * reload_anim_coeff_2 - 0.005 * reload_anim_coeff
+		animation_tilt.x += -0.25 * reload_anim_coeff
+		animation_tilt.z += -0.03 * reload_anim_coeff_3 + 0.02 * reload_anim_coeff_2
 
-	# vertical speed
+	# weapon switching anim
+	anim_weapon_switching = Game.delta_interpolate(anim_weapon_switching, 0, 0.5, delta)
+	animation_offset.y += 0.3 * anim_weapon_switching
+	animation_tilt.x -= 3 * anim_weapon_switching
+	animation_tilt.z -= 5 * anim_weapon_switching
+	animation_tilt.y += 5 * anim_weapon_switching
+
+	# player's vertical speed sway
 	animation_offset.y += 1 * (Game.player.velocity.y / Game.max_fall_speed)
 
+	# BUG: the first shot fired after reloading, if it hits something,
+	# will not display a muzzle flash *SOMETIMES*.
+	# I have no idea how to fix this!!!!!
 	# update muzzle flash
 	var muzzle_flash = get_node(weapid).get_node("muzzle_flash")
-	muzzle_flash.visible = false
 	if firing:
+		muzzle_flash.get_node("mesh").rotation.z = randf() * 2 * PI
 		muzzle_flash.visible = true
-		if muzzle_flash.has_node("mesh"):
-			var mesh = muzzle_flash.get_node("mesh")
-			mesh.rotation.z = randf() * 2 * PI
+	elif !firing && muzzle_flash.visible:
+		muzzle_flash.visible = false
 
 func press_trigger(t, pressed):
 	if pressed: # FIRING ??
 		if triggers[t] != 0: # accidental input bleeding!
 			return
 		triggers[t] = 1
-		fire(t)
 	else:
 		if triggers[t] != 2: # accidental input bleeding!
 			return
 		triggers[t] = 3
-		fire(t)
-		trigger_timers[t] = 0.0 # trigger released -- cease fire and reset the trigger timer
 func timer_advance(timer, delta, callback, args):
 	if timer > 0.0:
 		timer -= delta
@@ -238,12 +252,18 @@ func timer_advance(timer, delta, callback, args):
 		timer = 0.0
 	return timer
 func trigger_state_process(t, delta):
-	if triggers[t] == 3: # finished pressing
-		triggers[t] = 0
-	elif triggers[t] >= 1: # continuos press
-		triggers[t] = 2
+	# update timer, fire if trigger is active
+	if triggers[t] > 0:
 		trigger_timers[t] += delta
-		fire(t)
+		live_action(t)
+	else:
+		trigger_timers[t] = 0
+
+	# udpate trigger state
+	if triggers[t] == 1:
+		triggers[t] = 2 # continuous press
+	elif triggers[t] == 3:
+		triggers[t] = 0 # trigger release
 
 func _process(delta):
 	rof_cooldown = timer_advance(rof_cooldown, delta, null, null)
@@ -261,11 +281,7 @@ func _process(delta):
 	decals_update()
 
 	Debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
-	Debug.logpaddedinfo("firing:     ", false, [7, 10], [firing, rof_cooldown, reload_timer])
+	Debug.logpaddedinfo("firing:     ", false, [7, 10, 10], [firing, rof_cooldown, reload_timer, anim_weapon_switching])
 
 	# reset FIRING states
 	firing = false
-
-func _ready():
-	for ammoid in Game.db.ammo:
-		Game.db.ammo[ammoid]["decal_cached_scene"] = load("res://scenes/decals/" + ammoid + ".tscn")

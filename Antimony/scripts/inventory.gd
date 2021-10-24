@@ -16,14 +16,21 @@ enum ivs {
 }
 var invsystem = ivs.simple
 
-func in_inv(item): # return -1 if not in invequip - return parent's item array index if so
-	var r = -1
-	var items = UI.hh_invequip[item.slot[0]].items # check in slot
-	for i in items.size(): # still, use first slot for now
-		var hi = items[i]
-		if Game.get_item_data(hi.prop.itemid).layer == item.layer:
-			r = i
-	return r
+func in_inv(itemid): # return -1 if not in invequip - return parent's item array index if so
+	match invsystem:
+		ivs.simple:
+			if db.items.has(itemid) && db.items[itemid] > 0:
+				return true;
+			return false
+		ivs.rpg:
+			var r = -1
+			var item_data = Game.get_item_data(itemid)
+			var items = UI.hh_invequip[item_data.slot[0]].items # check in slot
+			for i in items.size(): # still, use first slot for now
+				var hi = items[i]
+				if Game.get_item_data(hi.prop.itemid).layer == item_data.layer:
+					r = i
+			return r
 func can_equip(item):
 	var s = in_inv(item)
 	if !item.stackable && s > -1: # cannot be equip! (not stackable)
@@ -87,8 +94,50 @@ func despawn(hi):
 	hi.prop.queue_free()
 	hi.queue_free()
 
-var curr_weapon = ""
-var last_weapon = ""
+var curr_weapon = null
+var last_weapon = null
+
+func get_weapon_bank(weapid):
+	for b in Game.db.weap_banks.size():
+		var i = Game.db.weap_banks[b].index_of(weapid)
+		if i != -1:
+			return [b, i]
+	return null
+func equip_weapon(weapid):
+	if weapid == null || Game.weaps.busy():
+		return
+	last_weapon = curr_weapon
+	curr_weapon = weapid
+	Game.weaps.select_weapon(weapid)
+	UI.update_weap_hud()
+func weapon_prev():
+	var prev_weapon = null
+	for bank in Game.db.weap_banks:
+		for weapid in bank:
+			if weapid != curr_weapon && in_inv(weapid):
+				var ammoid = Game.get_weap_data(weapid).ammo
+				if ammoid == null || in_inv(ammoid) || Game.settings.controls.equip_empty_weapons: # check ammo
+					prev_weapon = weapid
+			if weapid == curr_weapon && prev_weapon != null: # found a weapon preceding the currently equipped one
+				return equip_weapon(prev_weapon)
+	if prev_weapon != null:
+		equip_weapon(prev_weapon) # finally, if no valid weapon before the current one - equipped whatever last valid weapon is in the banks
+func weapon_next():
+	var next_weapon = null
+	var after_current = false
+	for bank in Game.db.weap_banks:
+		for weapid in bank:
+			if weapid == curr_weapon:
+				after_current = true
+			elif next_weapon == null || after_current:
+				if in_inv(weapid):
+					var ammoid = Game.get_weap_data(weapid)
+					if ammoid == null || in_inv(ammoid) || Game.settings.controls.equip_empty_weapons: # check ammo
+						if after_current:
+							return equip_weapon(weapid) # found a weapon succeeding the currently equipped one
+						next_weapon = weapid
+	if next_weapon != null:
+		equip_weapon(next_weapon) # finally, if no valid weapon after the current one - equipped whatever first valid weapon is in the banks
 
 func reload_amount(weapid, amount):
 	match invsystem:

@@ -211,16 +211,21 @@ func _input(event):
 				if Input.is_action_just_pressed("weap_reload"):
 					Game.weaps.reload(false)
 
-				# use items
-				# TODO
+				# weapon selection
+				if Input.is_action_just_pressed("weap_prev"):
+					Inventory.weapon_prev()
+				elif Input.is_action_just_pressed("weap_next"):
+					Inventory.weapon_next()
+				elif Input.is_action_just_pressed("weap_last"):
+					Inventory.equip_weapon(Inventory.last_weapon)
 
 				# fire selection
 				# TODO
 
-				# weapon selection
+				# item selection
 				# TODO
 
-				# item selection
+				# use items
 				# TODO
 
 				# camera
