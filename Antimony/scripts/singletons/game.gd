@@ -50,6 +50,8 @@ var camera_fov = 70
 var camera_fov_scope = 20
 var camera_weapon_shake_force = Vector2(0.0015, 0.01)
 
+var max_bullet_travel = 100
+
 var character = 0
 #var hotbar_sel = 0
 #var inventory = [null, null, null] # these are HUD_item nodes! they are handled by the UI class!
@@ -79,6 +81,9 @@ var settings = {
 		"always_run": true,
 		"fast_weapon_switch": true,
 		"equip_empty_weapons": true
+	},
+	"visual": {
+		"max_decals": 50,
 	}
 }
 

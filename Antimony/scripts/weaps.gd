@@ -28,11 +28,10 @@ func scope_trigger(tstate):
 func scope_zoom(z):
 	pass # TODO
 
-var max_hit_history = 10
 var hits_history = []
 func decals_update():
 	# remove old decals
-	if hits_history.size() > max_hit_history:
+	if hits_history.size() > Game.settings.visual.max_decals:
 		var old = hits_history[0]
 		# TODO: potential bug?
 		# the node sometimes becomes invalid before
@@ -68,12 +67,18 @@ func invoke_hit(hit_result, ammoid):
 	decal.look_at_from_position(hit_result.position, hit_result.position + hit_result.normal, Vector3(1, 1, 1))
 
 	# sparkles
+	var sparkles
 	match ammo_data.sparkles.type:
 		1: # classic simple sparks -- metal on metal
-			var sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
-			decal.add_child(sparkles)
-			sparkles.emitting = true
-			Game.set_death_timeout(sparkles, 1)
+			sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
+
+	sparkles.emitting = true
+	for param in ammo_data.sparkles:
+		if param != "type":
+			sparkles.set(param, ammo_data.sparkles[param])
+			sparkles.process_material.set(param, ammo_data.sparkles[param]) # cheating, but it works ;)
+	decal.add_child(sparkles)
+	Game.set_death_timeout(sparkles, 1)
 
 	# add hit to history
 	hit_result["node"] = decal
@@ -106,7 +111,7 @@ enum fa {
 	charge
 }
 var firing = false
-func fire_action(action, tstate, bullet, q, rof):
+func fire_action(action, tstate, ammoid, q, rof):
 	# no matter the action or weapon - do not fire while reloading or on cooldown
 	if busy():
 		return
@@ -130,8 +135,9 @@ func fire_action(action, tstate, bullet, q, rof):
 		missing = Inventory.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
 		if !missing:
 			Game.controller.weapon_shake(weap_data.shake_strength)
-			fire_bullet(bullet) # FIRE!!!!!!
+			fire_bullet(ammoid) # FIRE!!!!!!
 			rof_cooldown = rof
+			anim_weapon_firing = 0.1
 		else:
 			firing = false
 			if reload_timer <= 0 && Game.settings.controls.auto_reload:
@@ -154,12 +160,14 @@ func reload(finished):
 
 	var ammoid = weap_data.ammo
 	var curr_mag = Inventory.db.magazines[weapid]
-	var curr_tot = Inventory.db.items[ammoid]
+	var curr_tot = -1
+	if !weap_data.infinite_ammo:
+		curr_tot = Inventory.in_inv(ammoid)
 	var max_mag = weap_data.mag_max
 
 	###
 
-	if !weap_data.use_mag || curr_mag >= max_mag || curr_tot <= 0:
+	if !weap_data.use_mag || curr_mag >= max_mag || curr_tot == 0:
 		return
 
 	scope(false) # reset scope while reloading
@@ -171,7 +179,8 @@ func reload(finished):
 	else:
 		var requesting = max_mag - curr_mag
 		var missing = 0
-#		var missing = Game.consume_amount(ammoid, requesting) # naughty!!! consuming amounts BEFORE figuring out how much to take!
+		if !weap_data.infinite_ammo:
+			missing = Inventory.consume_amount(ammoid, requesting) # naughty!!! consuming amounts BEFORE figuring out how much to take!
 		var given = requesting - missing
 		Inventory.reload_amount(weapid, given)
 		UI.update_weap_ammo_counters()
@@ -185,8 +194,12 @@ func select_weapon(weapid):
 		else:
 			n.visible = false
 
-var anim_firing_z_offset = 0
+var anim_weapon_firing = 0
 var anim_weapon_switching = 0
+func update_custom_anims(delta):
+	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
+	# CHILD SCRIPT INHERITING THIS CLASS.
+	pass
 func update_anims(delta):
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)
@@ -196,21 +209,8 @@ func update_anims(delta):
 	animation_tilt = Vector3()
 	animation_offset = Vector3()
 
-	# firing anim
-	if firing:
-		anim_firing_z_offset = 0.1
-	anim_firing_z_offset = Game.delta_interpolate(anim_firing_z_offset, 0, 0.4, delta)
-	animation_offset.z = anim_firing_z_offset
-
-	# reload anim
-	if weap_data.ammo != null:
-		var reload_anim_linear = reload_timer / weap_data.reload_cooldown
-		var reload_anim_coeff = sin(reload_anim_linear * PI)
-		var reload_anim_coeff_2 = sin(reload_anim_linear * PI * 2)
-		var reload_anim_coeff_3 = sin(reload_anim_linear * PI * 3)
-		animation_offset.y += -0.003 * reload_anim_coeff_3 - 0.01 * reload_anim_coeff_2 - 0.005 * reload_anim_coeff
-		animation_tilt.x += -0.25 * reload_anim_coeff
-		animation_tilt.z += -0.03 * reload_anim_coeff_3 + 0.02 * reload_anim_coeff_2
+	# custom!
+	update_custom_anims(delta)
 
 	# weapon switching anim
 	anim_weapon_switching = Game.delta_interpolate(anim_weapon_switching, 0, 0.5, delta)

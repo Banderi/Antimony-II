@@ -30,7 +30,7 @@ func release():
 
 func take_hit(hit_data):
 	wake()
-	rb.apply_impulse(hit_data.position, -hit_data.normal)
+	rb.apply_impulse(hit_data.position, -hit_data.normal * hit_data.ammo_data.kickback)
 	.take_hit(hit_data)
 func destroy():
 	global_transform = rb.get_global_transform()

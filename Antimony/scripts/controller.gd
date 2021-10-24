@@ -50,12 +50,17 @@ var command_point = Vector3()
 var max_height_diff = 0.5
 
 var camera_shake_force = Vector2()
+var shake_anim_linear = 0
 func weapon_shake(strength):
 	camera_shake_force.x = strength * (2.0 * randf() - 1.0) * Game.camera_weapon_shake_force.x
-	camera_shake_force.y = strength * randf() * Game.camera_weapon_shake_force.y
+	camera_shake_force.y = randf() * Game.camera_weapon_shake_force.y + strength * 0.01
+	shake_anim_linear = 1.0
 func shake_update(delta):
-	phi += camera_shake_force.x * 60 * delta
-	theta += camera_shake_force.y * 60 * delta
+	var shake_anim_coeff = sin((1.0 - shake_anim_linear) * PI * 1.2 + PI * 0.2) * shake_anim_linear
+	var shake_anim_coeff_2 = sin(shake_anim_linear * PI * 0.5)
+
+	phi += camera_shake_force.x * 60 * delta * shake_anim_coeff
+	theta += camera_shake_force.y * 60 * delta * shake_anim_coeff
 	while phi < 0:
 		phi += 2 * PI
 	while phi > 2 * PI:
@@ -63,8 +68,9 @@ func shake_update(delta):
 	theta = max(min_height, theta)
 	theta = min(max_height, theta)
 
-	camera_shake_force.x = Game.delta_interpolate(camera_shake_force.x, 0, 0.5, delta)
-	camera_shake_force.y = Game.delta_interpolate(camera_shake_force.y, 0, 0.5, delta)
+	shake_anim_linear = Game.delta_interpolate(shake_anim_linear, 0, 0.3, delta)
+#	camera_shake_force.x = Game.delta_interpolate(camera_shake_force.x, 0, 0.5, delta)
+#	camera_shake_force.y = Game.delta_interpolate(camera_shake_force.y, 0, 0.5, delta)
 
 func zoom(z):
 	zoom_target += z

@@ -20,8 +20,8 @@ func in_inv(itemid): # return -1 if not in invequip - return parent's item array
 	match invsystem:
 		ivs.simple:
 			if db.items.has(itemid) && db.items[itemid] > 0:
-				return true;
-			return false
+				return db.items[itemid];
+			return 0
 		ivs.rpg:
 			var r = -1
 			var item_data = Game.get_item_data(itemid)
