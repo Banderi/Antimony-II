@@ -1025,7 +1025,7 @@ func _physics_process(delta):
 			movement -= up * jump_force
 		Game.gm.fps:
 			speed = Game.walk_speed # normal moving speed
-			if Game.always_run:
+			if Game.settings.controls.always_run:
 				speed = Game.run_speed
 
 			# SNEAKING
@@ -1035,7 +1035,7 @@ func _physics_process(delta):
 			# SPRINTING
 			if !dashing && !crouching && sprinting && Game.can_sprint:
 				speed = Game.run_speed
-				if Game.always_run:
+				if Game.settings.controls.always_run:
 					speed = Game.walk_speed
 
 			# BLOCKING

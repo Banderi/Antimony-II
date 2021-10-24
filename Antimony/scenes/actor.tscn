@@ -75,16 +75,25 @@ __meta__ = {
 [node name="collision_capsule" type="CollisionShape" parent="body3D"]
 transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0.903641, 0 )
 shape = SubResource( 1 )
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="collision_cylinder" type="CollisionShape" parent="body3D"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.903641, 0 )
 shape = SubResource( 2 )
 disabled = true
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="collision_cylinder_low" type="CollisionShape" parent="body3D"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
 shape = SubResource( 14 )
 disabled = true
+__meta__ = {
+"_edit_lock_": true
+}
 
 [node name="AnimationTree" type="AnimationTree" parent="body3D"]
 tree_root = SubResource( 11 )

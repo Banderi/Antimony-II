@@ -2,7 +2,7 @@ extends Node
 
 onready var follow = get_node("follow")
 onready var cam = get_node("follow/camera")
-onready var cam_secondary = get_node("follow/camera/ViewportContainer/Viewport/cameraChild")
+onready var cam_secondary = cam.get_node("ViewportContainer/Viewport/cameraChild")
 onready var cursor = get_node("cursor")
 
 onready var follow2D = get_node("follow2D")
@@ -201,7 +201,7 @@ func _input(event):
 			if UI.state <= 0: # not in menus
 				# mouse movement
 				if event is InputEventMouseMotion:
-					orbit(-event.relative.x, -event.relative.y, Game.settings["controls"]["mouse_sens"] * 0.0035)
+					orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0035)
 	#			if Input.is_action_pressed("camera_zoomin"):
 	#				zoom(-Game.settings["controls"]["zoom_sens"])
 	#			if Input.is_action_pressed("camera_zoomout"):
@@ -235,7 +235,7 @@ func _input(event):
 					elif Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
 						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
 					else:
-						orbit(-event.relative.x, -event.relative.y, Game.settings["controls"]["mouse_sens"] * 0.0075)
+						orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0075)
 
 			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
 			if !alt_camera:
@@ -327,9 +327,9 @@ func _process(delta):
 
 					# update camera tilt
 					var speed_coeff = Game.player.last_velocity.length() / Game.run_speed
-					camera_tilt.x = Game.delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.25, delta)
-					camera_tilt.y = Game.delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.25, delta)
-					camera_tilt.z = Game.delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.25, delta)
+					camera_tilt.x = Game.delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.55, delta)
+					camera_tilt.y = Game.delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.55, delta)
+					camera_tilt.z = Game.delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.55, delta)
 
 					# final movement calc
 					if dir != Vector3():

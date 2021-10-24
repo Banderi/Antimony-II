@@ -35,7 +35,6 @@ var air_speed_max = 0.7
 var air_speed_coeff = 0.1
 var available_jumps = 1
 var jump_spam = false
-var always_run = false
 var midair_attack_float_drag = Vector2(0, 0)
 var block_walk_speed = 0.0
 var sneak_speed = 0.25
@@ -69,14 +68,15 @@ enum gm { # "game mode" for different sub-engines
 }
 var GAMEMODE = gm.none
 
-onready var settings = {
+var settings = {
 	"controls": {
 		"mouse_sens": 1.0,
 		"zoom_sens": 1.2,
 		"switch_on_new": true,
 		"equip_on_pickup": false,
 		"auto_reload": true,
-		"aim_toggle": true
+		"aim_toggle": true,
+		"always_run": true
 	}
 }
 

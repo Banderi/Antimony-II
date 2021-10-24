@@ -499,6 +499,11 @@ func load_UI(mode): # load hud scene node and set UI mode
 #		Game.controller.cam.current = false
 #	else:
 #		Game.controller.cam2D.current = false
+
+	# rescale UI to selected scale
+#	for mn in hud_node.get_children():
+#		mn.rect_scale = Vector2(0.25, 0.25)
+
 func is_ui_valid():
 	if hud == null || Game.GAMEMODE == Game.gm.none:
 		return false

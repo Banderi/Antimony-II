@@ -45,17 +45,39 @@ func add_hit(hit_result, ammoid):
 
 	###
 
+	# give damage to object hit
+	var victim_coll = instance_from_id(hit_result.collider_id)
+	var victim = victim_coll.get_parent()
+#	var global_t = Transform()
+	var local_hit_position = victim_coll.to_local(hit_result.position)
+	var local_normal = victim_coll.to_local(hit_result.position + hit_result.normal) - local_hit_position
+	if victim.has_method("take_hit"):
+		victim.take_hit({
+			"damage": ammo_data.damage,
+			"position": local_hit_position,
+			"normal": local_normal
+		})
+
 	# add decals
-	var DECAL = load("res://scenes/decals/" + ammoid + ".tscn")
-	var decal = DECAL.instance()
+	var decal = ammo_data.decal_cached_scene.instance()
 
 	var rand_decal_index = randi() % ammo_data.decal_files_max
 	decal.get_node("mesh").get("material/0").albedo_texture = load("res://textures/decals/" + ammoid + "/" + str(rand_decal_index) + ".png")
 	decal.get_node("mesh").rotation.z = randf() * 2 * PI
 
-	Game.level.add_child(decal)
-	decal.look_at(hit_result.normal, Vector3(1, 1, 1))
-	decal.translation = hit_result.position
+	# BUG: the first shot fired in the game, if it hits something,
+	# will not display a muzzle flash IF a decal is added to the tree.
+	# I have no idea how to fix this!
+	decal.look_at(local_normal, Vector3(1, 1, 1))
+#	decal.translation = hit_result.position - victim.translation
+#	decal.transform = decal.transform.to_local()
+#	var t = decal.get_global_transform()
+#	var t = victim.get_global_transform().xform_inv(Game.level.get_global_transform().origin)
+#	var t = Game.level.get_global_transform().affine_inverse() * victim.get_global_transform()
+	victim_coll.add_child(decal)
+	decal.translation = local_hit_position
+#	decal.translation = t
+#	decal.transform = t
 
 	# add to history
 	hit_result["node"] = decal
@@ -66,6 +88,7 @@ func fire_bullet(ammoid):
 
 	###
 
+#	$sfx/audio_gun_shot.play()
 	spawn_bullet(ammo_data.bullet) # this is what exits the gun...
 
 	if ammo_data.bullet == null: # no physical bullet -- hit instantaneously
@@ -147,6 +170,7 @@ func reload(finished):
 	if !finished:
 		var cooldown = float(weap_data.reload_cooldown)
 		reload_timer = cooldown
+#		$sfx/audio_gun_reload.play()
 	else:
 		var requesting = max_mag - curr_mag
 		var missing = 0
@@ -185,13 +209,12 @@ func update_anims(delta):
 
 	# update muzzle flash
 	var muzzle_flash = get_node(weapid).get_node("muzzle_flash")
+	muzzle_flash.visible = false
 	if firing:
+		muzzle_flash.visible = true
 		if muzzle_flash.has_node("mesh"):
 			var mesh = muzzle_flash.get_node("mesh")
-			mesh.rotation.z = randf()
-		muzzle_flash.visible = true
-	else:
-		muzzle_flash.visible = false
+			mesh.rotation.z = randf() * 2 * PI
 
 func press_trigger(t, pressed):
 	if pressed: # FIRING ??
@@ -244,4 +267,5 @@ func _process(delta):
 	firing = false
 
 func _ready():
-	pass # Replace with function body.
+	for ammoid in Game.db.ammo:
+		Game.db.ammo[ammoid]["decal_cached_scene"] = load("res://scenes/decals/" + ammoid + ".tscn")
