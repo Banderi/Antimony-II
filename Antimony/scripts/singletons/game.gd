@@ -157,6 +157,11 @@ func delta_interpolate(old, new, s, delta):
 #	var delta_factor = 60 / abs(new - old)
 	return old + (new - old) * s * delta_factor
 
+func set_death_timeout(node, lifetime):
+	var timer = load("res://Antimony/scenes/kill_timer.tscn").instance()
+	timer.wait_time = lifetime
+	node.add_child(timer)
+
 ###
 
 func is_2D():

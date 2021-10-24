@@ -32,6 +32,11 @@ func take_hit(hit_data):
 	wake()
 	rb.apply_impulse(hit_data.position, -hit_data.normal)
 	.take_hit(hit_data)
+func destroy():
+	global_transform = rb.get_global_transform()
+	get_node("Particles").emitting = true
+	Game.set_death_timeout(get_parent(), 1)
+	rb.visible = false
 
 ###
 

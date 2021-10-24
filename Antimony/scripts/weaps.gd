@@ -76,6 +76,8 @@ func add_hit(hit_result, ammoid):
 		1: # classic simple sparks -- metal on metal
 			var sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
 			decal.add_child(sparkles)
+			sparkles.emitting = true
+			Game.set_death_timeout(sparkles, 1)
 
 	# add hit to history
 	hit_result["node"] = decal
