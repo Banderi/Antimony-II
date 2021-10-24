@@ -48,15 +48,15 @@ func add_hit(hit_result, ammoid):
 	# give damage to object hit
 	var victim_coll = instance_from_id(hit_result.collider_id)
 	var victim = victim_coll.get_parent()
-#	var global_t = Transform()
 	var local_hit_position = victim_coll.to_local(hit_result.position)
 	var local_normal = victim_coll.to_local(hit_result.position + hit_result.normal) - local_hit_position
 	if victim.has_method("take_hit"):
 		victim.take_hit({
-			"damage": ammo_data.damage,
+			"ammo_data": ammo_data,
 			"position": local_hit_position,
 			"normal": local_normal
 		})
+		print(victim.data.health)
 
 	# add decals
 	var decal = ammo_data.decal_cached_scene.instance()
@@ -66,20 +66,18 @@ func add_hit(hit_result, ammoid):
 	decal.get_node("mesh").rotation.z = randf() * 2 * PI
 
 	# BUG: the first shot fired in the game, if it hits something,
-	# will not display a muzzle flash IF a decal is added to the tree.
-	# I have no idea how to fix this!
-	decal.look_at(local_normal, Vector3(1, 1, 1))
-#	decal.translation = hit_result.position - victim.translation
-#	decal.transform = decal.transform.to_local()
-#	var t = decal.get_global_transform()
-#	var t = victim.get_global_transform().xform_inv(Game.level.get_global_transform().origin)
-#	var t = Game.level.get_global_transform().affine_inverse() * victim.get_global_transform()
+	# will not display a muzzle flash *IF* a decal is added to the tree.
+	# I have no idea how to fix this!!
 	victim_coll.add_child(decal)
-	decal.translation = local_hit_position
-#	decal.translation = t
-#	decal.transform = t
+	decal.look_at_from_position(hit_result.position, hit_result.position + hit_result.normal, Vector3(1, 1, 1))
 
-	# add to history
+	# sparkles
+	match ammo_data.sparkles.type:
+		1: # classic simple sparks -- metal on metal
+			var sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
+			decal.add_child(sparkles)
+
+	# add hit to history
 	hit_result["node"] = decal
 	hits_history.push_back(hit_result)
 

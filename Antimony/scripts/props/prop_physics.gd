@@ -1,64 +1,12 @@
 extends Prop
 class_name PhysProp
-tool
 
-#export(String) var itemid = "" setget id_change
-
-#var custom_item = []
+export(String) var rbpath = ""
 
 var initial_origin
 var rb
 
 ###
-
-#func id_change(id):
-#	itemid = id
-#	if Engine.editor_hint:
-#		reload_mesh()
-#func reload_mesh():
-#	print("loading mesh: <%s>" % [itemid])
-#
-#	# clear previously existing mesh
-#	for c in get_children():
-#		c.free()
-#
-#	# check if resource exists
-#	var p = "res://meshes/props/" + itemid + ".dae"
-#	if itemid == "" || !ResourceLoader.exists(p):
-#		return
-#
-#	# load mesh file and add as a node
-#	var m = load(p).instance()
-#	add_child(m)
-#
-#	# only took me 4 hours, I want to die :D
-#	# --yeahhh scratch that, I'm rewriting it and it's taking even longer
-#	var meshroot = m.get_child(0)
-#	var coll = null
-#	for n in meshroot.get_children():
-#		if n is RigidBody:
-#			coll = n
-#	if coll == null:
-#		print("ERROR: missing collision body!")
-#		return
-#
-#	# reparent rigidbody, rename, copy over data from old one cuz lazy
-#	meshroot.remove_child(coll)
-#	add_child(coll)
-#	coll.remove_child(coll.get_node("mesh"))
-#	coll.name = "rb"
-#	coll.collision_layer = 8
-#	coll.collision_mask = 1 + 4 + 8
-#	var pm = PhysicsMaterial.new()
-#	pm.resource_local_to_scene = true
-#	coll.physics_material_override = pm
-#
-#	# move meshes to the new rigidbody
-#	m.remove_child(meshroot)
-#	coll.add_child(meshroot)
-#	meshroot.name = "mesh"
-#	if !Engine.editor_hint:
-#		init_mesh_array()
 
 func sleep():
 	rb.collision_layer = 0
@@ -135,25 +83,10 @@ func _physics_process(delta):
 	path_origin = start_tr.origin
 
 func _ready():
-	if Engine.editor_hint:
-		return
-
-#	reload_mesh()
-	._ready()
 
 	initial_origin = get_global_transform()
-	rb = $rb
+	rb = get_node(rbpath)
+	rb.get_node("mesh").layers = 0
+	print("setting collision mesh to <%s>" % [rbpath])
 
-	# set as toplevel because hirerarchy makes me cri
-#	rb.transform = initial_origin
-#	transform = Transform()
-
-#	# pickup-able item vs interactible/physics room prop
-#	var item_data = Game.get_item_data(itemid)
-#	if item_data != null:
-#		type = 1000
-#		custom_item = item_data.duplicate()
-#	else:
-#		type = 999
-
-#	custom_item = item_data.duplicate()
+	._ready()

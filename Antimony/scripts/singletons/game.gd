@@ -249,10 +249,8 @@ func load_level(map):
 	# load next level
 	var next_level = load(str("res://scenes/", map, ".tscn")).instance()
 	next_level.set_name("level")
+	Game.level = next_level
 	Game.root.add_child(next_level)
-
-	# set level nodes
-	Game.level = Game.root.get_node("level")
 	Game.navmesh = Game.level.get_node("navigation")
 
 	# boot level script

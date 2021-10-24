@@ -1,72 +1,20 @@
 extends Spatial
 class_name Prop
-tool
 
-var meshnodes = []
-
-var hl = false # currently highlighted
-
-export(String) var itemid = "" setget id_change
-
+export(String) var itemid = "" #setget id_change
 var data = []
 
-#var type = -1 # prop type, for interaction logic
+var meshnodes = []
+var hl = false # currently highlighted
+
 var user = null # actor interacting with prop
 var busy = false
 var distance = 0.4
-#var health = 1.0
 
 var path_origin = Vector3()
 var start_tr = Transform()
 
-func id_change(id):
-	itemid = id
-	if Engine.editor_hint:
-		reload_mesh()
-func reload_mesh():
-	print("loading mesh: <%s>" % [itemid])
-
-	# clear previously existing mesh
-	for c in get_children():
-		c.free()
-
-	# check if resource exists
-	var p = "res://meshes/props/" + itemid + ".dae"
-	if itemid == "" || !ResourceLoader.exists(p):
-		return
-
-	# load mesh file and add as a node
-	var m = load(p).instance()
-	add_child(m)
-
-	# only took me 4 hours, I want to die :D
-	# --yeahhh scratch that, I'm rewriting it and it's taking even longer
-	var meshroot = m.get_child(0)
-	var coll = null
-	for n in meshroot.get_children():
-		if n is RigidBody:
-			coll = n
-	if coll == null:
-		print("ERROR: missing collision body!")
-		return
-
-	# reparent rigidbody, rename, copy over data from old one cuz lazy
-	meshroot.remove_child(coll)
-	add_child(coll)
-	coll.remove_child(coll.get_node("mesh"))
-	coll.name = "rb"
-	coll.collision_layer = 8
-	coll.collision_mask = 1 + 4 + 8
-	var pm = PhysicsMaterial.new()
-	pm.resource_local_to_scene = true
-	coll.physics_material_override = pm
-
-	# move meshes to the new rigidbody
-	m.remove_child(meshroot)
-	coll.add_child(meshroot)
-	meshroot.name = "mesh"
-	if !Engine.editor_hint:
-		init_mesh_array()
+# TODO: rewrite this utter garbage
 
 func highlight(y):
 	hl = false
@@ -97,8 +45,7 @@ func release():
 
 func take_hit(hit_data):
 	if data.health > 0:
-		if "damage" in hit_data:
-			data.health -= hit_data.damage
+		data.health -= hit_data.ammo_data.damage
 		if data.health <= 0:
 			destroy()
 func destroy():
@@ -133,9 +80,6 @@ remote func RPC_release_actor():
 ###
 
 func _ready():
-	if Engine.editor_hint:
-		return
-
 	init_mesh_array()
 
 	path_origin = get_global_transform().origin
@@ -144,18 +88,16 @@ func _ready():
 
 	###
 
-	reload_mesh()
+	# wait for game databases to finish loading
+	yield(Game.level, "level_ready")
 
 	# pickup-able item vs interactible/physics room prop
 	var item_data = Game.get_item_data(itemid)
 	if item_data != null:
-#		type = 1000 # <---- TODO: redo type variables
+		# TODO: redo type variables
 		data = item_data.duplicate()
 	else:
 		data = { # default "dummy" item data
 			"type": 999,
 			"health" : -1
 		}
-#		type = 999
-
-#	custom_item = item_data.duplicate()

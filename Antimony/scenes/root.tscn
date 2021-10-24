@@ -10,7 +10,7 @@
 
 [sub_resource type="ShaderMaterial" id=5]
 shader = ExtResource( 7 )
-shader_param/pixel_size = 0.25
+shader_param/pixel_size = 0.5
 
 [sub_resource type="StyleBoxEmpty" id=1]
 
