@@ -457,50 +457,58 @@ func update_weap_hud():
 		Game.controller.cam.fov = Game.camera_fov_scope
 
 	update_weap_ammo_counters()
-func update_weap_ammo_counters():
-	var weapid = Inventory.curr_weapon
-	var weap_data = Game.get_weap_data(weapid)
-	var witem_data = Game.get_item_data(weapid)
-	h_itemname.text = str(witem_data.name)
-	if weap_data.ammoid != null:
-		h_ammoname.text = str(Game.get_item_data(weap_data.ammoid).name)
+func update_weap_ammo_counters(counters_only = false):
+	if !counters_only:
+		h_itemname.text = Game.weaps.item_data.name
+
+	# ammo!
+	if Game.weaps.ammoid != null:
+		if !counters_only: # no need to update these every frame
+			h_ammoname.visible = true
+			h_tot.visible = true
+			h_mag.visible = true
+			h_mag_slash.visible = true
+
+		if !counters_only:
+			h_ammoname.text = Game.get_item_data(Game.weaps.ammoid).name
+		var color = Color(1, 1, 1)
+		if Game.weaps.time_since_trigger == 0.0:
+			if Game.weaps.charge.missing > 0: # charge choke
+				color = Color(1, 0.5, 0.5) + Color(0, 0.5, 0.5) * sin(cum_delta * 4)
+			elif Game.weaps.charge.consuming > 0: # cumulation
+				color = Color(0.8, 0.8, 1) + Color(0.2, 0.2, 0) * sin(cum_delta * 4)
+		elif Game.weaps.time_since_trigger <= 0.1:
+			if Game.weaps.charge.missing > 0:
+				color = Color(1, 0.5, 0.5)
+			else:
+				color = Color(0.8, 0.8, 1)
+		color.a = 1.0
 
 		# ammo in storage
-		if !weap_data.infinite_ammo:
-			if weap_data.use_mag:
-				h_tot.text = str(floor(Inventory.db.items[weap_data.ammoid]))
+		if !Game.weaps.weap_data.infinite_ammo:
+			if Game.weaps.weap_data.use_mag:
+				h_tot.text = str(floor(Inventory.in_inv(Game.weaps.ammoid)))
 			else:
-				h_tot.text = str(floor(Inventory.db.items[weap_data.ammoid] - Game.weaps.charge.consuming))
-				if Game.weaps.charge.missing > 0: # charge choke
-					h_tot.modulate = Color(1, 0.5, 0.5) + Color(0, 0.5, 0.5) * sin(cum_delta * 4)
-				elif Game.weaps.charge.consuming > 0: # cumulation
-					h_tot.modulate = Color(0, 0, 1) + Color(1, 1, 0) * sin(cum_delta * 4)
-				else:
-					h_tot.modulate = Color(1, 1, 1)
-				h_tot.modulate.a = 1
+				h_tot.text = str(floor(Inventory.in_inv(Game.weaps.ammoid) - Game.weaps.charge.consuming))
+				h_tot.modulate = color
 		else:
 			h_tot.text = "inf"
 
 		# ammo in magazine
-		if weap_data.use_mag:
+		if Game.weaps.weap_data.use_mag:
 			h_mag.visible = true
 			h_mag_slash.visible = true
-			h_mag.text = str(floor(Inventory.db.magazines[weapid] - Game.weaps.charge.consuming))
-			if Game.weaps.charge.missing > 0: # charge choke
-				h_mag.modulate = Color(1, 0, 0) + Color(0, 1, 1) * sin(cum_delta * 4)
-			elif Game.weaps.charge.consuming > 0: # cumulation
-				h_mag.modulate = Color(0.8, 0.8, 1) + Color(0.2, 0.2, 0) * sin(cum_delta * 4)
-			else:
-				h_mag.modulate = Color(1, 1, 1)
-			h_mag.modulate.a = 1
+			h_mag.text = str(floor(Inventory.ammo_in_mag(Game.weaps.weapid) - Game.weaps.charge.consuming))
+			h_mag.modulate = color
 		else:
 			h_mag.visible = false
 			h_mag_slash.visible = false
 	else:
-		h_ammoname.text = ""
-		h_tot.text = ""
-		h_mag.visible = false
-		h_mag_slash.visible = false
+		if !counters_only: # no need to update these every frame
+			h_ammoname.visible = false
+			h_tot.visible = false
+			h_mag.visible = false
+			h_mag_slash.visible = false
 
 ###
 
@@ -553,8 +561,6 @@ func load_3D_weaps(scene = "weaps"):
 	weaps.name = "weaps"
 	Game.controller.cam.get_node("ViewportContainer/Viewport/cameraChild").add_child(weaps)
 	Game.weaps = weaps
-
-	update_weap_hud()
 
 
 ###

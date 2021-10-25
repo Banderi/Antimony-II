@@ -1,6 +1,13 @@
 extends Spatial
 class_name WeaponSystem
 
+# cached data because it's barbaric to fetch this every time!
+var weapid = null
+var ammoid = null
+var item_data = null
+var weap_data = null
+var ammo_data = null
+
 var camera_tilt = Vector3()
 var animation_offset = Vector3()
 var animation_tilt = Vector3()
@@ -15,7 +22,6 @@ var scope_enabled = false
 var scope_zoom = 0.0
 func scope(enabled):
 	scope_enabled = enabled
-	UI.update_weap_hud()
 func scope_trigger(tstate):
 	if Game.settings.controls.aim_toggle:
 		if tstate.state == 1:
@@ -40,10 +46,6 @@ func decals_update():
 			old.node.queue_free()
 		hits_history.pop_front()
 func invoke_hit(hit_result, ammoid, strength_scale):
-	var ammo_data = Game.get_ammo_data(ammoid)
-
-	###
-
 	# give damage to object hit
 	var victim_coll = instance_from_id(hit_result.collider_id)
 	var victim = victim_coll.get_parent()
@@ -72,7 +74,6 @@ func invoke_hit(hit_result, ammoid, strength_scale):
 	match ammo_data.sparkles.type:
 		1: # classic simple sparks -- metal on metal
 			sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
-
 	sparkles.emitting = true
 	for param in ammo_data.sparkles:
 		if param != "type":
@@ -80,24 +81,29 @@ func invoke_hit(hit_result, ammoid, strength_scale):
 			sparkles.process_material.set(param, ammo_data.sparkles[param] * strength_scale) # cheating, but it works ;)
 		if param == "size":
 			sparkles.draw_pass_1.size *= ammo_data.sparkles[param] * strength_scale
-	decal.add_child(sparkles)
+	sparkles.translation = hit_result.position
+	Game.level.add_child(sparkles)
 	Game.set_death_timeout(sparkles, 1)
 
 	# add hit to history
 	hit_result["node"] = decal
 	hits_history.push_back(hit_result)
 
-func kinematic_bullet(ammoid, npath):
-	var ammo_data = Game.get_ammo_data(ammoid)
-	if ammo_data.speed == -1: # no physical bullet -- hit instantaneously
-		var hit_result = Game.controller.pick[0]
-		if hit_result.size() != 0 && hit_result.has("position"):
-			invoke_hit(hit_result, ammoid, 1.0)
-		return
-
-	###
-
+func common_scene_bullet(ammoid, npath):
+	# bullet scene
 	var bullet = load("res://scenes/bullets/" + npath + ".tscn").instance()
+
+	# bullet data
+	bullet.ammoid = ammoid
+	bullet.speed = ammo_data.speed
+	bullet.strength_scale = charge.consuming # by default, scale per the cumulated ammo charge!
+
+	# pass the new node back for handling
+	return bullet
+
+func kinematic_bullet(ammoid, npath):
+	# common bullet scene
+	var bullet = common_scene_bullet(ammoid, npath)
 
 	# get bullet travel's normal
 	var muzz_pos = get_node(Inventory.curr_weapon).get_node("emitter").get_global_transform().origin
@@ -112,19 +118,25 @@ func kinematic_bullet(ammoid, npath):
 	bullet.normal = normal
 	bullet.translation = muzz_pos
 
-	# bullet data
-	bullet.ammoid = ammoid
-	bullet.speed = ammo_data.speed
-	bullet.strength_scale = charge.consuming # by default, scale per the cumulated ammo charge!
-
 	# pass the new node back for handling
 	return bullet
+func physics_bullet(ammoid, npath):
+	pass
 func fire_bullet(ammoid, tstate):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
 
-	# by default, spawn a kinematic-based bullet
-	Game.level.add_child(kinematic_bullet(ammoid, ammoid))
+	# default cases:
+	# 	- instantaneous (hitscan)
+	#	- kinematic bullet
+	#	- physics bullet
+	if ammo_data.speed == -1:
+		var hit_result = Game.controller.pick[0]
+		if hit_result.size() != 0 && hit_result.has("position"):
+			invoke_hit(hit_result, ammoid, 1.0)
+		return
+	else:
+		Game.level.add_child(kinematic_bullet(ammoid, ammoid))
 
 func lerp_charge_amount(ammo_data, duration):
 	# for now, only linear!
@@ -139,8 +151,9 @@ enum fa {
 	chunk,
 	charge
 }
-var firing = false
-var charge = {
+var frames_since_firing = 1
+var time_since_trigger = 1
+var charge = { # ammo charge state
 	"requesting": 0,
 	"consuming": 0,
 	"missing": 0
@@ -150,25 +163,23 @@ func fire_action(action, tstate, ammoid, q, rof):
 	if busy():
 		return
 
-	var weapid = Inventory.curr_weapon
-	var weap_data = Game.get_weap_data(weapid)
-	var ammo_data = Game.get_ammo_data(ammoid)
-
-	###
+	# update timer for special uses
+	time_since_trigger = 0.0
 
 	# first, check if there's enough ammo, reload if not,
 	# otherwise store the cumulative charge (for special cases)
 	var missing = 0
 	missing = max(q - Inventory.ammo_in_mag(weapid), 0)
+	charge.requesting = q
+	charge.missing = missing
+	charge.consuming = q - missing
 	if missing == q:
 		if reload_timer <= 0 && Game.settings.controls.auto_reload:
 			reload(false)
 		return
-	charge.requesting = q
-	charge.missing = missing
-	charge.consuming = q - missing
 
 	# specific conditional logic for different firing actions
+	var firing = false
 	match action:
 		fa.semi:
 			if tstate.state == 1:
@@ -187,31 +198,28 @@ func fire_action(action, tstate, ammoid, q, rof):
 		Game.controller.weapon_shake(weap_data.shake_strength, charge.consuming)
 		rof_cooldown = rof
 		anim_weapon_firing = 0.1
+		frames_since_firing = 0
 
 		# consume ammo and reset the charge counter
-		Inventory.consume_weapon_ammo(weapid, charge.consuming)
+		Inventory.consume_ammo(weapid, charge.consuming)
 		charge = {
 			"requesting": 0,
 			"consuming": 0,
 			"missing": 0
 		}
-func live_action(tstate):
+func trigger_action(tstate):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
 	pass
 
 func busy():
-	if firing || reload_timer > 0 || rof_cooldown > 0:
+	if frames_since_firing == 0 || reload_timer > 0 || rof_cooldown > 0:
 		return true
 
 func reload(finished):
 	if !finished && busy():
 		return
 
-	var weapid = Inventory.curr_weapon
-	var weap_data = Game.get_weap_data(weapid)
-
-	var ammoid = weap_data.ammoid
 	var curr_mag = Inventory.db.magazines[weapid]
 	var curr_tot = -1
 	if !weap_data.infinite_ammo:
@@ -235,9 +243,16 @@ func reload(finished):
 		if !weap_data.infinite_ammo:
 			missing = Inventory.consume_amount(ammoid, requesting) # naughty!!! consuming amounts BEFORE figuring out how much to take!
 		var given = requesting - missing
-		Inventory.reload_amount(weapid, given)
-		UI.update_weap_ammo_counters()
-func select_weapon(weapid):
+		Inventory.reload_ammo(weapid, given)
+func update_weapon_selection():
+	# update cached data
+	weapid = Inventory.curr_weapon
+	item_data = Game.get_item_data(weapid)
+	weap_data = Game.get_weap_data(weapid)
+	ammoid = weap_data.ammoid
+	ammo_data = Game.get_ammo_data(ammoid)
+
+	# switching animation
 	anim_weapon_switching = 0.5
 	for n in get_children():
 		n.get_node("muzzle_flash").visible = false # just to be safe
@@ -248,21 +263,9 @@ func select_weapon(weapid):
 
 var anim_weapon_firing = 0
 var anim_weapon_switching = 0
-func update_custom_anims(delta):
+func update_anims(delta):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
-	pass
-func update_anims(delta):
-	var weapid = Inventory.curr_weapon
-	var weap_data = Game.get_weap_data(weapid)
-
-	###
-
-	animation_tilt = Vector3()
-	animation_offset = Vector3()
-
-	# custom!
-	update_custom_anims(delta)
 
 	# weapon switching anim
 	anim_weapon_switching = Game.delta_interpolate(anim_weapon_switching, 0, 0.5, delta)
@@ -279,10 +282,10 @@ func update_anims(delta):
 	# I have no idea how to fix this!!!!!
 	# update muzzle flash
 	var muzzle_flash = get_node(weapid).get_node("muzzle_flash")
-	if firing:
+	if frames_since_firing == 0:
 		muzzle_flash.get_node("mesh").rotation.z = randf() * 2 * PI
 		muzzle_flash.visible = true
-	elif !firing && muzzle_flash.visible:
+	else:
 		muzzle_flash.visible = false
 
 func press_trigger(t, pressed):
@@ -314,7 +317,7 @@ func trigger_state_process(t, delta):
 			"duration": trigger_timers[t]
 		}
 
-		live_action(tstate)
+		trigger_action(tstate)
 	else:
 		trigger_timers[t] = 0
 
@@ -327,11 +330,27 @@ func trigger_state_process(t, delta):
 func _process(delta):
 	rof_cooldown = timer_advance(rof_cooldown, delta, null, null)
 	reload_timer = timer_advance(reload_timer, delta, "reload", [true])
+#	charge = {
+#		"requesting": 0,
+#		"consuming": 0,
+#		"missing": 0
+#	}
 	trigger_state_process(0, delta)
 	trigger_state_process(1, delta)
 	trigger_state_process(2, delta)
 
+	# TODO: make this lighter! it re-draws text every frame!!
+	UI.update_weap_ammo_counters(true)
+
+	# update misc counters
+	if frames_since_firing < 1024:
+		frames_since_firing += 1
+	if time_since_trigger < 1024.0:
+		time_since_trigger += delta
+
 	# update bobbling, animations, tilt etc.
+	animation_tilt = Vector3()
+	animation_offset = Vector3()
 	update_anims(delta)
 	rotation = camera_tilt + animation_tilt
 	translation = animation_offset
@@ -340,7 +359,5 @@ func _process(delta):
 	decals_update()
 
 	Debug.logpaddedinfo("triggers:   ", false, [10], [triggers, "timers:", trigger_timers])
-	Debug.logpaddedinfo("firing:     ", false, [7, 10, 10], [firing, rof_cooldown, reload_timer, anim_weapon_switching])
-
-	# reset FIRING states
-	firing = false
+	Debug.logpaddedinfo("firing:     ", false, [7, 10, 10, 10], [frames_since_firing, time_since_trigger, rof_cooldown, reload_timer, anim_weapon_switching])
+	Debug.logpaddedinfo("charge:     ", false, [], [charge.missing, "(" + str(charge.consuming) + "/" + str(charge.requesting) + ")"])

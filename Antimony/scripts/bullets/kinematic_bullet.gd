@@ -26,6 +26,9 @@ func _process(delta):
 	if pos.distance_to(original_pos) >= Game.max_bullet_travel:
 		queue_free()
 
+	visible = true
+
 func _ready():
 	original_pos = get_global_transform().origin
 	look_at(original_pos + normal, Vector3(0, 1, 0))
+	visible = false # wait for a frame to pass to avoid aesthetic collision with muzzle flash

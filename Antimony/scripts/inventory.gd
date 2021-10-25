@@ -108,7 +108,7 @@ func equip_weapon(weapid):
 		return
 	last_weapon = curr_weapon
 	curr_weapon = weapid
-	Game.weaps.select_weapon(weapid)
+	Game.weaps.update_weapon_selection()
 	UI.update_weap_hud()
 func weapon_prev():
 	var prev_weapon = null
@@ -139,14 +139,6 @@ func weapon_next():
 	if next_weapon != null:
 		equip_weapon(next_weapon) # finally, if no valid weapon after the current one - equipped whatever first valid weapon is in the banks
 
-func reload_amount(weapid, amount):
-	match invsystem:
-		ivs.simple:
-			var available_space = Game.get_weap_data(weapid).mag_max - db.magazines[weapid]
-			var accepted = min(available_space, amount)
-			var refused = amount - available_space
-			db.magazines[weapid] += accepted
-			return refused
 func give_amount(itemid, amount):
 	match invsystem:
 		ivs.simple:
@@ -155,13 +147,20 @@ func give_amount(itemid, amount):
 			var refused = amount - available_space
 			db.items[itemid] += accepted
 			return refused
+func reload_ammo(weapid, amount):
+	match invsystem:
+		ivs.simple:
+			var available_space = Game.get_weap_data(weapid).mag_max - db.magazines[weapid]
+			var accepted = min(available_space, amount)
+			var refused = amount - available_space
+			db.magazines[weapid] += accepted
+			return refused
 func ammo_in_mag(weapid):
 	match invsystem:
 		ivs.simple:
 			var weap_data = Game.get_weap_data(weapid)
 			return db.magazines[weapid]
-
-func consume_weapon_ammo(weapid, amount):
+func consume_ammo(weapid, amount):
 	match invsystem:
 		ivs.simple:
 			var weap_data = Game.get_weap_data(weapid)
