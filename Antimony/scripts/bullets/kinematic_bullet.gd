@@ -4,7 +4,7 @@ var ammoid = null
 var original_pos = Vector3()
 var normal = Vector3()
 var speed = 0.1
-#var distance_traveled = 0
+var strength_scale = 1.0
 
 ###
 
@@ -18,7 +18,7 @@ func _process(delta):
 			"normal": collider.normal,
 			"collider_id": collider.collider_id,
 		}
-		Game.weaps.invoke_hit(hit_result, ammoid)
+		Game.weaps.invoke_hit(hit_result, ammoid, strength_scale)
 		return queue_free()
 
 	# check if past max life

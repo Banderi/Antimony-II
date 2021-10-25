@@ -462,16 +462,37 @@ func update_weap_ammo_counters():
 	var weap_data = Game.get_weap_data(weapid)
 	var witem_data = Game.get_item_data(weapid)
 	h_itemname.text = str(witem_data.name)
-	if weap_data.ammo != null:
-		h_ammoname.text = str(Game.get_item_data(weap_data.ammo).name)
+	if weap_data.ammoid != null:
+		h_ammoname.text = str(Game.get_item_data(weap_data.ammoid).name)
+
+		# ammo in storage
 		if !weap_data.infinite_ammo:
-			h_tot.text = str(Inventory.db.items[weap_data.ammo])
+			if weap_data.use_mag:
+				h_tot.text = str(floor(Inventory.db.items[weap_data.ammoid]))
+			else:
+				h_tot.text = str(floor(Inventory.db.items[weap_data.ammoid] - Game.weaps.charge.consuming))
+				if Game.weaps.charge.missing > 0: # charge choke
+					h_tot.modulate = Color(1, 0.5, 0.5) + Color(0, 0.5, 0.5) * sin(cum_delta * 4)
+				elif Game.weaps.charge.consuming > 0: # cumulation
+					h_tot.modulate = Color(0, 0, 1) + Color(1, 1, 0) * sin(cum_delta * 4)
+				else:
+					h_tot.modulate = Color(1, 1, 1)
+				h_tot.modulate.a = 1
 		else:
 			h_tot.text = "inf"
+
+		# ammo in magazine
 		if weap_data.use_mag:
 			h_mag.visible = true
 			h_mag_slash.visible = true
-			h_mag.text = str(Inventory.db.magazines[weapid])
+			h_mag.text = str(floor(Inventory.db.magazines[weapid] - Game.weaps.charge.consuming))
+			if Game.weaps.charge.missing > 0: # charge choke
+				h_mag.modulate = Color(1, 0, 0) + Color(0, 1, 1) * sin(cum_delta * 4)
+			elif Game.weaps.charge.consuming > 0: # cumulation
+				h_mag.modulate = Color(0.8, 0.8, 1) + Color(0.2, 0.2, 0) * sin(cum_delta * 4)
+			else:
+				h_mag.modulate = Color(1, 1, 1)
+			h_mag.modulate.a = 1
 		else:
 			h_mag.visible = false
 			h_mag_slash.visible = false
@@ -610,9 +631,13 @@ func _input(event):
 	if check_mouse_within(UI.h_invpanel) && m_inv.visible:
 		handle_input += 1
 
+var cum_delta = 0
 func _process(delta):
 	if !is_ui_valid():
 		return
+
+	# increase cumulative counter for interpolations
+	cum_delta += delta
 
 	# refresh chatbox size
 	resize_chatbox()

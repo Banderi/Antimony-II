@@ -18,12 +18,12 @@ func scope(enabled):
 	UI.update_weap_hud()
 func scope_trigger(tstate):
 	if Game.settings.controls.aim_toggle:
-		if tstate == 1:
+		if tstate.state == 1:
 			scope(!scope_enabled)
 	else:
-		if tstate == 1:
+		if tstate.state == 1:
 			scope(true)
-		elif tstate == 3:
+		elif tstate.state == 3:
 			scope(false)
 func scope_zoom(z):
 	pass # TODO
@@ -39,7 +39,7 @@ func decals_update():
 		if weakref(old.node).get_ref() != null:
 			old.node.queue_free()
 		hits_history.pop_front()
-func invoke_hit(hit_result, ammoid):
+func invoke_hit(hit_result, ammoid, strength_scale):
 	var ammo_data = Game.get_ammo_data(ammoid)
 
 	###
@@ -53,7 +53,8 @@ func invoke_hit(hit_result, ammoid):
 		victim.take_hit({
 			"ammo_data": ammo_data,
 			"position": local_hit_position,
-			"normal": local_normal
+			"normal": local_normal,
+			"strength": strength_scale,
 		})
 		print(victim.data.health)
 
@@ -75,8 +76,10 @@ func invoke_hit(hit_result, ammoid):
 	sparkles.emitting = true
 	for param in ammo_data.sparkles:
 		if param != "type":
-			sparkles.set(param, ammo_data.sparkles[param])
-			sparkles.process_material.set(param, ammo_data.sparkles[param]) # cheating, but it works ;)
+			sparkles.set(param, ammo_data.sparkles[param] * strength_scale)
+			sparkles.process_material.set(param, ammo_data.sparkles[param] * strength_scale) # cheating, but it works ;)
+		if param == "size":
+			sparkles.draw_pass_1.size *= ammo_data.sparkles[param] * strength_scale
 	decal.add_child(sparkles)
 	Game.set_death_timeout(sparkles, 1)
 
@@ -84,23 +87,49 @@ func invoke_hit(hit_result, ammoid):
 	hit_result["node"] = decal
 	hits_history.push_back(hit_result)
 
-func fire_bullet(ammoid):
-	print("shot!")
+func kinematic_bullet(ammoid, npath):
 	var ammo_data = Game.get_ammo_data(ammoid)
+	if ammo_data.speed == -1: # no physical bullet -- hit instantaneously
+		var hit_result = Game.controller.pick[0]
+		if hit_result.size() != 0 && hit_result.has("position"):
+			invoke_hit(hit_result, ammoid, 1.0)
+		return
 
 	###
 
-#	$sfx/audio_gun_shot.play()
-	spawn_bullet(ammo_data.bullet) # this is what exits the gun...
+	var bullet = load("res://scenes/bullets/" + npath + ".tscn").instance()
 
-	if ammo_data.bullet == null: # no physical bullet -- hit instantaneously
-		var hit_result = Game.controller.pick[0]
-		if hit_result.size() != 0 && hit_result.has("position"):
-			invoke_hit(hit_result, ammoid)
-func spawn_bullet(bullet):
+	# get bullet travel's normal
+	var muzz_pos = get_node(Inventory.curr_weapon).get_node("emitter").get_global_transform().origin
+	var goal = Vector3()
+	if Game.controller.pick[0].has("position"):
+		goal = Game.controller.pick[0].position
+	else:
+		var proj_origin = Game.controller.cam.project_ray_origin(get_viewport().get_mouse_position())
+		var proj_normal = Game.controller.cam.project_ray_normal(get_viewport().get_mouse_position())
+		goal = proj_origin + proj_normal * 20.0
+	var normal = (goal - muzz_pos).normalized()
+	bullet.normal = normal
+	bullet.translation = muzz_pos
+
+	# bullet data
+	bullet.ammoid = ammoid
+	bullet.speed = ammo_data.speed
+	bullet.strength_scale = charge.consuming # by default, scale per the cumulated ammo charge!
+
+	# pass the new node back for handling
+	return bullet
+func fire_bullet(ammoid, tstate):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
-	pass
+
+	# by default, spawn a kinematic-based bullet
+	Game.level.add_child(kinematic_bullet(ammoid, ammoid))
+
+func lerp_charge_amount(ammo_data, duration):
+	# for now, only linear!
+	var coeff = min(ammo_data.max_charge_duration, duration) / ammo_data.max_charge_duration
+	return ammo_data.min_charge + floor((ammo_data.max_charge - ammo_data.min_charge) * coeff)
 
 enum fa {
 	none,
@@ -111,6 +140,11 @@ enum fa {
 	charge
 }
 var firing = false
+var charge = {
+	"requesting": 0,
+	"consuming": 0,
+	"missing": 0
+}
 func fire_action(action, tstate, ammoid, q, rof):
 	# no matter the action or weapon - do not fire while reloading or on cooldown
 	if busy():
@@ -118,31 +152,50 @@ func fire_action(action, tstate, ammoid, q, rof):
 
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)
+	var ammo_data = Game.get_ammo_data(ammoid)
 
 	###
+
+	# first, check if there's enough ammo, reload if not,
+	# otherwise store the cumulative charge (for special cases)
+	var missing = 0
+	missing = max(q - Inventory.ammo_in_mag(weapid), 0)
+	if missing == q:
+		if reload_timer <= 0 && Game.settings.controls.auto_reload:
+			reload(false)
+		return
+	charge.requesting = q
+	charge.missing = missing
+	charge.consuming = q - missing
 
 	# specific conditional logic for different firing actions
 	match action:
 		fa.semi:
-			if tstate == 1:
-				firing = true
+			if tstate.state == 1:
+				firing = true # fire on first press
 		fa.auto:
-			firing = true
+			firing = true # fire on any press detection
+		fa.charge:
+			if tstate.state == 3:
+				firing = true # fire on release
 
 	# fire...??
 	if firing:
-		var missing = 0
-		missing = Inventory.consume_weapon_ammo(weapid, q) # attempts consuming first, returns results
-		if !missing:
-			Game.controller.weapon_shake(weap_data.shake_strength)
-			fire_bullet(ammoid) # FIRE!!!!!!
-			rof_cooldown = rof
-			anim_weapon_firing = 0.1
-		else:
-			firing = false
-			if reload_timer <= 0 && Game.settings.controls.auto_reload:
-				reload(false)
-func live_action(t):
+		fire_bullet(ammoid, tstate) # F I R E !!!!!!
+
+		# add weapon shake, recoil animation, cooldown etc.
+		Game.controller.weapon_shake(weap_data.shake_strength, charge.consuming)
+		rof_cooldown = rof
+		anim_weapon_firing = 0.1
+
+		# consume ammo and reset the charge counter
+		Inventory.consume_weapon_ammo(weapid, charge.consuming)
+		charge = {
+			"requesting": 0,
+			"consuming": 0,
+			"missing": 0
+		}
+func live_action(tstate):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
 	pass
@@ -158,7 +211,7 @@ func reload(finished):
 	var weapid = Inventory.curr_weapon
 	var weap_data = Game.get_weap_data(weapid)
 
-	var ammoid = weap_data.ammo
+	var ammoid = weap_data.ammoid
 	var curr_mag = Inventory.db.magazines[weapid]
 	var curr_tot = -1
 	if !weap_data.infinite_ammo:
@@ -184,7 +237,6 @@ func reload(finished):
 		var given = requesting - missing
 		Inventory.reload_amount(weapid, given)
 		UI.update_weap_ammo_counters()
-
 func select_weapon(weapid):
 	anim_weapon_switching = 0.5
 	for n in get_children():
@@ -255,7 +307,14 @@ func trigger_state_process(t, delta):
 	# update timer, fire if trigger is active
 	if triggers[t] > 0:
 		trigger_timers[t] += delta
-		live_action(t)
+
+		var tstate = {
+			"t": t,
+			"state": triggers[t],
+			"duration": trigger_timers[t]
+		}
+
+		live_action(tstate)
 	else:
 		trigger_timers[t] = 0
 

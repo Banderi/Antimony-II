@@ -45,7 +45,7 @@ func release():
 
 func take_hit(hit_data):
 	if data.health > 0:
-		data.health -= hit_data.ammo_data.damage
+		data.health -= hit_data.ammo_data.damage * hit_data.strength
 		if data.health <= 0:
 			destroy()
 func destroy():

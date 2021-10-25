@@ -115,7 +115,7 @@ func weapon_prev():
 	for bank in Game.db.weap_banks:
 		for weapid in bank:
 			if weapid != curr_weapon && in_inv(weapid):
-				var ammoid = Game.get_weap_data(weapid).ammo
+				var ammoid = Game.get_weap_data(weapid).ammoid
 				if ammoid == null || in_inv(ammoid) || Game.settings.controls.equip_empty_weapons: # check ammo
 					prev_weapon = weapid
 			if weapid == curr_weapon && prev_weapon != null: # found a weapon preceding the currently equipped one
@@ -155,13 +155,19 @@ func give_amount(itemid, amount):
 			var refused = amount - available_space
 			db.items[itemid] += accepted
 			return refused
+func ammo_in_mag(weapid):
+	match invsystem:
+		ivs.simple:
+			var weap_data = Game.get_weap_data(weapid)
+			return db.magazines[weapid]
+
 func consume_weapon_ammo(weapid, amount):
 	match invsystem:
 		ivs.simple:
 			var weap_data = Game.get_weap_data(weapid)
 			var missing = 0
 			if weap_data.use_mag:
-				var available = min(db.magazines[weapid], amount)
+				var available = min(ammo_in_mag(weapid), amount)
 				missing = amount - available
 				if missing == 0: # do not fire if not enough ammo "rounds" are available
 					db.magazines[weapid] -= available
