@@ -51,6 +51,11 @@ var camera_fov_scope = 20
 var camera_weapon_shake_force = Vector2(0.0015, 0.01)
 
 var max_bullet_travel = 100
+var max_bullet_lifetime = 10.0
+
+var unlimited_health = false
+var unlimited_ammo = false
+var unlimited_mags = false
 
 var character = 0
 #var hotbar_sel = 0

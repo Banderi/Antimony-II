@@ -9,9 +9,8 @@ var strength_scale = 1.0
 ###
 
 func _process(delta):
-	var collider = move_and_collide(normal * speed, false)
-
 	# check for collisions
+	var collider = move_and_collide(normal * speed, false)
 	if collider != null:
 		var hit_result = {
 			"position": collider.position,

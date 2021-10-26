@@ -110,6 +110,7 @@ func equip_weapon(weapid):
 	curr_weapon = weapid
 	Game.weaps.update_weapon_selection()
 	UI.update_weap_hud()
+	UI.update_weap_ammo_counters()
 func weapon_prev():
 	var prev_weapon = null
 	for bank in Game.db.weap_banks:
@@ -142,14 +143,21 @@ func weapon_next():
 func give_amount(itemid, amount):
 	match invsystem:
 		ivs.simple:
-			var available_space = Game.get_item_data(itemid).quantity_max - db.items[itemid]
+			var item_data = Game.get_item_data(itemid)
+			var quantity_max = 1
+			if item_data.has("quantity_max"):
+				quantity_max = item_data.quantity_max
+			var ininv = in_inv(itemid)
+			var available_space = quantity_max - ininv
 			var accepted = min(available_space, amount)
 			var refused = amount - available_space
-			db.items[itemid] += accepted
+			db.items[itemid] = ininv + accepted
 			return refused
 func reload_ammo(weapid, amount):
 	match invsystem:
 		ivs.simple:
+			if !db.magazines.has(weapid):
+				db.magazines[weapid] = 0
 			var available_space = Game.get_weap_data(weapid).mag_max - db.magazines[weapid]
 			var accepted = min(available_space, amount)
 			var refused = amount - available_space
@@ -159,7 +167,10 @@ func ammo_in_mag(weapid):
 	match invsystem:
 		ivs.simple:
 			var weap_data = Game.get_weap_data(weapid)
-			return db.magazines[weapid]
+			if weap_data.use_mag:
+				return db.magazines[weapid]
+			else:
+				return in_inv(weap_data.ammoid)
 func consume_ammo(weapid, amount):
 	match invsystem:
 		ivs.simple:
@@ -171,7 +182,7 @@ func consume_ammo(weapid, amount):
 				if missing == 0: # do not fire if not enough ammo "rounds" are available
 					db.magazines[weapid] -= available
 			else:
-				missing = consume_amount(weap_data.ammo, amount, false)
+				missing = consume_amount(weap_data.ammoid, amount, false)
 			return missing
 func consume_amount(itemid, amount, consume_if_missing = true):
 	match invsystem:
@@ -181,3 +192,22 @@ func consume_amount(itemid, amount, consume_if_missing = true):
 			if missing == 0 || consume_if_missing:
 				db.items[itemid] -= available
 			return missing
+
+func give_weapon(weapid, ammo_amount = -1):
+	var weap_data = Game.get_weap_data(weapid)
+	give_amount(weapid, 1)
+	if !weap_data.infinite_ammo:
+		# default: use pickup_ammo amount
+		if ammo_amount == -1:
+			ammo_amount = weap_data.pickup_ammo
+		give_amount(weap_data.ammoid, ammo_amount)
+
+		# if it uses magazines, reload automatically
+		if weap_data.use_mag:
+			var requesting = weap_data.mag_max
+			var missing = consume_amount(weap_data.ammoid, requesting)
+			var available = requesting - missing
+			reload_ammo(weapid, available)
+	else:
+		if weap_data.use_mag:
+			reload_ammo(weapid, weap_data.mag_max)

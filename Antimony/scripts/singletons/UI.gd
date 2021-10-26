@@ -430,33 +430,23 @@ func update_status_icons():
 			h_effects[8].visible = true
 
 func update_weap_hud():
-
 	# reset first
 	for n in u_crosshairs.get_children():
 		n.visible = false
 	for n in u_scopes.get_children():
 		n.visible = false
 
-	###
-
-	var weapid = Inventory.curr_weapon
-	var weap_data = Game.get_weap_data(weapid)
-	if weapid == "" || weap_data == null:
-		return # no valid weapon equipped
-
 	# crosshair
-	if "crosshair" in weap_data:
-		u_crosshairs.get_node(weap_data.crosshair).visible = true
+	if "crosshair" in Game.weaps.weap_data:
+		u_crosshairs.get_node(Game.weaps.weap_data.crosshair).visible = true
 
 	# sniper scope
 	Game.weaps.visible = true
 	Game.controller.cam.fov = Game.camera_fov
-	if "scope" in weap_data && Game.weaps.scope_enabled:
-		u_scopes.get_node(weap_data.scope).visible = true
+	if "scope" in Game.weaps.weap_data && Game.weaps.scope_enabled:
+		u_scopes.get_node(Game.weaps.weap_data.scope).visible = true
 		Game.weaps.visible = false
 		Game.controller.cam.fov = Game.camera_fov_scope
-
-	update_weap_ammo_counters()
 func update_weap_ammo_counters(counters_only = false):
 	if !counters_only:
 		h_itemname.text = Game.weaps.item_data.name
@@ -465,17 +455,18 @@ func update_weap_ammo_counters(counters_only = false):
 	if Game.weaps.ammoid != null:
 		if !counters_only: # no need to update these every frame
 			h_ammoname.visible = true
+			h_ammoname.text = Game.get_item_data(Game.weaps.ammoid).name
 			h_tot.visible = true
 			h_mag.visible = true
 			h_mag_slash.visible = true
 
-		if !counters_only:
-			h_ammoname.text = Game.get_item_data(Game.weaps.ammoid).name
+		# ammo count color
 		var color = Color(1, 1, 1)
 		if Game.weaps.time_since_trigger == 0.0:
+#			color = Color(1, 0, 1)
 			if Game.weaps.charge.missing > 0: # charge choke
 				color = Color(1, 0.5, 0.5) + Color(0, 0.5, 0.5) * sin(cum_delta * 4)
-			elif Game.weaps.charge.consuming > 0: # cumulation
+			elif Game.weaps.charging && Game.weaps.charge.consuming > 0: # cumulation
 				color = Color(0.8, 0.8, 1) + Color(0.2, 0.2, 0) * sin(cum_delta * 4)
 		elif Game.weaps.time_since_trigger <= 0.1:
 			if Game.weaps.charge.missing > 0:
@@ -484,24 +475,32 @@ func update_weap_ammo_counters(counters_only = false):
 				color = Color(0.8, 0.8, 1)
 		color.a = 1.0
 
-		# ammo in storage
+		# ammo in total storage
+		var displ_amount = Inventory.in_inv(Game.weaps.ammoid)
+		if Game.weaps.charging:
+			displ_amount = Inventory.in_inv(Game.weaps.ammoid) - Game.weaps.charge.consuming
 		if !Game.weaps.weap_data.infinite_ammo:
 			if Game.weaps.weap_data.use_mag:
-				h_tot.text = str(floor(Inventory.in_inv(Game.weaps.ammoid)))
+				h_tot.text = str(displ_amount)
 			else:
-				h_tot.text = str(floor(Inventory.in_inv(Game.weaps.ammoid) - Game.weaps.charge.consuming))
+				h_tot.text = str(displ_amount)
 				h_tot.modulate = color
 		else:
 			h_tot.text = "inf"
 
 		# ammo in magazine
+		displ_amount = Inventory.ammo_in_mag(Game.weaps.weapid)
+		if Game.weaps.charging:
+			displ_amount = Inventory.ammo_in_mag(Game.weaps.weapid) - Game.weaps.charge.consuming
 		if Game.weaps.weap_data.use_mag:
-			h_mag.visible = true
+#			h_mag.visible = true
+			h_mag.get_parent().visible = true
 			h_mag_slash.visible = true
-			h_mag.text = str(floor(Inventory.ammo_in_mag(Game.weaps.weapid) - Game.weaps.charge.consuming))
+			h_mag.text = str(displ_amount)
 			h_mag.modulate = color
 		else:
-			h_mag.visible = false
+#			h_mag.visible = false
+			h_mag.get_parent().visible = false
 			h_mag_slash.visible = false
 	else:
 		if !counters_only: # no need to update these every frame
