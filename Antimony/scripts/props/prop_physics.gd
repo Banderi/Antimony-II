@@ -13,8 +13,8 @@ func sleep():
 	rb.collision_mask = 0
 	rb.sleeping = true
 func wake():
-	rb.collision_layer = 8
-	rb.collision_mask = 1 + 4 + 8
+	rb.collision_layer = Masks.LEVEL + Masks.ACTORS + Masks.PROPS # LISTENING FROM...
+	rb.collision_mask = Masks.PROPS # PROPAGATING TO...
 	rb.sleeping = false
 
 func _on_rb_body_entered(body):

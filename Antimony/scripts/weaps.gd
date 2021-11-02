@@ -70,69 +70,74 @@ func decals_update():
 		# TODO: potential bug?
 		# the node sometimes becomes invalid before
 		# this line is called...
-		if weakref(old.node).get_ref() != null:
+		if old.has("node") && weakref(old.node).get_ref() != null:
 			old.node.queue_free()
 		hits_history.pop_front()
-func invoke_hit(hit_result, ammoid, strength_scale):
+func invoke_hit(hit_result, b_ammoid, b_ammo_data, strength_scale):
 	# give damage to object hit
-	var victim_coll = instance_from_id(hit_result.collider_id)
-	var victim = victim_coll.get_parent()
-	var local_hit_position = victim_coll.to_local(hit_result.position)
-	var local_normal = victim_coll.to_local(hit_result.position + hit_result.normal) - local_hit_position
-	if victim.has_method("take_hit"):
-		victim.take_hit({
-			"ammo_data": ammo_data,
-			"position": local_hit_position,
-			"normal": local_normal,
-			"strength": strength_scale,
-		})
-		print(victim.data.health)
+	var victim = instance_from_id(hit_result.collider_id)
+	if victim != null:
+		var local_hit_position = victim.to_local(hit_result.position)
+		var local_normal = victim.to_local(hit_result.position + hit_result.normal) - local_hit_position
+		if victim.has_method("take_hit"):
+			victim.take_hit({
+				"ammo_data": b_ammo_data,
+				"position": local_hit_position,
+				"normal": local_normal,
+				"strength": strength_scale,
+			})
+		var victim_parent = victim.get_parent() # also check the parent
+		if victim_parent.has_method("take_hit"):
+			victim_parent.take_hit({
+				"ammo_data": b_ammo_data,
+				"position": local_hit_position,
+				"normal": local_normal,
+				"strength": strength_scale,
+			})
 
-	# add decals
-	var decal = load("res://scenes/decals/" + ammoid + ".tscn").instance()
+		# add decals
+		match b_ammo_data.decal_type:
+			0: # standard bullet decal
+				var decal = load("res://scenes/decals/" + b_ammoid + ".tscn").instance()
 
-	var rand_decal_index = randi() % ammo_data.decal_files_max
-	decal.get_node("mesh").get("material/0").albedo_texture = load("res://textures/decals/" + ammoid + "/" + str(rand_decal_index) + ".png")
-	decal.get_node("mesh").rotation.z = randf() * 2 * PI
-	victim_coll.add_child(decal) # add to the tree before facing the normal to avoid having the engine scream at me
-	decal.look_at_from_position(hit_result.position, hit_result.position + hit_result.normal, Vector3(1, 1, 1))
+				var rand_decal_index = randi() % b_ammo_data.decal_files_max
+				decal.get_node("mesh").get("material/0").albedo_texture = load("res://textures/decals/" + b_ammoid + "/" + str(rand_decal_index) + ".png")
+				decal.get_node("mesh").rotation.z = randf() * 2 * PI
+				victim.add_child(decal) # add to the tree before facing the normal to avoid having the engine scream at me
+				decal.look_at_from_position(hit_result.position, hit_result.position + hit_result.normal, Vector3(1, 1, 1))
+				hit_result["node"] = decal
 
-	# sparkles
-	var sparkles
-	match ammo_data.sparkles.type:
-		1: # classic simple sparks -- metal on metal
-			sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
-	sparkles.emitting = true
-	for param in ammo_data.sparkles:
-		if param != "type":
-			sparkles.set(param, ammo_data.sparkles[param] * strength_scale)
-			sparkles.process_material.set(param, ammo_data.sparkles[param] * strength_scale) # cheating, but it works ;)
-		if param == "size":
-			sparkles.draw_pass_1.size *= ammo_data.sparkles[param] * strength_scale
-	sparkles.translation = hit_result.position
-	Game.level.add_child(sparkles)
-	Game.set_death_timeout(sparkles, 1)
+		# sparkles
+		if b_ammo_data.has("sparkles"):
+			var sparkles
+			match b_ammo_data.sparkles.type:
+				1: # classic simple sparks -- metal on metal
+					sparkles = load("res://Antimony/scenes/particles/sparkles_fast.tscn").instance()
+			sparkles.emitting = true
+			for param in b_ammo_data.sparkles:
+				if param != "type":
+					sparkles.set(param, b_ammo_data.sparkles[param] * strength_scale)
+					sparkles.process_material.set(param, b_ammo_data.sparkles[param] * strength_scale) # cheating, but it works ;)
+				if param == "size":
+					sparkles.draw_pass_1.size *= b_ammo_data.sparkles[param] * strength_scale
+			sparkles.translation = hit_result.position
+			Game.level.add_child(sparkles)
+			Game.set_death_timeout(sparkles, 1)
 
 	# add hit to history
-	hit_result["node"] = decal
 	hits_history.push_back(hit_result)
 
-func common_scene_bullet(ammoid, npath):
+func common_scene_bullet(actor, npath):
 	# bullet scene
 	var bullet = load("res://scenes/bullets/" + npath + ".tscn").instance()
 
-	# bullet data
-	bullet.ammoid = ammoid
-	bullet.speed = ammo_data.speed
-	bullet.strength_scale = charge.consuming # by default, scale per the cumulated ammo charge!
+	# variable bullet data
+	bullet.owner_actor = actor
+	bullet.strength_scale = max(1.0, charge.consuming) # by default, scale per the cumulated ammo charge!
+#	bullet.ammoid = ammoid
+#	bullet.speed = ammo_data.speed
 
-	# pass the new node back for handling
-	return bullet
-func kinematic_bullet(ammoid, npath):
-	# common bullet scene
-	var bullet = common_scene_bullet(ammoid, npath)
-
-	# get bullet travel's normal
+	# bullet position and rotation
 	var emitter_position = get_node(Inventory.curr_weapon).get_node("emitter").get_global_transform().origin
 	var goal = Vector3()
 	if Game.controller.pick[0].has("position"):
@@ -147,24 +152,44 @@ func kinematic_bullet(ammoid, npath):
 
 	# pass the new node back for handling
 	return bullet
-func physics_bullet(ammoid, npath):
-	# common bullet scene
-	var bullet = common_scene_bullet(ammoid, npath)
-
-	# bullet data
-	var emitter = get_node(Inventory.curr_weapon).get_node("emitter")
-	var normal = ammo_data.normal.normalized() # just to be safe!
-	bullet.translation = emitter.get_global_transform().origin
-	bullet.normal = emitter.get_global_transform().xform(normal) - bullet.translation
-	if ammo_data.has("lifetime"):
-		bullet.lifetime = ammo_data.lifetime
-	else:
-		bullet.lifetime = Game.max_bullet_lifetime
-	if ammo_data.has("bounce"):
-		bullet.physics_material_override.bounce = ammo_data.bounce
-
-	# pass the new node back for handling
-	return bullet
+#func kinematic_bullet(ammoid, npath):
+#	# common bullet scene
+#	var bullet = common_scene_bullet(ammoid, npath)
+#
+#	# get bullet travel's normal
+#	var emitter_position = get_node(Inventory.curr_weapon).get_node("emitter").get_global_transform().origin
+#	var goal = Vector3()
+#	if Game.controller.pick[0].has("position"):
+#		goal = Game.controller.pick[0].position
+#	else:
+#		var proj_origin = Game.controller.cam.project_ray_origin(get_viewport().get_mouse_position())
+#		var proj_normal = Game.controller.cam.project_ray_normal(get_viewport().get_mouse_position())
+#		goal = proj_origin + proj_normal * 20.0
+#	var normal = (goal - emitter_position).normalized()
+#	bullet.normal = normal
+#	bullet.translation = emitter_position
+#
+#	# pass the new node back for handling
+#	return bullet
+#func physics_bullet(ammoid, npath):
+#	# common bullet scene
+#	var bullet = common_scene_bullet(ammoid, npath)
+#
+#	# bullet data
+#	var emitter = get_node(Inventory.curr_weapon).get_node("emitter")
+#	var normal = ammo_data.normal.normalized() # just to be safe!
+#	bullet.translation = emitter.get_global_transform().origin
+#	bullet.normal = emitter.get_global_transform().xform(normal) - bullet.translation
+#	bullet.explode_on_contact = ammo_data.explode_on_contact
+#	if ammo_data.has("lifetime"):
+#		bullet.lifetime = ammo_data.lifetime
+#	else:
+#		bullet.lifetime = Game.max_bullet_lifetime
+#	if ammo_data.has("bounce"):
+#		bullet.physics_material_override.bounce = ammo_data.bounce
+#
+#	# pass the new node back for handling
+#	return bullet
 func fire_bullet(ammoid, tstate):
 	# THIS FUNCTION IS IMPLEMENTED IN THE GAME'S OWN
 	# CHILD SCRIPT INHERITING THIS CLASS.
@@ -173,20 +198,21 @@ func fire_bullet(ammoid, tstate):
 	# 	- instantaneous (hitscan)
 	#	- kinematic bullet
 	#	- rigid bullet
-	if ammo_data.speed == -1:
-		var hit_result = Game.controller.pick[0]
-		if hit_result.size() != 0 && hit_result.has("position"):
-			invoke_hit(hit_result, ammoid, 1.0)
-		return
+	if ammo_data.has("bullet"):
+		if ammo_data.bullet == null: # no bullet: instantaneous
+			var hit_result = Game.controller.pick[0]
+			if hit_result.size() != 0 && hit_result.has("position"):
+				invoke_hit(hit_result, ammoid, ammo_data, 1.0)
+			return
+		else: # custom bullet scene name
+			Game.level.add_child(common_scene_bullet(Game.player, ammo_data.bullet))
 	else:
-		if !ammo_data.has("type"): # default case: kinematic
-			Game.level.add_child(kinematic_bullet(ammoid, ammoid))
-		else:
-			match ammo_data.type:
-				"rigid":
-					Game.level.add_child(physics_bullet(ammoid, ammoid))
-				"kinematic", _:
-					Game.level.add_child(kinematic_bullet(ammoid, ammoid))
+		Game.level.add_child(common_scene_bullet(Game.player, ammoid))
+#			match ammo_data.type:
+#				"rigid":
+#					Game.level.add_child(physics_bullet(ammoid, ammoid))
+#				"kinematic", _:
+#					Game.level.add_child(kinematic_bullet(ammoid, ammoid))
 
 func lerp_charge_amount(ammo_data, duration):
 	# for now, only linear!

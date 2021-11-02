@@ -9,57 +9,57 @@ radius = 0.4
 radius = 0.435482
 height = 0.537309
 
-[sub_resource type="CylinderShape" id=14]
+[sub_resource type="CylinderShape" id=3]
 radius = 0.157885
 height = 1.0
 
-[sub_resource type="AnimationNodeAnimation" id=3]
+[sub_resource type="AnimationNodeAnimation" id=4]
 animation = "22_grab"
 
-[sub_resource type="AnimationNodeBlend2" id=4]
+[sub_resource type="AnimationNodeBlend2" id=5]
 filter_enabled = true
 filters = [ "Armature/Skeleton:arm_L", "Armature/Skeleton:arm_R", "Armature/Skeleton:forearm_L", "Armature/Skeleton:forearm_R", "Armature/Skeleton:hand_L", "Armature/Skeleton:hand_R" ]
-
-[sub_resource type="AnimationNodeAnimation" id=5]
-animation = "04_run"
 
 [sub_resource type="AnimationNodeAnimation" id=6]
 animation = "04_run"
 
-[sub_resource type="AnimationNodeStateMachineTransition" id=7]
-switch_mode = 2
-auto_advance = true
+[sub_resource type="AnimationNodeAnimation" id=7]
+animation = "04_run"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id=8]
 switch_mode = 2
 auto_advance = true
 
-[sub_resource type="AnimationNodeStateMachine" id=9]
-states/04_run/node = SubResource( 6 )
+[sub_resource type="AnimationNodeStateMachineTransition" id=9]
+switch_mode = 2
+auto_advance = true
+
+[sub_resource type="AnimationNodeStateMachine" id=10]
+states/04_run/node = SubResource( 7 )
 states/04_run/position = Vector2( 143, 71 )
-"states/04_run 2/node" = SubResource( 5 )
+"states/04_run 2/node" = SubResource( 6 )
 "states/04_run 2/position" = Vector2( 292, 71 )
-transitions = [ "04_run", "04_run 2", SubResource( 7 ), "04_run 2", "04_run", SubResource( 8 ) ]
+transitions = [ "04_run", "04_run 2", SubResource( 8 ), "04_run 2", "04_run", SubResource( 9 ) ]
 graph_offset = Vector2( -15, -78 )
 
-[sub_resource type="AnimationNodeTimeScale" id=10]
+[sub_resource type="AnimationNodeTimeScale" id=11]
 
-[sub_resource type="AnimationNodeBlendTree" id=11]
+[sub_resource type="AnimationNodeBlendTree" id=12]
 graph_offset = Vector2( -22, 16 )
-nodes/blend/node = SubResource( 3 )
+nodes/blend/node = SubResource( 4 )
 nodes/blend/position = Vector2( 140, 240 )
-nodes/blender/node = SubResource( 4 )
+nodes/blender/node = SubResource( 5 )
 nodes/blender/position = Vector2( 300, 100 )
-nodes/machine/node = SubResource( 9 )
+nodes/machine/node = SubResource( 10 )
 nodes/machine/position = Vector2( 120, 100 )
 nodes/output/position = Vector2( 600, 100 )
-nodes/speed/node = SubResource( 10 )
+nodes/speed/node = SubResource( 11 )
 nodes/speed/position = Vector2( 460, 100 )
 node_connections = [ "speed", 0, "blender", "output", 0, "speed", "blender", 0, "machine", "blender", 1, "blend" ]
 
-[sub_resource type="AnimationNodeStateMachinePlayback" id=12]
+[sub_resource type="AnimationNodeStateMachinePlayback" id=13]
 
-[sub_resource type="RectangleShape2D" id=13]
+[sub_resource type="RectangleShape2D" id=14]
 extents = Vector2( 17, 39 )
 
 [node name="actor" type="Node"]
@@ -89,17 +89,17 @@ __meta__ = {
 
 [node name="collision_cylinder_low" type="CollisionShape" parent="body3D"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
-shape = SubResource( 14 )
+shape = SubResource( 3 )
 disabled = true
 __meta__ = {
 "_edit_lock_": true
 }
 
 [node name="AnimationTree" type="AnimationTree" parent="body3D"]
-tree_root = SubResource( 11 )
+tree_root = SubResource( 12 )
 anim_player = NodePath("../mesh/AnimationPlayer")
 parameters/blender/blend_amount = 1.0
-parameters/machine/playback = SubResource( 12 )
+parameters/machine/playback = SubResource( 13 )
 parameters/speed/scale = 1.0
 
 [node name="lights" type="Spatial" parent="body3D"]
@@ -117,12 +117,13 @@ transform = Transform( 0.821691, -0.48818, 0.294117, -0.192485, -0.723437, -0.66
 light_energy = 0.1
 
 [node name="body2D" type="KinematicBody2D" parent="."]
+collision_layer = 2
 __meta__ = {
 "_edit_lock_": true
 }
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="body2D"]
-shape = SubResource( 13 )
+shape = SubResource( 14 )
 __meta__ = {
 "_edit_lock_": true
 }

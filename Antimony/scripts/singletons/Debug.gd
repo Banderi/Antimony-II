@@ -35,6 +35,12 @@ func line(v1, v2, c1, c2 = null):
 	if c2 == null:
 		c2 = c1
 	todraw["lines"].append([v1, v2, c1, c2])
+func vector(p, v, c, d1 = false, d2 = false):
+	line(p, p + v, c)
+	if d1:
+		point(p, c)
+	if d2:
+		point(p + v, c)
 func path(p, v, c):
 	if !todraw["paths"].has(p):
 		todraw["paths"][p] = []

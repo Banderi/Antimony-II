@@ -30,9 +30,9 @@ remote func RPC_receive_player(peer, peer_info): # somebody else is trying to sy
 	status_refresh()
 func RPC_sync_my_player(): # I received a connect signal, so I'm sending OUR player data over!
 	# TODO:
-#	Game.player.name = "PLAYER_" + str(my_peer)
-#	Game.player.peer = my_peer
-#	Game.player.set_network_master(my_peer)
+#	game.player.name = "PLAYER_" + str(my_peer)
+#	game.player.peer = my_peer
+#	game.player.set_network_master(my_peer)
 	var peer_info = {
 		# TODO
 	}

@@ -8,15 +8,15 @@
 [ext_resource path="res://Antimony/fonts/slkscr.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://Antimony/shaders/pixelize.shader" type="Shader" id=7]
 
-[sub_resource type="ShaderMaterial" id=5]
+[sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 7 )
 shader_param/pixel_size = 0.5
 
-[sub_resource type="StyleBoxEmpty" id=1]
-
 [sub_resource type="StyleBoxEmpty" id=2]
 
-[sub_resource type="DynamicFont" id=3]
+[sub_resource type="StyleBoxEmpty" id=3]
+
+[sub_resource type="DynamicFont" id=4]
 size = 17
 font_data = ExtResource( 6 )
 
@@ -38,7 +38,8 @@ __meta__ = {
 [node name="level" type="Spatial" parent="."]
 
 [node name="POST_PROCESSING" type="ColorRect" parent="."]
-material = SubResource( 5 )
+visible = false
+material = SubResource( 1 )
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
@@ -69,7 +70,7 @@ margin_top = -139.5
 margin_right = 93.5
 margin_bottom = 139.5
 mouse_filter = 2
-custom_styles/focus = SubResource( 1 )
+custom_styles/focus = SubResource( 2 )
 disabled = true
 enabled_focus_mode = 0
 __meta__ = {
@@ -106,8 +107,8 @@ __meta__ = {
 [node name="resume" type="Button" parent="UI/m_pause/Panel/vbox"]
 margin_right = 180.0
 margin_bottom = 24.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "Continue Game"
 __meta__ = {
 "_edit_lock_": true
@@ -117,8 +118,8 @@ __meta__ = {
 margin_top = 28.0
 margin_right = 180.0
 margin_bottom = 52.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "New World"
 __meta__ = {
 "_edit_lock_": true
@@ -129,8 +130,8 @@ visible = false
 margin_top = 56.0
 margin_right = 180.0
 margin_bottom = 80.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "Save Game"
 __meta__ = {
 "_edit_lock_": true
@@ -140,8 +141,8 @@ __meta__ = {
 margin_top = 56.0
 margin_right = 180.0
 margin_bottom = 80.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "Load Game"
 __meta__ = {
 "_edit_lock_": true
@@ -151,8 +152,8 @@ __meta__ = {
 margin_top = 84.0
 margin_right = 180.0
 margin_bottom = 108.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 disabled = true
 text = "Connect"
 __meta__ = {
@@ -163,8 +164,8 @@ __meta__ = {
 margin_top = 112.0
 margin_right = 180.0
 margin_bottom = 136.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 disabled = true
 text = "Settings"
 __meta__ = {
@@ -175,8 +176,8 @@ __meta__ = {
 margin_top = 140.0
 margin_right = 180.0
 margin_bottom = 164.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "About"
 __meta__ = {
 "_edit_lock_": true
@@ -187,8 +188,8 @@ visible = false
 margin_top = 168.0
 margin_right = 180.0
 margin_bottom = 192.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "Credits"
 __meta__ = {
 "_edit_lock_": true
@@ -198,8 +199,8 @@ __meta__ = {
 margin_top = 168.0
 margin_right = 180.0
 margin_bottom = 192.0
-custom_styles/focus = SubResource( 2 )
-custom_fonts/font = SubResource( 3 )
+custom_styles/focus = SubResource( 3 )
+custom_fonts/font = SubResource( 4 )
 text = "Exit"
 __meta__ = {
 "_edit_lock_": true

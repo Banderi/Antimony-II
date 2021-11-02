@@ -938,7 +938,9 @@ func _process(delta):
 	Debug.loginfo("")
 
 func _physics_process(delta):
-	body3D.collision_mask = 1 # collision is set to "disabled" by certain props
+	# reset collision masks -- collision is set to "disabled" by certain props/states, like ladders
+	body3D.collision_layer = Masks.LEVEL + Masks.ACTORS # LISTENING FROM...
+	body3D.collision_mask = Masks.PROPS # PROPAGATING TO...
 
 	# only perform basic animation updates if puppet (node controlled by other players remotely)
 	if !RPC.am_master(self):

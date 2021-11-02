@@ -54,8 +54,8 @@ var max_bullet_travel = 100
 var max_bullet_lifetime = 10.0
 
 var unlimited_health = false
-var unlimited_ammo = false
-var unlimited_mags = false
+var unlimited_ammo = true
+var unlimited_mags = true
 
 var character = 0
 #var hotbar_sel = 0
