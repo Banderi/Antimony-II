@@ -6,25 +6,17 @@ export(float) var health = 1.0
 export(float) var speed = 0.1
 export(float) var lifetime = 1.0
 export(bool) var explode_on_contact = true
-#export(bool) var slide_on_contact = true
 export(bool) var maintain_normal = false
 export(Vector3) var gravity = Vector3(0, -0.98, 0)
 export(float) var mass = 1.0
 export(float) var bounce = 0.5
 export(float) var friction = 0.9
 export(float) var damping = 0.003
-#export(int, 1, 100) var max_contacts = 10
 
 var owner_actor = null
 var original_pos = Vector3()
 var normal = Vector3()
 var strength_scale = 1.0
-#var ammoid = null
-#var original_pos = Vector3()
-#var normal = Vector3()
-#var speed = 0.1
-#var strength_scale = 1.0
-
 
 ###
 
@@ -80,15 +72,10 @@ func handle_collision_slide(data, slide):
 
 	# redirection
 	var redirect_vector = -radius.dot(slide.normal) * slide.normal * 1
-#	data.redirect_forces += redirect_vector
 
 	Debug.vector(slide.position, slide.normal, Color(1,0,1), true)
 	Debug.vector(slide.position, local_normal_force, Color(1,1,0))
 	Debug.vector(slide.position, velocity_at_point, Color(0,1,0))
-#	Debug.vector(slide.position, local_friction_vector, Color(0,0,0))
-#	Debug.vector(slide.position, bounce_vector, Color(0,0,1))
-#	Debug.vector(slide.position, redirect_vector, Color(0,1,1))
-#		print("%d %s @ %s" % [slide.collider_id, slide.normal, slide.position])
 	var hit_result = {
 		"position": slide.position,
 		"normal": slide.normal,
@@ -153,12 +140,10 @@ func custom_collision_integration(delta):
 	# add gravity
 	velocity_0 = (velocity_0 + gravity * 0.9) * (1.0 - damping)
 
-	# linear force integration
-#	velocity = move_and_slide(velocity_0, Vector3(), false, 4, 0.785398, false) # add to previous velocities
-#	var cc
-#	var cc = move_and_collide(velocity_0 * delta, false)
-#	velocity = velocity_0
-
+	# force integrations
+	# NOTE: this code will NEVER seemingly hit more than one collision/slide at a time.
+	# To combat this, the collision integration is called TWICE: first with the full velocity,
+	# then a second time without the force of gravity, to correctly parse collision from walls.
 	var data = {
 		"overall_friction": Vector3(),
 		"overall_ang_friction": Vector3(),
@@ -168,49 +153,28 @@ func custom_collision_integration(delta):
 		"bouncing_forces": Vector3(),
 		"redirect_forces": Vector3()
 	}
-
-	if true:
+	if true: # iterate over slides
 		velocity = move_and_slide(velocity_0, Vector3(), false, 4, 0.785398, false) # add to previous velocities
-		# iterate over slides
 		for c in get_slide_count():
-#			print(c)
 			data = handle_collision_slide(data, get_slide_collision(c))
-	else:
+	else: # iterate over kinematic collisions
 		var cc = move_and_collide(velocity_0 * delta, false)
-		velocity = velocity_0
-		# iterate over kinematic collisions
+		velocity = velocity_0 # add to previous velocities
 		if cc != null:
-#			print(cc.collider_id)
 			data = handle_collision_kinematic(data, cc)
 
-	# TODO: overall_friction
-
 	velocity += data.bouncing_forces + data.redirect_forces
-
-#
-#	# linear force integration
-#	velocity = move_and_slide(velocity_0) # add to previous velocities
-
-#	# bounce!
-#	if overall_coll_normal != Vector3():
-#		overall_coll_normal = overall_coll_normal.normalized()
-#		velocity = velocity_0 - 2 * (velocity_0.dot(overall_coll_normal)) * overall_coll_normal * bounce
 
 	# angular acceleration from torque
 	if !maintain_normal:
 		if data.overall_torque != Vector3():
 			vectorial_angular_velocity = Game.delta_interpolate(vectorial_angular_velocity, data.overall_torque, 1.0 / mass, delta)
-#		vectorial_angular_velocity = data.overall_torque # TODO: mass ("moment of inertia")
 		if vectorial_angular_velocity != Vector3():
 			var ang_axis = vectorial_angular_velocity.normalized()
 			var ang_magnitude = vectorial_angular_velocity.length()
 			rotate(ang_axis, ang_magnitude)
 
-#	var ddd = overall_coll_normal.dot(Vector3(0,1,0))
-#	if ddd < 0:
-#	print("%d %s" % [get_slide_count(), ddd])
 	Debug.vector(translation, velocity_0, Color(0,1,0), true)
-#	Debug.vector(translation, overall_ang_friction * 100, Color(0,0,0))
 	Debug.vector(translation, data.overall_torque * 10, Color(1,0,0))
 
 func _physics_process(delta):
