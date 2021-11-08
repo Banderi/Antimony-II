@@ -12,6 +12,7 @@ var debugbox
 #var t2
 #var c1
 #var c2
+var ff
 
 var todraw = {
 	"points": [],
@@ -126,7 +127,10 @@ func _process(delta):
 
 	match display:
 		1:
+			# render immediate geometry
 			render()
+
+			# render game elements
 			for p in get_tree().get_nodes_in_group("props"):
 				draw_owner(p)
 			for a in get_tree().get_nodes_in_group("actors"):
@@ -138,8 +142,24 @@ func _process(delta):
 				point(e.target, c)
 				line(e.target, e.get_global_transform().origin, c)
 
+			# render free-floating text
+			for p in Game.controller.pick.size():
+				if !Game.controller.pick[p].empty():
+					var label = ff.get_child(p)
+					var pick = Game.controller.pick[p]
+#					label.text = str(pick)
+#					label.text = JSON.print(pick, "\t")
+					label.text = ""
+					for l in pick:
+						label.text += "%s : %s" % [l, pick[l]]
+						if (l != pick.keys().back()):
+							label.text += "\n"
+					label.rect_position = pick.screencoords + Vector2(30, 0)
+
+			# FPS
 			fps.text = str(Performance.get_monitor(0))
 
+			# inventory box debug draws
 			for i in range(0,7):
 				var h = null
 				if i < 3:

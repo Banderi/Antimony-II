@@ -15,6 +15,8 @@ var weaps # toolbelt
 var space_state
 var space_state2D
 
+var raypick_ignore_first = false
+
 var gravity = 100
 var air_drag = 0.99
 var max_fall_speed = -5000
@@ -182,6 +184,13 @@ func set_death_timeout(node, lifetime):
 	var timer = load("res://Antimony/scenes/kill_timer.tscn").instance()
 	timer.wait_time = lifetime
 	node.add_child(timer)
+
+func correct_look_at(node, pos, normal):
+	node.translation = pos
+	if normal.angle_to(Vector3(0, 1, 0)) < 0.2:
+		node.look_at(pos + normal, Vector3(0, 0, 1))
+	else:
+		node.look_at(pos + normal, Vector3(0, 1, 0))
 
 ###
 

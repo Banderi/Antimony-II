@@ -23,8 +23,9 @@ func _ready():
 	Game.root = self
 	Debug.dbg = $UI/debug
 	Debug.im = $UI/debug/im
-	Debug.fps = $UI/debug/text/fps
 	Debug.debugbox = $UI/debug/text/box
+	Debug.fps = $UI/debug/topright/fps
+	Debug.ff = $UI/debug/freefloating
 	UI.UI_root = $UI
 	UI.m_main = $UI/m_main
 	UI.m_pause = $UI/m_pause

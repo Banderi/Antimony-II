@@ -46,7 +46,7 @@ var pick = [
 	{}, {}, {}
 ]
 var hl_prop = null
-var command_point = Vector3()
+var command_point = null
 var max_height_diff = 0.5
 
 var camera_shake_force = Vector2()
@@ -114,6 +114,10 @@ func center():
 		target = Game.player.pos
 
 func update_raycast():
+	# reset prop highlight
+	get_tree().call_group_flags(2, "props", "highlight", false)
+	hl_prop = null
+
 	if Game.is_2D():
 		cursor.visible = false
 	else:
@@ -121,60 +125,69 @@ func update_raycast():
 		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
 		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
-		match Game.GAMEMODE:
-			Game.gm.fps:
+		if !Game.raypick_ignore_first:
+			# first raycast - from camera to 1000 in front
+			var from = proj_origin
+			var to = from + proj_normal * 1000
+			var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
 
-				# first raycast - from camera to 1000 in front
-				var from = proj_origin
-				var to = from + proj_normal * 1000
-				var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+			# hit!
+			if result:
+				pick[0] = result.duplicate()
+				update_cursor(false)
+			else:
+				pick = [{},{},{}]
+				cursor.visible = false
 
-				# hit!
-				if result:
+		else:
+			# first raycast - from 1000 units behind camera to 1000 in front
+			var from = proj_origin - proj_normal * 1000
+			var to = from + proj_normal * 2000
+			var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+
+			# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
+			if result:
+				if ((proj_origin - result.position).normalized() - proj_normal).length() < 1:
+					from = proj_origin # if collision was behind camera, do again from the camera
+				else:
+					from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
+				to = from + proj_normal * 1000
+				var result2 = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+
+				# final, correct collision point!
+				if result2:
+					pick[0] = result2.duplicate()
+				else:
 					pick[0] = result.duplicate()
-					update_cursor(false)
-				else:
-					pick = [{},{},{}]
-					cursor.visible = false
+					pick[1] = result2.duplicate()
 
-			Game.gm.rts, Game.gm.ludcorp:
-				# first raycast - from 1000 units behind camera to 1000 in front
-				var from = proj_origin - proj_normal * 1000
-				var to = from + proj_normal * 2000
-				var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+				# mouse hover over props
+				var m = pick[0].collider.collision_layer
+	#			Debug.loginfo(str(m))
+				match m:
+					4, 8:
+						hl_prop = pick[0].collider.get_parent()
+						hl_prop.highlight(true)
+	#				8:
+	#					hl_prop = pick[0].collider
+	#					pick[0].collider.highlight(true)
+				update_cursor(false)
+			else:
+				pick = [{},{},{}]
+				cursor.visible = false
 
-				# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
-				if result:
-					if ((proj_origin - result.position).normalized() - proj_normal).length() < 1:
-						from = proj_origin # if collision was behind camera, do again from the camera
-					else:
-						from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
-					to = from + proj_normal * 1000
-					var result2 = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+	# normalize... normals, and add screen coords
+	for p in pick.size():
+		if !pick[p].empty():
+#			pick[p].normal = pick[p].normal.normalized()
+			pick[p]["screencoords"] = cam.unproject_position(pick[p].position)
 
-					# final, correct collision point!
-					if result2:
-						pick[0] = result2.duplicate()
-					else:
-						pick[0] = result.duplicate()
-						pick[1] = result2.duplicate()
-
-					# mouse hover over props
-					get_tree().call_group_flags(2, "props", "highlight", false)
-					hl_prop = null
-					var m = pick[0].collider.collision_layer
-		#			Debug.loginfo(str(m))
-					match m:
-						4, 8:
-							hl_prop = pick[0].collider.get_parent()
-							hl_prop.highlight(true)
-		#				8:
-		#					hl_prop = pick[0].collider
-		#					pick[0].collider.highlight(true)
-					update_cursor(false)
-				else:
-					pick = [{},{},{}]
-					cursor.visible = false
+	if !pick[0].empty():
+		Debug.point(pick[0].position, Color(1, 1, 0))
+		Debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
+	if !pick[1].empty():
+		Debug.point(pick[1].position, Color(1, 0, 0))
+		Debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
 func update_cursor(snap):
 	match Game.GAMEMODE:
 		Game.gm.fps:
@@ -183,23 +196,20 @@ func update_cursor(snap):
 	cursor.visible = true
 
 	var cur_pos = Vector3()
-
 	if snap:
 		cur_pos = pick[0].position.floor() + Vector3(0.5, 0.5, 0.5) - 0.5 * pick[0].normal
 	else:
 		cur_pos = pick[0].position
-	cursor.translation = cur_pos
+	Game.correct_look_at(cursor, cur_pos, pick[0].normal)
 
-	if pick[0].normal != Vector3(0, 1, 0) && pick[0].normal != Vector3(0, -1, 0):
-		cursor.look_at(cur_pos + pick[0].normal, Vector3(0, 1, 0))
-	else:
-		cursor.look_at(cur_pos + pick[0].normal, Vector3(1, 0, 0))
+var slv = null # this is the controller slave node -- implements input manually.
 
 func _input(event):
 	if UI.paused:
 		return
 
 	# GAME-specific logic
+	slv.input_slave_queue(event)
 	match Game.GAMEMODE:
 		Game.gm.fps:
 			if UI.state <= 0: # not in menus
@@ -235,42 +245,42 @@ func _input(event):
 				# camera
 				if Input.is_action_just_pressed("camera_thirdperson"):
 					alt_camera = !alt_camera
-		Game.gm.rts, Game.gm.ludcorp:
-			# mouse movement
-			if event is InputEventMouseMotion:
-				if Input.is_action_pressed("camera_orbit"): # orbit camera
-					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
-						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
-					elif Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
-						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
-					else:
-						orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0075)
-
-			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
-			if !alt_camera:
-				if Input.is_action_pressed("camera_zoomin"):
-					zoom(-Game.settings["controls"]["zoom_sens"])
-				if Input.is_action_pressed("camera_zoomout"):
-					zoom(Game.settings["controls"]["zoom_sens"])
-			# only if mouse is NOT on inv. panels
-			if UI.handle_input <= 0:
-				if Input.is_action_just_released("player_command") && !pick[0].empty(): # send actor on an adventure!
-					if hl_prop != null:
-						Game.player.reach_prop(hl_prop)
-					else:
-						command_point = pick[0].position
-						command_point += pick[0].normal * 0.2 # offset by normal
-						Game.player.travel(command_point)
-				if Input.is_action_just_released("player_cancel"): # cancel adventure....
-					Game.player.cancel()
-				if Input.is_action_just_pressed("character_switch"): # switch available character
-					Game.switch_character()
-					center()
-				if !alt_camera: # camera locking / centering / etc.
-					if Input.is_action_pressed("camera_center"):
-						center()
-					if Input.is_action_just_pressed("camera_follow"):
-						locked = !locked
+#		Game.gm.rts, Game.gm.ludcorp:
+#			# mouse movement
+#			if event is InputEventMouseMotion:
+#				if Input.is_action_pressed("camera_orbit"): # orbit camera
+#					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
+#						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
+#					elif Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
+#						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
+#					else:
+#						orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0075)
+#
+#			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
+#			if !alt_camera:
+#				if Input.is_action_pressed("camera_zoomin"):
+#					zoom(-Game.settings["controls"]["zoom_sens"])
+#				if Input.is_action_pressed("camera_zoomout"):
+#					zoom(Game.settings["controls"]["zoom_sens"])
+#			# only if mouse is NOT on inv. panels
+#			if UI.handle_input <= 0:
+#				if Input.is_action_just_released("player_command") && !pick[0].empty(): # send actor on an adventure!
+#					if hl_prop != null:
+#						Game.player.reach_prop(hl_prop)
+#					else:
+#						command_point = pick[0].position
+#						command_point += pick[0].normal * 0.2 # offset by normal
+#						Game.player.travel(command_point)
+#				if Input.is_action_just_released("player_cancel"): # cancel adventure....
+#					Game.player.cancel()
+#				if Input.is_action_just_pressed("character_switch"): # switch available character
+#					Game.switch_character()
+#					center()
+#				if !alt_camera: # camera locking / centering / etc.
+#					if Input.is_action_pressed("camera_center"):
+#						center()
+#					if Input.is_action_just_pressed("camera_follow"):
+#						locked = !locked
 		Game.gm.fighting:
 			# crouching
 			if Input.is_action_pressed("crouch"):
@@ -319,6 +329,7 @@ func _process(delta):
 	if !UI.paused:
 
 		# GAME-specific logic
+		slv.input_slave_process(delta)
 		match Game.GAMEMODE:
 			Game.gm.fps:
 				if UI.state <= 0: # not in menus
@@ -412,13 +423,16 @@ func _process(delta):
 
 	# how do the LookAt and Camera origin behave? (GAME-specific logic)
 	var lookat_offset = offset
-	if Game.can_sneak && Game.player.crouching:
-		lookat_offset = crouch_offset
-	smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
+#	if Game.can_sneak && Game.player.crouching:
+#		lookat_offset = crouch_offset
+#	smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 	var new_lookat = target + smooth_offset
 	var new_zoom = zoom_target
 	match Game.GAMEMODE:
 		Game.gm.fps:
+			if Game.can_sneak && Game.player.crouching:
+				lookat_offset = crouch_offset
+			smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 			new_lookat = Game.player.pos + smooth_offset
 			if alt_camera:
 				new_zoom = alt_camera_zoom
@@ -432,34 +446,37 @@ func _process(delta):
 				new_lookat = target + smooth_offset
 				new_zoom = zoom_target
 
-	lookat = Game.delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
-	zoom = Game.delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
-	zoom_curve = 0.0075 * zoom * zoom
-	cam.translation.z = 20.0 * zoom_curve
-
-	# update camera transform
-	# for camera tilt:
-	# X comes from dir.Z and rotates around the Y axis ---> .rotated(Vector3(1, 0, 0),  dir.z)
-	# Z comes from dir.X and rotates around the Z axis ---> .rotated(Vector3(0, 0, 1), -dir.x)
-	follow.set_transform(Transform(
-		Transform(Basis()).rotated(Vector3(1, 0, 0), theta).rotated(
-			Vector3(1, 0, 0), camera_tilt.x).rotated(
-			Vector3(0, 0, 1), camera_tilt.z).rotated(
-#			Vector3(0, 1, 0), camera_tilt.y).rotated(
-			up, phi).basis,
-		Vector3(0,0,0)))
-	follow.global_translate(lookat)
-
-	# update secondary camera
-	cam_secondary.global_transform = cam.global_transform
-
 	# update 2D camera
-	cam2D.position = Game.delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
-	cam2D.position.y += Game.player.velocity.y * camera_2d_vertical_compensation
-	cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
+	if Game.is_2D():
+		cam2D.position = Game.delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
+		cam2D.position.y += Game.player.velocity.y * camera_2d_vertical_compensation
+		cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
+	# update 3D camera
+	else:
+		lookat = Game.delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
+		zoom = Game.delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
+		zoom_curve = 0.0075 * zoom * zoom
+		cam.translation.z = 20.0 * zoom_curve
 
-	# update weapon & camera bobbing
-	Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
+		# update camera transform
+		# for camera tilt:
+		# X comes from (+)dir.Z and rotates around the X axis ---> .rotated(Vector3(1, 0, 0),  dir.z)
+		# Z comes from (-)dir.X and rotates around the Z axis ---> .rotated(Vector3(0, 0, 1), -dir.x)
+		follow.set_transform(Transform(
+			Transform(Basis()).rotated(Vector3(1, 0, 0), theta).rotated(
+				Vector3(1, 0, 0), camera_tilt.x).rotated(
+				Vector3(0, 0, 1), camera_tilt.z).rotated(
+#				Vector3(0, 1, 0), camera_tilt.y).rotated(
+				up, phi).basis,
+			Vector3(0,0,0)))
+		follow.global_translate(lookat)
+
+		# update secondary camera
+		cam_secondary.global_transform = cam.global_transform
+
+		# update weapon & camera bobbing
+		if Game.weaps != null:
+			Game.weaps.camera_tilt = camera_tilt * Vector3(-1, -1, 1)
 
 	# refresh global physic space state
 	Game.update_physics_space_state()
@@ -469,20 +486,13 @@ func _process(delta):
 		update_raycast()
 
 	# debugging info
-	match Game.GAMEMODE:
-		Game.gm.fps, Game.gm.ludcorp:
-			if !pick[0].empty():
-				Debug.point(pick[0].position, Color(1, 1, 0))
-				Debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
-			if !pick[1].empty():
-				Debug.point(pick[1].position, Color(1, 0, 0))
-				Debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
-			Debug.point(command_point, Color(0,1,0))
+	if command_point != null:
+		Debug.point(command_point, Color(0,1,0))
 
 	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
-	Debug.loginfo("colliders:  ", pick[0])
-	Debug.loginfo("            ", pick[1])
-	Debug.loginfo("            ", pick[2])
+#	Debug.loginfo("colliders:  ", pick[0])
+#	Debug.loginfo("            ", pick[1])
+#	Debug.loginfo("            ", pick[2])
 
 	emit_signal("controller_update")
 
