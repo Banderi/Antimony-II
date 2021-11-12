@@ -111,6 +111,7 @@ func update_raycast():
 						highlight(result.collider.get_parent())
 #					8:
 #						highlight(result.collider)
+				from = result.position + proj_normal * 0.001 # advance raycast along -- add EPSILON to avoid infinite loops!
 			else:
 				checking = false
 
@@ -122,11 +123,9 @@ func update_raycast():
 	update_cursor()
 
 	# normalize... normals, and add screen coords
-	for p in raypicks.size():
-		if !raypicks[p].empty():
-			raypicks[p]["screencoords"] = cam.unproject_position(raypicks[p].position)
-			Debug.vector(raypicks[p].position, raypicks[p].position + raypicks[p].normal, Color(1, 1, 0))
-
+	for pick in raypicks:
+		pick["screencoords"] = cam.unproject_position(pick.position)
+		Debug.vector(pick.position, pick.normal, Color(1, 1, 0), true)
 func update_cursor():
 	# no valid raypicking results
 	if get_raypick() == null:
@@ -223,21 +222,8 @@ func center(): # same as above, but shorthand for centering on the player actor 
 
 ###
 
-func _input(event):
-	if UI.paused:
-		return
-
-	# GAME-specific logic
-	if UI.hud != null:
-		UI.hud.input_slave_queue(event)
-
 signal controller_update
 func _process(delta):
-	if !UI.paused:
-
-		# GAME-specific logic
-		if UI.hud != null:
-			UI.hud.input_slave_process(delta)
 
 	# update camera to follow the locked-on object (if there is any)
 	follow_centered_object()
@@ -314,9 +300,10 @@ func _process(delta):
 		Debug.point(point, Color(0,1,0))
 
 	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
-#	Debug.loginfo("colliders:  ", pick[0])
-#	Debug.loginfo("            ", pick[1])
-#	Debug.loginfo("            ", pick[2])
+	Debug.loginfo("raypicks:   ", raypicks.size())
+	Debug.loginfo("highlights: ", highlighted_objects.size())
+	Debug.loginfo("selected:   ", selected_objects.size())
+	Debug.loginfo("commpoints: ", command_points.size())
 
 	emit_signal("controller_update")
 

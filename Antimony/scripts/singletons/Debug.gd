@@ -92,18 +92,16 @@ func _process(delta):
 				line(e.target, e.get_global_transform().origin, c)
 
 			# render free-floating text
-			for p in Game.controller.pick.size():
-				if !Game.controller.pick[p].empty():
-					var label = ff.get_child(p)
-					var pick = Game.controller.pick[p]
-#					label.text = str(pick)
-#					label.text = JSON.print(pick, "\t")
-					label.text = ""
-					for l in pick:
-						label.text += "%s : %s" % [l, pick[l]]
-						if (l != pick.keys().back()):
-							label.text += "\n"
-					label.rect_position = pick.screencoords + Vector2(30, 0)
+			for label in ff.get_children():
+				label.text = ""
+			for p in min(Game.controller.raypicks.size(), 1):
+				var label = ff.get_child(p)
+				var pick = Game.controller.get_raypick(p)
+				for l in pick:
+					label.text += "%s : %s" % [l, pick[l]]
+					if (l != pick.keys().back()):
+						label.text += "\n"
+				label.rect_position = pick.screencoords + Vector2(30, 0)
 
 			# FPS
 			fps.text = str(Performance.get_monitor(0))
