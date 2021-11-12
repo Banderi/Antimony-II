@@ -63,6 +63,8 @@ var character = 0
 #var hotbar_sel = 0
 #var inventory = [null, null, null] # these are HUD_item nodes! they are handled by the UI class!
 
+var cursor_mode = 0
+
 ###
 
 enum gm { # "game mode" for different sub-engines
@@ -271,6 +273,8 @@ func get_playername():
 ###
 
 func update_physics_space_state():
+	if level == null:
+		return
 	if is_2D():
 		space_state2D = level.get_world_2d().direct_space_state
 	else:
@@ -290,6 +294,13 @@ func load_level(map):
 
 	# boot level script
 	Game.level.start()
+
+	# initialize global space states
+	Game.update_physics_space_state()
+
+	if !UI.is_ui_valid():
+		print("ERROR: UI could not init! Quitting...")
+		Game.quit_game()
 
 func new_game():
 	pass

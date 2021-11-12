@@ -103,15 +103,26 @@ func move3D(r, s = 1.0):
 func move2D(x, y, s = 100.0):
 	target2D += Vector2(x, y) * s * (0.75 + zoom_curve * 0.95)
 
-func center():
+var followed_object = null
+func center_on(object, lock = false):
+	followed_object = object
+	locked = lock
+func follow_centered_object(): # this is ran continuously -- if it has a locked-on object, the camera will follow/center on it.
+	if followed_object == null:
+		return
+	# center camera on the followed object...
 	if Game.is_2D():
-		match Game.GAMEMODE:
-			Game.gm.plat:
-				target2D = Game.player.pos2D
-			Game.gm.fighting:
-				target2D = Game.player.pos2D # temp
+		if followed_object is Actor:
+			target = followed_object.pos2D
+		else:
+			target = followed_object.position
 	else:
-		target = Game.player.pos
+		if followed_object is Actor:
+			target = followed_object.pos
+		else:
+			target = followed_object.translation
+func center(): # same as above, but shorthand for centering on the player actor object.
+	center_on(Game.player)
 
 func update_raycast():
 	# reset prop highlight
@@ -134,7 +145,7 @@ func update_raycast():
 			# hit!
 			if result:
 				pick[0] = result.duplicate()
-				update_cursor(false)
+				update_cursor()
 			else:
 				pick = [{},{},{}]
 				cursor.visible = false
@@ -171,7 +182,7 @@ func update_raycast():
 	#				8:
 	#					hl_prop = pick[0].collider
 	#					pick[0].collider.highlight(true)
-				update_cursor(false)
+				update_cursor()
 			else:
 				pick = [{},{},{}]
 				cursor.visible = false
@@ -188,7 +199,7 @@ func update_raycast():
 	if !pick[1].empty():
 		Debug.point(pick[1].position, Color(1, 0, 0))
 		Debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
-func update_cursor(snap):
+func update_cursor():
 	match Game.GAMEMODE:
 		Game.gm.fps:
 			cursor.visible = false
@@ -196,227 +207,35 @@ func update_cursor(snap):
 	cursor.visible = true
 
 	var cur_pos = Vector3()
-	if snap:
-		cur_pos = pick[0].position.floor() + Vector3(0.5, 0.5, 0.5) - 0.5 * pick[0].normal
-	else:
-		cur_pos = pick[0].position
+	match Game.cursor_mode:
+		0:
+			cur_pos = pick[0].position
+		1:
+			cur_pos = pick[0].position.floor() + Vector3(0.5, 0.5, 0.5) - 0.5 * pick[0].normal
+		2:
+			pass
 	Game.correct_look_at(cursor, cur_pos, pick[0].normal)
 
-var slv = null # this is the controller slave node -- implements input manually.
+#var slv = null # this is the controller slave node -- implements input manually.
 
 func _input(event):
 	if UI.paused:
 		return
 
 	# GAME-specific logic
-	slv.input_slave_queue(event)
-	match Game.GAMEMODE:
-		Game.gm.fps:
-			if UI.state <= 0: # not in menus
-				# mouse movement
-				if event is InputEventMouseMotion:
-					orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0035)
-	#			if Input.is_action_pressed("camera_zoomin"):
-	#				zoom(-Game.settings["controls"]["zoom_sens"])
-	#			if Input.is_action_pressed("camera_zoomout"):
-	#				zoom(Game.settings["controls"]["zoom_sens"])
-
-				# reloading
-				if Input.is_action_just_pressed("weap_reload"):
-					Game.weaps.reload(false)
-
-				# weapon selection
-				if Input.is_action_just_pressed("weap_prev"):
-					Inventory.weapon_prev()
-				elif Input.is_action_just_pressed("weap_next"):
-					Inventory.weapon_next()
-				elif Input.is_action_just_pressed("weap_last"):
-					Inventory.equip_weapon(Inventory.last_weapon)
-
-				# fire selection
-				# TODO
-
-				# item selection
-				# TODO
-
-				# use items
-				# TODO
-
-				# camera
-				if Input.is_action_just_pressed("camera_thirdperson"):
-					alt_camera = !alt_camera
-#		Game.gm.rts, Game.gm.ludcorp:
-#			# mouse movement
-#			if event is InputEventMouseMotion:
-#				if Input.is_action_pressed("camera_orbit"): # orbit camera
-#					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
-#						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
-#					elif Input.is_action_pressed("camera_drag") && !locked: # pan camera (shift + orbit)
-#						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
-#					else:
-#						orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0075)
-#
-#			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
-#			if !alt_camera:
-#				if Input.is_action_pressed("camera_zoomin"):
-#					zoom(-Game.settings["controls"]["zoom_sens"])
-#				if Input.is_action_pressed("camera_zoomout"):
-#					zoom(Game.settings["controls"]["zoom_sens"])
-#			# only if mouse is NOT on inv. panels
-#			if UI.handle_input <= 0:
-#				if Input.is_action_just_released("player_command") && !pick[0].empty(): # send actor on an adventure!
-#					if hl_prop != null:
-#						Game.player.reach_prop(hl_prop)
-#					else:
-#						command_point = pick[0].position
-#						command_point += pick[0].normal * 0.2 # offset by normal
-#						Game.player.travel(command_point)
-#				if Input.is_action_just_released("player_cancel"): # cancel adventure....
-#					Game.player.cancel()
-#				if Input.is_action_just_pressed("character_switch"): # switch available character
-#					Game.switch_character()
-#					center()
-#				if !alt_camera: # camera locking / centering / etc.
-#					if Input.is_action_pressed("camera_center"):
-#						center()
-#					if Input.is_action_just_pressed("camera_follow"):
-#						locked = !locked
-		Game.gm.fighting:
-			# crouching
-			if Input.is_action_pressed("crouch"):
-				Game.player.crouch(true)
-			if Input.is_action_just_released("crouch"):
-				Game.player.crouch(false)
-			# blocking
-			if Input.is_action_just_pressed("block"):
-				Game.player.block(true)
-			if Input.is_action_just_released("block"):
-				Game.player.block(false)
-			# attacks
-			if Game.player.crouching: # crouched attacks
-				if Input.is_action_just_pressed("attack_0"): # light attack (tail sweep)
-					Game.player.attack_start(9)
-				if Input.is_action_just_pressed("attack_1"): # heavy attack (double kick)
-					Game.player.attack_start(10)
-			elif Game.player.onground: # standing attacks
-				if Input.is_action_just_pressed("attack_0"): # light attacks (claws)
-					if Input.is_action_pressed("move_up"):
-						Game.player.attack_start(2) # high claws
-					elif Input.is_action_pressed("move_down"):
-						Game.player.attack_start(1) # low claws
-					else:
-						Game.player.attack_start(0) # mid claws
-				if Input.is_action_just_pressed("attack_1"): # heavy attacks (kicks)
-					if Input.is_action_pressed("move_up"):
-						Game.player.attack_start(5) # high kick
-					elif Input.is_action_pressed("move_down"):
-						Game.player.attack_start(4) # low kick
-					else:
-						Game.player.attack_start(3) # mid kick
-				if Input.is_action_just_pressed("attack_2"): # special attacks
-					if Input.is_action_pressed("move_up"):
-						Game.player.attack_start(7) # guitar golf swing
-					else:
-						Game.player.attack_start(6) # guitar smash
-				if Input.is_action_just_pressed("attack_3"): # grabs
-					Game.player.attack_start(8) # cord grab
-			else: # mid-air attacks
-				if Input.is_action_just_pressed("attack_2"): # special attacks
-					Game.player.attack_start(6) # guitar smash
+	if UI.hud != null:
+		UI.hud.input_slave_queue(event)
 
 signal controller_update
 func _process(delta):
 	if !UI.paused:
 
 		# GAME-specific logic
-		slv.input_slave_process(delta)
-		match Game.GAMEMODE:
-			Game.gm.fps:
-				if UI.state <= 0: # not in menus
+		if UI.hud != null:
+			UI.hud.input_slave_process(delta)
 
-					# movement
-					var dir = Vector3()
-					if Input.is_action_pressed("move_up"):
-						dir += Vector3(0, 0, -1)
-					if Input.is_action_pressed("move_down"):
-						dir += Vector3(0, 0, 1)
-					if Input.is_action_pressed("move_left"):
-						dir += Vector3(-1, 0, 0)
-					if Input.is_action_pressed("move_right"):
-						dir += Vector3(1, 0, 0)
-
-					# update camera tilt
-					var speed_coeff = Game.player.last_velocity.length() / Game.run_speed
-					camera_tilt.x = Game.delta_interpolate(camera_tilt.x, dir.z * camera_tilt_max.x * speed_coeff, 0.55, delta)
-					camera_tilt.y = Game.delta_interpolate(camera_tilt.y, dir.x * camera_tilt_max.y * speed_coeff, 0.55, delta)
-					camera_tilt.z = Game.delta_interpolate(camera_tilt.z, -dir.x * camera_tilt_max.z * speed_coeff, 0.55, delta)
-
-					# final movement calc
-					if dir != Vector3():
-						dir = dir.rotated(Vector3(0, 1, 0), phi)
-						Game.player.move_from_controls(dir.x, dir.y, dir.z)
-
-					# jumping
-					if (Input.is_action_pressed("jump") && Game.jump_spam) || Input.is_action_just_pressed("jump"):
-						Game.player.jump(true)
-					if Input.is_action_just_released("jump"):
-						Game.player.jump(false)
-
-					# fire action
-					Game.weaps.press_trigger(0, Input.is_action_pressed("shoot"))
-					Game.weaps.press_trigger(1, Input.is_action_pressed("shoot_secondary"))
-					Game.weaps.press_trigger(2, Input.is_action_pressed("shoot_tertiary"))
-
-					# crouching
-					Game.player.crouch(Input.is_action_pressed("crouch"))
-
-					# sprinting
-					Game.player.sprint(Input.is_action_pressed("sprint"))
-
-			Game.gm.ludcorp:
-				if Input.is_action_pressed("shoot"):
-					match Game.player.state:
-						Actor.states.turret:
-							Game.player.prop_inuse.fire()
-
-				var s = 0.25 # TODO: camera sensitivity
-				if !locked:
-					if Input.is_action_pressed("move_up"):
-						move_naive(0, -s)
-					if Input.is_action_pressed("move_down"):
-						move_naive(0, s)
-					if Input.is_action_pressed("move_left"):
-						move_naive(-s, 0)
-					if Input.is_action_pressed("move_right"):
-						move_naive(s, 0)
-			Game.gm.plat, Game.gm.fighting:
-				# movement
-				if Input.is_action_pressed("move_left"):
-					Game.player.move_from_controls(-1, 0, 0)
-				if Input.is_action_pressed("move_right"):
-					Game.player.move_from_controls(1, 0, 0)
-				# jumping
-				if (Input.is_action_pressed("jump") && Game.jump_spam) || Input.is_action_just_pressed("jump"):
-					Game.player.jump(true)
-				if Input.is_action_just_released("jump"):
-					Game.player.jump(false)
-				# dash
-				if Input.is_action_just_pressed("dash"):
-					match Game.player.state:
-						Actor.states.idle:
-							if Input.is_action_pressed("move_up"):
-								Game.player.dash(Game.player.last_dir, -2) # backflip (cartwheel)
-							else:
-								Game.player.dash(Game.player.last_dir, -1) # back-step
-						Actor.states.transit:
-							if Input.is_action_pressed("move_up"):
-#								Game.player.dash(Game.player.last_dir, 2) # frontflip while sneaking?
-								pass
-							else:
-								Game.player.dash(Game.player.last_dir, 1) # forward dash
-
-		if locked: # follow player
-			center()
+	# update camera to follow the locked-on object (if there is any)
+	follow_centered_object()
 
 	# update certain special physics (camera shakes)
 	shake_update(delta)
@@ -482,7 +301,7 @@ func _process(delta):
 	Game.update_physics_space_state()
 
 	# update reycasts & cursors
-	if UI.handle_input == 0:
+	if UI.handle_input == 0 && Game.level != null:
 		update_raycast()
 
 	# debugging info

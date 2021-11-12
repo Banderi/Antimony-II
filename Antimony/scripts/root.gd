@@ -42,10 +42,7 @@ func _ready():
 	####
 
 	# load initial level
-	Game.load_level("levels/main")
-	if !UI.is_ui_valid():
-		print("ERROR: UI could not init! Quitting...")
-		Game.quit_game()
+	Game.load_level("levels/test")
 
 	# push chat history (for testing purposes)
 #	UI.chat_push("testest", OS.get_datetime(), "test")
@@ -54,6 +51,3 @@ func _ready():
 	# start game!!!
 #	Debug.display = 1
 	UI.state = UI.ms.ingame
-
-	# initialize global space states
-	Game.update_physics_space_state()
