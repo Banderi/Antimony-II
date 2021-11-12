@@ -27,6 +27,7 @@ func _ready():
 	Debug.fps = $UI/debug/topright/fps
 	Debug.ff = $UI/debug/freefloating
 	UI.UI_root = $UI
+	UI.im = $UI/im
 	UI.m_main = $UI/m_main
 	UI.m_pause = $UI/m_pause
 

@@ -2,15 +2,7 @@
 
 [ext_resource path="res://Antimony/fonts/hotbar.tres" type="DynamicFont" id=1]
 [ext_resource path="res://Antimony/fonts/debug_monospace_outline.tres" type="DynamicFont" id=2]
-
-[sub_resource type="SpatialMaterial" id=1]
-flags_transparent = true
-flags_unshaded = true
-flags_vertex_lighting = true
-flags_no_depth_test = true
-flags_use_point_size = true
-vertex_color_use_as_albedo = true
-params_point_size = 10.0
+[ext_resource path="res://Antimony/materials/im_debug.tres" type="Material" id=3]
 
 [sub_resource type="ShortCut" id=2]
 
@@ -23,7 +15,7 @@ __meta__ = {
 }
 
 [node name="im" type="ImmediateGeometry" parent="."]
-material_override = SubResource( 1 )
+material_override = ExtResource( 3 )
 
 [node name="topright" type="Control" parent="."]
 anchor_left = 1.0
