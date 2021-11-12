@@ -280,7 +280,7 @@ func fire_action(action, tstate, ammoid, q, rof):
 		fire_bullet(ammoid, tstate) # F I R E !!!!!!
 
 		# add weapon shake, recoil animation, cooldown etc.
-		Game.controller.weapon_shake(weap_data.shake_strength, consuming)
+		Game.controller.weap_jerk(weap_data.shake_strength, consuming)
 		rof_cooldown = rof
 		anim_weapon_firing = 0.1
 		frames_since_firing = 0

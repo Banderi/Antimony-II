@@ -42,25 +42,122 @@ var camera_3d_coeff = Vector3(1, 1, 1)
 var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
 var camera_2d_vertical_compensation = 0.0175
 
-var pick = [
-	{}, {}, {}
-]
-var hl_prop = null
-var command_point = null
-var max_height_diff = 0.5
+var raypicks = []
+var highlighted_objects = []
+var selected_objects = []
+var command_points = []
+#var max_height_diff = 0.5
 
-var camera_shake_force = Vector2()
-var shake_anim_linear = 0
-func weapon_shake(strength, charge):
+func _get_item(arr, n = 0):
+	if arr.empty():
+		return null
+	if n == -1:
+		return arr
+	return arr[n]
+func _add_item(arr, item):
+	if item != null && !arr.has(item):
+		arr.push_back(item)
+func _rem_item(arr, item):
+	if item == null: # unselect ALL
+		arr = []
+	elif arr.has(item):
+		arr.erase(item)
+
+func get_raypick(n = 0):
+	return _get_item(raypicks, n)
+func get_highlight(n = 0):
+	return _get_item(highlighted_objects, n)
+func get_selected(n = 0):
+	return _get_item(selected_objects, n)
+
+func highlight(item):
+	item.highlight(true)
+	_add_item(highlighted_objects, item)
+func select(item):
+	_add_item(selected_objects, item)
+func unselect(item):
+	_rem_item(selected_objects, item)
+func command_point(point):
+	Game.player.travel(command_points)
+	pass
+
+func update_raycast():
+	# reset prop highlight & raypicks
+	get_tree().call_group_flags(2, "props", "highlight", false)
+	highlighted_objects = []
+	raypicks = []
+	cursor.visible = false
+
+	if Game.is_2D():
+		pass # TODO: 2D raypicking...
+	else:
+		var masks = 1 + 4 + 8 # todo?
+		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
+		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
+
+		# first raycast - from camera to 1000 in front
+		var from = proj_origin
+		var checking = true
+		while checking:
+			var to = from + proj_normal * 1000
+			var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
+
+			# hit!
+			if result:
+				_add_item(raypicks, result.duplicate())
+				var m = result.collider.collision_layer
+				match m:
+					4, 8:
+						highlight(result.collider.get_parent())
+#					8:
+#						highlight(result.collider)
+			else:
+				checking = false
+
+	# remove first result in special cases
+	if Game.raypick_ignore_first:
+		raypicks.pop_front()
+
+	# update cursor accordingly
+	update_cursor()
+
+	# normalize... normals, and add screen coords
+	for p in raypicks.size():
+		if !raypicks[p].empty():
+			raypicks[p]["screencoords"] = cam.unproject_position(raypicks[p].position)
+			Debug.vector(raypicks[p].position, raypicks[p].position + raypicks[p].normal, Color(1, 1, 0))
+
+func update_cursor():
+	# no valid raypicking results
+	if get_raypick() == null:
+		cursor.visible = false
+		return
+	cursor.visible = true
+
+	var cur_pos = Vector3()
+	match Game.cursor_mode:
+		-1:
+			cursor.visible = false
+		0:
+			cur_pos = get_raypick().position
+		1:
+			cur_pos = get_raypick().position.floor() + Vector3(0.5, 0.5, 0.5) - 0.5 * get_raypick().normal
+	Game.correct_look_at(cursor, cur_pos, get_raypick().normal)
+
+###
+
+var weap_jerk_force = Vector2()
+var weap_jerk_linear = 0
+func weap_jerk(strength, charge):
 	strength = strength * (1 + 0.35 * (charge - 1)) # additional ammo charge
-	camera_shake_force.x = strength * (2.0 * randf() - 1.0) * Game.camera_weapon_shake_force.x
-	camera_shake_force.y = randf() * Game.camera_weapon_shake_force.y + strength * 0.01
-	shake_anim_linear = 1.0
-func shake_update(delta):
-	var shake_anim_coeff = sin((1.0 - shake_anim_linear) * PI * 1.2 + PI * 0.2) * shake_anim_linear
+	weap_jerk_force.x = strength * (2.0 * randf() - 1.0) * Game.camera_weapon_shake_force.x
+	weap_jerk_force.y = randf() * Game.camera_weapon_shake_force.y + strength * 0.01
+	weap_jerk_linear = 1.0
+func jerk_update(delta):
+	var weap_jerk_coeff = sin((1.0 - weap_jerk_linear) * PI * 1.2 + PI * 0.2) * weap_jerk_linear
 
-	phi += camera_shake_force.x * 60 * delta * shake_anim_coeff
-	theta += camera_shake_force.y * 60 * delta * shake_anim_coeff
+	phi += weap_jerk_force.x * 60 * delta * weap_jerk_coeff
+	theta += weap_jerk_force.y * 60 * delta * weap_jerk_coeff
 	while phi < 0:
 		phi += 2 * PI
 	while phi > 2 * PI:
@@ -68,7 +165,7 @@ func shake_update(delta):
 	theta = max(min_height, theta)
 	theta = min(max_height, theta)
 
-	shake_anim_linear = Game.delta_interpolate(shake_anim_linear, 0, 0.3, delta)
+	weap_jerk_linear = Game.delta_interpolate(weap_jerk_linear, 0, 0.3, delta)
 
 func zoom(z):
 	zoom_target += z
@@ -124,99 +221,7 @@ func follow_centered_object(): # this is ran continuously -- if it has a locked-
 func center(): # same as above, but shorthand for centering on the player actor object.
 	center_on(Game.player)
 
-func update_raycast():
-	# reset prop highlight
-	get_tree().call_group_flags(2, "props", "highlight", false)
-	hl_prop = null
-
-	if Game.is_2D():
-		cursor.visible = false
-	else:
-		var masks = 1 + 4 + 8
-		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
-		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
-
-		if !Game.raypick_ignore_first:
-			# first raycast - from camera to 1000 in front
-			var from = proj_origin
-			var to = from + proj_normal * 1000
-			var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
-
-			# hit!
-			if result:
-				pick[0] = result.duplicate()
-				update_cursor()
-			else:
-				pick = [{},{},{}]
-				cursor.visible = false
-
-		else:
-			# first raycast - from 1000 units behind camera to 1000 in front
-			var from = proj_origin - proj_normal * 1000
-			var to = from + proj_normal * 2000
-			var result = Game.space_state.intersect_ray(from, to, [], masks, true, true)
-
-			# raycast twice because Godot is too cool to recognize collision normals, even for concave shapes >:(
-			if result:
-				if ((proj_origin - result.position).normalized() - proj_normal).length() < 1:
-					from = proj_origin # if collision was behind camera, do again from the camera
-				else:
-					from = result.position + proj_normal * 0.1 # if not, do from the first collision point onwards
-				to = from + proj_normal * 1000
-				var result2 = Game.space_state.intersect_ray(from, to, [], masks, true, true)
-
-				# final, correct collision point!
-				if result2:
-					pick[0] = result2.duplicate()
-				else:
-					pick[0] = result.duplicate()
-					pick[1] = result2.duplicate()
-
-				# mouse hover over props
-				var m = pick[0].collider.collision_layer
-	#			Debug.loginfo(str(m))
-				match m:
-					4, 8:
-						hl_prop = pick[0].collider.get_parent()
-						hl_prop.highlight(true)
-	#				8:
-	#					hl_prop = pick[0].collider
-	#					pick[0].collider.highlight(true)
-				update_cursor()
-			else:
-				pick = [{},{},{}]
-				cursor.visible = false
-
-	# normalize... normals, and add screen coords
-	for p in pick.size():
-		if !pick[p].empty():
-#			pick[p].normal = pick[p].normal.normalized()
-			pick[p]["screencoords"] = cam.unproject_position(pick[p].position)
-
-	if !pick[0].empty():
-		Debug.point(pick[0].position, Color(1, 1, 0))
-		Debug.line(pick[0].position, pick[0].position + pick[0].normal, Color(1, 1, 0))
-	if !pick[1].empty():
-		Debug.point(pick[1].position, Color(1, 0, 0))
-		Debug.line(pick[1].position, pick[1].position + pick[1].normal, Color(1, 0, 0))
-func update_cursor():
-	match Game.GAMEMODE:
-		Game.gm.fps:
-			cursor.visible = false
-			return
-	cursor.visible = true
-
-	var cur_pos = Vector3()
-	match Game.cursor_mode:
-		0:
-			cur_pos = pick[0].position
-		1:
-			cur_pos = pick[0].position.floor() + Vector3(0.5, 0.5, 0.5) - 0.5 * pick[0].normal
-		2:
-			pass
-	Game.correct_look_at(cursor, cur_pos, pick[0].normal)
-
-#var slv = null # this is the controller slave node -- implements input manually.
+###
 
 func _input(event):
 	if UI.paused:
@@ -238,7 +243,7 @@ func _process(delta):
 	follow_centered_object()
 
 	# update certain special physics (camera shakes)
-	shake_update(delta)
+	jerk_update(delta)
 
 	# how do the LookAt and Camera origin behave? (GAME-specific logic)
 	var lookat_offset = offset
@@ -305,8 +310,8 @@ func _process(delta):
 		update_raycast()
 
 	# debugging info
-	if command_point != null:
-		Debug.point(command_point, Color(0,1,0))
+	for point in command_points:
+		Debug.point(point, Color(0,1,0))
 
 	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
 #	Debug.loginfo("colliders:  ", pick[0])

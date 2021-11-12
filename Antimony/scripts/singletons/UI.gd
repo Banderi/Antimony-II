@@ -511,17 +511,16 @@ func update_weap_ammo_counters(counters_only = false):
 
 ###
 
-func load_UI(mode): # load hud scene node and set UI mode
+func init(node, gm): # load hud scene node and set UI mode
 	# delete previously loaded hud, first
 	UI_root.remove_child($hud)
-	var mode_name = Game.gm.keys()[mode]
-	var hud_node = load("res://scenes/hud/" + mode_name + ".tscn").instance()
+	var hud_node = load("res://scenes/hud/" + str(node) + ".tscn").instance()
 	hud_node.set_name("hud")
 	UI_root.add_child(hud_node)
 	UI_root.move_child(hud_node, 0)
 
-	# set UI mode and build the node struct for toggling
-	Game.GAMEMODE = mode
+	# set ENGINE mode and build the node struct for toggling
+	Game.GAMEMODE = gm
 	buildmenustruct()
 
 	# close all menus when starting the game
