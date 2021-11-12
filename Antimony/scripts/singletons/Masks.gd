@@ -18,7 +18,8 @@ extends Node
 
 const LEVEL = 1
 const ACTORS = 2
-#const OTHER_ACTORS = 4
+const INTERACTABLES = 4
 const PROPS = 8
+const STATICS = 16
 
 const BULLETS = 1024

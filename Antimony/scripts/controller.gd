@@ -91,7 +91,7 @@ func update_raycast():
 	if Game.is_2D():
 		pass # TODO: 2D raypicking...
 	else:
-		var masks = 1 + 4 + 8 # todo?
+		var masks = Masks.LEVEL + Masks.INTERACTABLES + Masks.PROPS + Masks.STATICS # todo?
 		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
 		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
@@ -107,7 +107,7 @@ func update_raycast():
 				_add_item(raypicks, result.duplicate())
 				var m = result.collider.collision_layer
 				match m:
-					4, 8:
+					Masks.INTERACTABLES, Masks.PROPS, Masks.STATICS:
 						highlight(result.collider.get_parent())
 #					8:
 #						highlight(result.collider)

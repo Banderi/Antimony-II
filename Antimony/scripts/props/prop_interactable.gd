@@ -5,7 +5,8 @@ export(String) var itemid = "" #setget id_change
 var data = []
 
 var meshnodes = []
-var hl = false # currently highlighted
+var highlighted = false # currently highlighted
+var selected = false # currently selected
 
 var user = null # actor interacting with prop
 var busy = false
@@ -17,15 +18,15 @@ var start_tr = Transform()
 # TODO: rewrite this utter garbage
 
 func highlight(y):
-	hl = false
-#	if y == true:
-#		print("ha")
-	if user != null: # already being used by someone!
-		y = false
+#	highlighted = false
+#	if user != null: # already being used by someone!
+#		y = false
 	for n in meshnodes:
 		n.get_surface_material(0).next_pass.next_pass.set_shader_param("visible", y)
 		pass
-	hl = y
+	highlighted = y
+func select(y):
+	selected = y
 
 func to_reach(pos):
 	return path_origin
@@ -89,7 +90,7 @@ func _ready():
 	###
 
 	# wait for game databases to finish loading
-	yield(Game.level, "level_ready")
+#	yield(Game.level, "level_ready")
 
 	# pickup-able item vs interactible/physics room prop
 	var item_data = Game.get_item_data(itemid)

@@ -3,15 +3,10 @@ extends ImmediateGeometryDisplay
 var display = 0
 
 var dbg
-#var im
 
 var fps
 var debug_text = ""
 var debugbox
-#var t1
-#var t2
-#var c1
-#var c2
 var ff
 
 ###
@@ -53,13 +48,6 @@ func loginfo(txt, txt2 = ""):
 
 ###
 
-#func clear():
-#	if im == null:
-#		return
-#	im.clear()
-#	debugbox.text = debug_text
-#	debug_text = ""
-
 func _process(delta):
 	# cycle display mode
 	if display > 1:
@@ -72,7 +60,6 @@ func _process(delta):
 	# refresh and prepare for next draw
 	debugbox.text = debug_text
 	debug_text = ""
-#	clear()
 
 	match display:
 		1:
@@ -94,13 +81,10 @@ func _process(delta):
 			# render free-floating text
 			for label in ff.get_children():
 				label.text = ""
-			for p in min(Game.controller.raypicks.size(), 1):
-				var label = ff.get_child(p)
-				var pick = Game.controller.get_raypick(p)
-				for l in pick:
-					label.text += "%s : %s" % [l, pick[l]]
-					if (l != pick.keys().back()):
-						label.text += "\n"
+			if Game.controller.raypicks.size() > 0:
+				var pick = Game.controller.get_raypick()
+				var label = ff.get_child(0)
+				label.text = Game.print_dict(pick)
 				label.rect_position = pick.screencoords + Vector2(30, 0)
 
 			# FPS

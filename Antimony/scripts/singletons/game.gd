@@ -135,7 +135,7 @@ func get_ammo_data(ammoid):
 func get_character_data(charid):
 	return get_db_element(db.characters, charid)
 
-###
+### GLOBAL HELPER FUNCTIONS
 
 func get_all_childs(node):
 	var nodes = []
@@ -156,6 +156,14 @@ func get_type(t):
 			return "float"
 		4:
 			return "string"
+
+func print_dict(dict):
+	var text = ""
+	for l in dict:
+		text += "%s : %s" % [l, dict[l]]
+		if (l != dict.keys().back()):
+			text += "\n"
+	return text
 
 func delta_interpolate(old, new, s, delta):
 	delta *= 60

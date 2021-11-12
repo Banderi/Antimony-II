@@ -7,7 +7,7 @@
 [ext_resource path="res://Antimony/scripts/root.gd" type="Script" id=5]
 [ext_resource path="res://Antimony/fonts/slkscr.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://Antimony/shaders/pixelize.shader" type="Shader" id=7]
-[ext_resource path="res://Antimony/materials/im_debug.tres" type="Material" id=8]
+[ext_resource path="res://Antimony/materials/im_graphics.tres" type="Material" id=8]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 7 )
