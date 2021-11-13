@@ -65,6 +65,7 @@ var character = 0
 
 var cursor_mode = -1
 var selection_mode = 0
+var custom_cursors = false
 
 ###
 

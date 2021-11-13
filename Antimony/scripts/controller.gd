@@ -74,8 +74,11 @@ func highlight(item, drag_sel):
 	if !item.can_be_selected(drag_sel):
 		return
 	item.highlight(true)
-	if !drag_sel && mouse_motion_timer > 1.0:
-		UI.tooltip(item.name)
+	if !drag_sel:
+		if !item in selected_objects:
+			UI.set_cursor(Input.CURSOR_CROSS)
+		if mouse_motion_timer > 0.2:
+			UI.tooltip(item.name)
 	_add_item(highlighted_objects, item)
 
 func select(item):
@@ -128,6 +131,7 @@ func update_raycast():
 	highlighted_objects = []
 	raypicks = []
 	cursor.visible = false
+	UI.set_cursor(Input.CURSOR_ARROW)
 
 	if Game.is_2D():
 		pass # TODO: 2D raypicking...
@@ -304,6 +308,9 @@ func _input(event):
 
 signal controller_update
 func _process(delta):
+	if UI.paused:
+		return
+
 	# update mouse motion timer
 	if mouse_was_moved:
 		mouse_motion_timer = 0

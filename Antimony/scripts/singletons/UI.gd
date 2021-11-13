@@ -530,6 +530,61 @@ func tooltip(text):
 	h_tooltip.visible = true
 	tooltip_visible = true
 
+# cursors
+var cursors = {
+	Input.CURSOR_ARROW: [0, 0, "Antimony/graphics/cursor/cur_arrow.png"],
+	Input.CURSOR_IBEAM: null,
+	Input.CURSOR_POINTING_HAND: [4, 1, "Antimony/graphics/cursor/cur_point.png"],
+	Input.CURSOR_CROSS: [8, 8, "Antimony/graphics/cursor/cur_select.png"],
+	Input.CURSOR_WAIT: null,
+	Input.CURSOR_BUSY: null,
+	Input.CURSOR_DRAG: [8, 8, "Antimony/graphics/cursor/cur_hand.png"],
+	Input.CURSOR_CAN_DROP: [8, 8, "Antimony/graphics/cursor/cur_hand2.png"],
+	Input.CURSOR_FORBIDDEN: null,
+	Input.CURSOR_VSIZE: null,
+	Input.CURSOR_HSIZE: null,
+	Input.CURSOR_BDIAGSIZE: null,
+	Input.CURSOR_FDIAGSIZE: null,
+	Input.CURSOR_MOVE: [8, 8, "Antimony/graphics/cursor/cur_purse.png"],
+	Input.CURSOR_VSPLIT: null,
+	Input.CURSOR_HSPLIT: null,
+	Input.CURSOR_HELP: null,
+}
+var current_cursor_shape = Input.CURSOR_ARROW
+func load_cursor_pix(s):
+	 # invalid/unassigned cursor shape
+	var shape_data = cursors[s]
+	if shape_data == null || shape_data.size() == 0:
+		return
+
+	# load cursor shape
+	var pix = load("res://" + shape_data[2])
+	var coords = Vector2(shape_data[0], shape_data[1])
+	Input.set_custom_mouse_cursor(pix, s, coords);
+func init_cursors():
+	for s in cursors:
+		load_cursor_pix(s)
+func set_cursor(s, refresh = false):
+	# assert valid range
+	if s == null:
+		s = Input.CURSOR_ARROW
+	s = max(min(Input.CURSOR_HELP, s), Input.CURSOR_ARROW)
+
+	# update cursor if there's any change
+	current_cursor_shape = s
+	if refresh:
+		update_cursor()
+func update_cursor():
+	# BUG:
+	# the cursor changes to the highest custom cursor available (max #16) when reloading the tree
+	# with the debug command. it then prompty switches back to the correct cursor shape on move.
+	# ...I don't even. not a big issue though.
+
+	if Input.get_current_cursor_shape() != current_cursor_shape:
+		Input.set_default_cursor_shape(current_cursor_shape)
+		get_viewport().warp_mouse(get_viewport().get_mouse_position()); # refresh mouse input to update the frickin' cursor
+	current_cursor_shape = Input.CURSOR_ARROW
+
 ###
 
 func init(node, gm): # load hud scene node and set UI mode
@@ -550,6 +605,11 @@ func init(node, gm): # load hud scene node and set UI mode
 	menu(ms.gestures, false)
 	menu(ms.scoreboard, false)
 	menu(ms.chat, false)
+
+	# load custom cursors
+	if Game.custom_cursors:
+		init_cursors()
+		set_cursor(Input.CURSOR_ARROW)
 
 func is_ui_valid():
 	if hud == null || Game.GAMEMODE == Game.gm.none:
@@ -672,5 +732,9 @@ func _process(delta):
 	else:
 		UI.h_chatpanel.modulate.a += (0.5 - UI.h_chatpanel.modulate.a) * delta * 10
 
-	# tooltip!
+	# tooltips & cursors
 	update_tooltip(delta)
+	update_cursor()
+
+	Debug.loginfo("")
+	Debug.loginfo("cursor:     ", Input.get_current_cursor_shape())
