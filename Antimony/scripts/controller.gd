@@ -46,7 +46,6 @@ var raypicks = []
 var highlighted_objects = []
 var selected_objects = []
 var command_points = []
-#var max_height_diff = 0.5
 
 func _get_item(arr, n = 0):
 	if arr.empty():

@@ -164,7 +164,6 @@ func print_dict(dict):
 		if (l != dict.keys().back()):
 			text += "\n"
 	return text
-
 func delta_interpolate(old, new, s, delta):
 	delta *= 60
 	var delta_factor = delta * s
@@ -189,18 +188,22 @@ func delta_interpolate(old, new, s, delta):
 #	return lerp(old, new, s * delta)
 #	var delta_factor = 60 / abs(new - old)
 	return old + (new - old) * s * delta_factor
-
 func set_death_timeout(node, lifetime):
 	var timer = load("res://Antimony/scenes/kill_timer.tscn").instance()
 	timer.wait_time = lifetime
 	node.add_child(timer)
-
 func correct_look_at(node, pos, normal):
 	node.translation = pos
 	if normal.angle_to(Vector3(0, 1, 0)) < 0.2:
 		node.look_at(pos + normal, Vector3(0, 0, 1))
 	else:
 		node.look_at(pos + normal, Vector3(0, 1, 0))
+func to_screen(pos):
+	return controller.cam.unproject_position(pos)
+func camera_distance(pos):
+	return controller.cam.translation.distance_to(pos)
+func camera_distance_sqr(pos):
+	return controller.cam.translation.distance_squared_to(pos)
 
 ###
 
