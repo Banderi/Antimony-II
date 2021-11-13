@@ -69,11 +69,12 @@ func get_highlight(n = 0):
 func get_selected(n = 0):
 	return _get_item(selected_objects, n)
 
+var mouse_motion_timer = 0
 func highlight(item, drag_sel):
 	if !item.can_be_selected(drag_sel):
 		return
 	item.highlight(true)
-	if !drag_sel:
+	if !drag_sel && mouse_motion_timer > 1.0:
 		UI.tooltip(item.name)
 	_add_item(highlighted_objects, item)
 
@@ -264,6 +265,7 @@ func center(): # same as above, but shorthand for centering on the player actor 
 
 ###
 
+var mouse_was_moved = false
 func _input(event):
 	if UI.paused:
 		return
@@ -272,6 +274,9 @@ func _input(event):
 		Game.gm.rts:
 			# mouse movement
 			if event is InputEventMouseMotion:
+				if event.relative.x != 0.0 || event.relative.y != 0.0:
+					mouse_was_moved = true
+
 				if Input.is_action_pressed("camera_orbit"): # orbit camera
 					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
 						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
@@ -299,6 +304,12 @@ func _input(event):
 
 signal controller_update
 func _process(delta):
+	# update mouse motion timer
+	if mouse_was_moved:
+		mouse_motion_timer = 0
+		mouse_was_moved = false
+	else:
+		mouse_motion_timer += delta
 
 	# update camera to follow the locked-on object (if there is any)
 	follow_centered_object()

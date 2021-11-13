@@ -517,6 +517,7 @@ func update_tooltip(delta):
 	if h_tooltip == null:
 		return
 	h_tooltip.rect_size.x = 0
+	h_tooltip.text = ""
 	h_tooltip.rect_position = hud.get_global_mouse_position() + Vector2(20, 0)
 	if tooltip_visible:
 		tooltip_visible = false
