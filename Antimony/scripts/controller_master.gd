@@ -3,13 +3,12 @@ class_name HUDControllerMaster
 
 ###
 
-#func has_raypick():
-#	return Game.controller.has_raypick()
 func get_raypick(n = 0):
-	return Game.controller.get_raypick()
-
+	return Game.controller.get_raypick(n)
 func get_highlight(n = 0):
-	return Game.controller.hl_prop
+	return Game.controller.get_highlight(n)
+func get_selected(n = 0):
+	return Game.controller.get_selected(n)
 
 func command_point(point):
 	Game.controller.command_point(point)

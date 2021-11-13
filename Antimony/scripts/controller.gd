@@ -69,8 +69,12 @@ func get_highlight(n = 0):
 func get_selected(n = 0):
 	return _get_item(selected_objects, n)
 
-func highlight(item):
+func highlight(item, drag_sel):
+	if !item.can_be_selected(drag_sel):
+		return
 	item.highlight(true)
+	if !drag_sel:
+		UI.tooltip(item.name)
 	_add_item(highlighted_objects, item)
 
 func select(item):
@@ -116,7 +120,7 @@ func update_selection_rect_intersect():
 			for prop in get_tree().get_nodes_in_group("props"):
 				UI.point(prop.translation, Color(1,1,1,1))
 				if selection_rect.has_point(Game.to_screen(prop.translation)):
-					highlight(prop)
+					highlight(prop, true)
 func update_raycast():
 	# reset prop highlight & raypicks
 	get_tree().call_group_flags(2, "props", "highlight", false)
@@ -141,12 +145,11 @@ func update_raycast():
 			# hit!
 			if result:
 				_add_item(raypicks, result.duplicate())
+#				if !Input.is_action_pressed("left_click"): # skip if dragging
 				var m = result.collider.collision_layer
 				match m:
 					Masks.INTERACTABLES, Masks.PROPS, Masks.STATICS:
-						highlight(result.collider.get_parent())
-#					8:
-#						highlight(result.collider)
+						highlight(result.collider.get_parent(), false)
 				from = result.position + proj_normal * 0.001 # advance raycast along -- add EPSILON to avoid infinite loops!
 			else:
 				checking = false

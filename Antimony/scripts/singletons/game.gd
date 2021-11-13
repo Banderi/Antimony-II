@@ -6,7 +6,7 @@ onready var SCENE_ACTOR = preload("res://Antimony/scenes/actor.tscn")
 
 var root
 
-var player
+#var player
 var controller
 var navmesh
 var level
@@ -221,12 +221,13 @@ func is_2D():
 	return false
 
 func spawn_player(actor_scene):
-	randomize()
-	var rand_name = "[DRONE %04d]" % [rand_range(0,9999)]
-	var rand_color = Color(rand_range(0,1), rand_range(0,1), rand_range(0,1))
-	player = new_actor(1, actor_scene) # OUR (local) peer is always 1!
-	player.ping = 0
-	controller.target = player.pos
+#	randomize()
+#	var rand_name = "[DRONE %04d]" % [rand_range(0,9999)]
+#	var rand_color = Color(rand_range(0,1), rand_range(0,1), rand_range(0,1))
+#	player = new_actor(1, actor_scene) # OUR (local) peer is always 1!
+#	player.ping = 0
+#	controller.target = player.pos
+	pass
 
 func switch_character(): # switch characters in single player
 	return # temporarily disabled
@@ -285,8 +286,12 @@ func destroy_actor(peer):
 	a.queue_free()
 
 func get_playername():
-	return "TEST"
 #	return player.player_name
+	return "TEST"
+
+func get_player_team(player = null):
+	# todo....
+	return 0
 
 ###
 

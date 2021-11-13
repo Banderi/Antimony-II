@@ -3,6 +3,7 @@ class_name Prop
 
 export(String) var itemid = "" #setget id_change
 var data = []
+var team = null
 
 var meshnodes = []
 var highlighted = false # currently highlighted
@@ -27,6 +28,12 @@ func highlight(y):
 	highlighted = y
 func select(y):
 	selected = y
+func can_be_selected(drag):
+	if team == 1:
+		return true
+	elif !drag:
+		return true
+	return false
 
 func to_reach(pos):
 	return path_origin

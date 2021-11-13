@@ -1,10 +1,10 @@
 [gd_scene load_steps=5 format=2]
 
-[ext_resource path="res://Antimony/fonts/hotbar.tres" type="DynamicFont" id=1]
-[ext_resource path="res://Antimony/fonts/debug_monospace_outline.tres" type="DynamicFont" id=2]
+[ext_resource path="res://Antimony/fonts/font_gaposiss_large.tres" type="DynamicFont" id=1]
+[ext_resource path="res://Antimony/fonts/font_monospace_outline.tres" type="DynamicFont" id=2]
 [ext_resource path="res://Antimony/materials/im_debug.tres" type="Material" id=3]
 
-[sub_resource type="ShortCut" id=2]
+[sub_resource type="ShortCut" id=1]
 
 [node name="debug" type="Control"]
 anchor_right = 1.0
@@ -141,7 +141,7 @@ margin_top = -61.3853
 margin_right = 145.97
 margin_bottom = -19.3853
 mouse_filter = 1
-shortcut = SubResource( 2 )
+shortcut = SubResource( 1 )
 text = "CONNECT"
 __meta__ = {
 "_edit_use_anchors_": false

@@ -59,6 +59,8 @@ var h_chatbox
 var h_chatscroll
 var h_chatlist
 
+var h_tooltip
+
 var sb_peers = []
 
 ###
@@ -74,7 +76,6 @@ func savegame_btn():
 	pass
 func loadgame_btn():
 	pass
-
 
 func multiplayer_btn():
 	UI.menu(UI.ms.multiplayer)
@@ -429,6 +430,7 @@ func update_status_icons():
 		Actor.states.asleep:
 			h_effects[8].visible = true
 
+# weapon system!
 func update_weap_hud():
 	# reset first
 	for n in u_crosshairs.get_children():
@@ -508,6 +510,24 @@ func update_weap_ammo_counters(counters_only = false):
 			h_tot.visible = false
 			h_mag.visible = false
 			h_mag_slash.visible = false
+
+# tooltip
+var tooltip_visible = false
+func update_tooltip(delta):
+	if h_tooltip == null:
+		return
+	h_tooltip.rect_size.x = 0
+	h_tooltip.rect_position = hud.get_global_mouse_position() + Vector2(20, 0)
+	if tooltip_visible:
+		tooltip_visible = false
+	else:
+		h_tooltip.visible = false
+func tooltip(text):
+	if h_tooltip == null:
+		return
+	h_tooltip.text = text
+	h_tooltip.visible = true
+	tooltip_visible = true
 
 ###
 
@@ -641,13 +661,15 @@ func _process(delta):
 	paused = m_main.visible || m_pause.visible || m_gestures.visible || h_chatbox.has_focus()
 
 	# GAME_mode-specific logic
-	match Game.GAMEMODE:
-		Game.gm.ludcorp:
-			# update status icons
-			update_status_icons()
+#	match Game.GAMEMODE:
+#		Game.gm.ludcorp:
+#			# update status icons
 
 	# update chat menu transparency
 	if inchat:
 		UI.h_chatpanel.modulate.a += (1 - UI.h_chatpanel.modulate.a) * delta * 10
 	else:
 		UI.h_chatpanel.modulate.a += (0.5 - UI.h_chatpanel.modulate.a) * delta * 10
+
+	# tooltip!
+	update_tooltip(delta)
