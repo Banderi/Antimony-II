@@ -63,7 +63,8 @@ var character = 0
 #var hotbar_sel = 0
 #var inventory = [null, null, null] # these are HUD_item nodes! they are handled by the UI class!
 
-var cursor_mode = 0
+var cursor_mode = -1
+var selection_mode = 0
 
 ###
 
@@ -204,6 +205,12 @@ func camera_distance(pos):
 	return controller.cam.translation.distance_to(pos)
 func camera_distance_sqr(pos):
 	return controller.cam.translation.distance_squared_to(pos)
+func rect(position, size):
+	position.x = min(position.x, position.x + size.x)
+	position.y = min(position.y, position.y + size.y)
+	size.x  = abs(size.x)
+	size.y = abs(size.y)
+	return Rect2(position, size)
 
 ###
 

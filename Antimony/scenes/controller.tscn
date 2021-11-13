@@ -46,6 +46,7 @@ near = 0.01
 far = 1000.0
 
 [node name="cursor" type="Spatial" parent="."]
+visible = false
 
 [node name="MeshInstance" type="MeshInstance" parent="cursor"]
 transform = Transform( 1, 0, 0, 0, -1, -8.74228e-08, 0, 8.74228e-08, -1, 0, 0, 0 )

@@ -5,5 +5,7 @@ flags_transparent = true
 flags_unshaded = true
 flags_vertex_lighting = true
 flags_use_point_size = true
+flags_do_not_receive_shadows = true
+flags_disable_ambient_light = true
 vertex_color_use_as_albedo = true
 params_point_size = 5.0

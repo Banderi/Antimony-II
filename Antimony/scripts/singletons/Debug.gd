@@ -86,6 +86,7 @@ func _process(delta):
 				var label = ff.get_child(0)
 				label.text = Game.print_dict(pick)
 				label.rect_position = pick.screencoords + Vector2(30, 0)
+#				label.rect_position = UI.hud.get_global_mouse_position() + Vector2(30, 0)
 
 			# FPS
 			fps.text = str(Performance.get_monitor(0))

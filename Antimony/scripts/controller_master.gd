@@ -38,3 +38,9 @@ func center_on(object, lock = false):
 	Game.controller.center_on(object, lock)
 func center(): # same as above, but shorthand for centering on the player actor object.
 	Game.controller.center()
+
+###
+
+func _draw():
+	if Game.controller.selection_start != null: # Node2D/Control methods can not be called directly from here (script extends Node class!)
+		UI.hud.draw_rect(Rect2(Game.controller.selection_start, Game.controller.selection_end - Game.controller.selection_start), Color(1, 1, 1, 1), false)

@@ -72,14 +72,51 @@ func get_selected(n = 0):
 func highlight(item):
 	item.highlight(true)
 	_add_item(highlighted_objects, item)
+
 func select(item):
+	item.select(true)
 	_add_item(selected_objects, item)
-func unselect(item):
-	_rem_item(selected_objects, item)
-func command_point(point):
-	Game.player.travel(command_points)
+func select_currently_highlighted():
+	for item in highlighted_objects:
+		select(item)
+func unselect_all():
+	for item in selected_objects:
+		item.select(false) # arrays CANNOT be updated during iteration!!
+	selected_objects = []
+
+func command_point(point): # TODO!!!!
+#	Game.command_pawns(point)
+#	Game.player.travel(command_points)
 	pass
 
+var selection_start = null
+var selection_end = null
+var selection_rect = Rect2()
+func commence_drag_select(pos):
+	selection_start = pos
+	update_drag_select(pos)
+func update_drag_select(pos):
+	selection_end = pos
+	selection_rect = Game.rect(selection_start, selection_end - selection_start)
+	UI.hud.update()
+func confirm_drag_select(booleans):
+	if !booleans:
+		unselect_all()
+	select_currently_highlighted()
+	selection_start = null
+	selection_end = null
+	UI.hud.update()
+
+func update_selection_rect_intersect():
+	# ONLY update if there is a current valid selection action
+	if selection_start == null:
+		return
+	match Game.selection_mode:
+		0:
+			for prop in get_tree().get_nodes_in_group("props"):
+				UI.point(prop.translation, Color(1,1,1,1))
+				if selection_rect.has_point(Game.to_screen(prop.translation)):
+					highlight(prop)
 func update_raycast():
 	# reset prop highlight & raypicks
 	get_tree().call_group_flags(2, "props", "highlight", false)
@@ -125,6 +162,9 @@ func update_raycast():
 	for pick in raypicks:
 		pick["screencoords"] = cam.unproject_position(pick.position)
 		Debug.vector(pick.position, pick.normal, Color(1, 1, 0), true)
+
+	# update drag-selectors highlighting
+	update_selection_rect_intersect()
 func update_cursor():
 	# no valid raypicking results
 	if get_raypick() == null:
@@ -220,6 +260,39 @@ func center(): # same as above, but shorthand for centering on the player actor 
 	center_on(Game.player)
 
 ###
+
+func _input(event):
+	if UI.paused:
+		return
+
+	match Game.GAMEMODE:
+		Game.gm.rts:
+			# mouse movement
+			if event is InputEventMouseMotion:
+				if Input.is_action_pressed("camera_orbit"): # orbit camera
+					if Input.is_action_pressed("camera_zoomdrag"): # drag zoom (ctrl + orbit)
+						zoom(Game.settings["controls"]["zoom_sens"] * event.relative.y * 0.05)
+					elif Input.is_action_pressed("camera_drag") && !Game.controller.locked: # pan camera (shift + orbit)
+						move_pan(-event.relative.x * 0.01, -event.relative.y * 0.01)
+					else:
+						orbit(-event.relative.x, -event.relative.y, Game.settings.controls.mouse_sens * 0.0075)
+
+				# update selections
+				if Input.is_action_pressed("left_click"):
+					update_drag_select(event.position)
+
+			# zooming only if CTRL is pressed - otherwise use the keybind to scroll items
+			if !Game.controller.alt_camera:
+				if Input.is_action_pressed("camera_zoomin"):
+					zoom(-Game.settings["controls"]["zoom_sens"])
+				if Input.is_action_pressed("camera_zoomout"):
+					zoom(Game.settings["controls"]["zoom_sens"])
+
+			# drag selection!
+			if Input.is_action_just_pressed("left_click"):
+				commence_drag_select(event.position)
+			if Input.is_action_just_released("left_click"):
+				confirm_drag_select(Input.is_action_pressed("shift"))
 
 signal controller_update
 func _process(delta):
