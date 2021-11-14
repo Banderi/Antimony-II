@@ -16,36 +16,22 @@ var crouch_offset = Vector3(0, 0.75, 0) # height off of the ground
 var smooth_offset = offset
 var target = Vector3(0, 0, 0) # interpolation target
 var lookat = target + smooth_offset
-
 var target2D = Vector2(0, 0) # for 2D camera
 
 var locked = false
 var alt_camera = false
-var alt_camera_zoom = 6.0
 
-var max_height = 0.1 * PI
-var min_height = - 0.5 * PI
 var phi = 0.5
 var theta = -0.5
-
 var zoom = 13 # note: zoom works in reverse - lower value means closer to target! yes I know that's not how zoom works
-var zoom_curve = 1
+var zoom_interpolated = 1.0
 var zoom_target = zoom # zoom's interpolation target
-var zoom_delta_speed = 0.9
-var min_zoom = 0.5
-var max_zoom = 50.0
 
 var camera_tilt = Vector3()
-var camera_tilt_max = Vector3(0.03, 0.03, 0.03)
-
-var camera_3d_coeff = Vector3(1, 1, 1)
-var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
-var camera_2d_vertical_compensation = 0.0175
 
 var raypicks = []
 var highlighted_objects = []
 var selected_objects = []
-var command_points = []
 
 func _get_item(arr, n = 0):
 	if arr.empty():
@@ -75,10 +61,9 @@ func highlight(item, drag_sel):
 		return
 	item.highlight(true)
 	if !drag_sel:
-		if !item in selected_objects:
-			UI.set_cursor(Input.CURSOR_CROSS)
+		# tooltips
 		if mouse_motion_timer > 0.2:
-			UI.tooltip(item.name)
+			UI.tooltip(item.data.name)
 	_add_item(highlighted_objects, item)
 
 func select(item):
@@ -91,11 +76,8 @@ func unselect_all():
 	for item in selected_objects:
 		item.select(false) # arrays CANNOT be updated during iteration!!
 	selected_objects = []
-
-func command_point(point): # TODO!!!!
-#	Game.command_pawns(point)
-#	Game.player.travel(command_points)
-	pass
+	locked = false # automatically unlock
+	followed_object = null
 
 var selection_start = null
 var selection_end = null
@@ -131,7 +113,7 @@ func update_raycast():
 	highlighted_objects = []
 	raypicks = []
 	cursor.visible = false
-	UI.set_cursor(Input.CURSOR_ARROW)
+#	UI.set_cursor(Input.CURSOR_ARROW)
 
 	if Game.is_2D():
 		pass # TODO: 2D raypicking...
@@ -208,20 +190,15 @@ func jerk_update(delta):
 		phi += 2 * PI
 	while phi > 2 * PI:
 		phi -= 2 * PI
-	theta = max(min_height, theta)
-	theta = min(max_height, theta)
+	theta = max(Game.camera_min_height, theta)
+	theta = min(Game.camera_max_height, theta)
 
 	weap_jerk_linear = Game.delta_interpolate(weap_jerk_linear, 0, 0.3, delta)
 
 func zoom(z):
 	zoom_target += z
-	zoom_target = max(zoom_target, min_zoom)
-	zoom_target = min(zoom_target, max_zoom)
-func init_zoom(minz, maxz, curz):
-	min_zoom = minz
-	max_zoom = maxz
-	zoom = curz
-	zoom_target = curz
+	zoom_target = max(zoom_target, Game.camera_zoom_min)
+	zoom_target = min(zoom_target, Game.camera_zoom_max)
 func move_naive(x, y, s = 1.0):
 	move3D(Vector3(x, 0, y).rotated(up, phi), s)
 	move2D(x, y, s * 100)
@@ -237,14 +214,14 @@ func orbit(x, y, s = 1.0):
 		phi += 2 * PI
 	while phi > 2 * PI:
 		phi -= 2 * PI
-	theta = max(min_height, theta)
-	theta = min(max_height, theta)
+	theta = max(Game.camera_min_height, theta)
+	theta = min(Game.camera_max_height, theta)
 
 # compensate for zoom levels
 func move3D(r, s = 1.0):
-	target += r * s * (0.75 + zoom_curve * 0.95)
+	target += r * s * (0.75 + zoom_interpolated * 0.95)
 func move2D(x, y, s = 100.0):
-	target2D += Vector2(x, y) * s * (0.75 + zoom_curve * 0.95)
+	target2D += Vector2(x, y) * s * (0.75 + zoom_interpolated * 0.95)
 
 var followed_object = null
 func center_on(object, lock = false):
@@ -257,17 +234,38 @@ func follow_centered_object(): # this is ran continuously -- if it has a locked-
 	if Game.is_2D():
 		if followed_object is Actor:
 			target = followed_object.pos2D
+		elif followed_object is Array:
+			var t = Vector2()
+			for f in followed_object:
+				t += f.position / followed_object.size()
+			target = t
 		else:
 			target = followed_object.position
 	else:
 		if followed_object is Actor:
 			target = followed_object.pos
+		elif followed_object is Array:
+			var t = Vector3()
+			for f in followed_object:
+				t += f.translation / followed_object.size()
+			target = t
 		else:
 			target = followed_object.translation
-func center(): # same as above, but shorthand for centering on the player actor object.
-	center_on(Game.player)
+	if !locked:
+		followed_object = null
+func center(lock = false): # same as above, but shorthand for centering on the player actor object.
+	if get_selected():
+		center_on(get_selected(-1), lock)
+	else:
+		target = Vector3(0,0,0)
 
 ###
+
+func update_camera_engine_settings():
+	if cam.near != Game.camera_near:
+		cam.near = Game.camera_near
+	if cam.far != Game.camera_far:
+		cam.far = Game.camera_far
 
 var mouse_was_moved = false
 func _input(event):
@@ -301,13 +299,26 @@ func _input(event):
 					zoom(Game.settings["controls"]["zoom_sens"])
 
 			# drag selection!
-			if Input.is_action_just_pressed("left_click"):
-				commence_drag_select(event.position)
-			if Input.is_action_just_released("left_click"):
-				confirm_drag_select(Input.is_action_pressed("shift"))
+			if event is InputEventMouseButton: # to prevent missing "position" value
+				if Input.is_action_just_pressed("left_click"):
+					commence_drag_select(event.position)
+				if Input.is_action_just_released("left_click"):
+					confirm_drag_select(Input.is_action_pressed("shift"))
+
+			# camera locking / centering / etc.
+			if !Game.controller.alt_camera:
+				if Input.is_action_pressed("camera_center"):
+					center()
+				if Input.is_action_just_pressed("camera_follow"):
+#					if locked:
+#						locked = false
+					if get_selected() && !locked:
+						center(true)
 
 signal controller_update
 func _process(delta):
+	update_camera_engine_settings()
+
 	if UI.paused:
 		return
 
@@ -338,28 +349,28 @@ func _process(delta):
 			smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
 			new_lookat = Game.player.pos + smooth_offset
 			if alt_camera:
-				new_zoom = alt_camera_zoom
+				new_zoom = Game.camera_alt_zoom
 			else:
 				new_zoom = zoom_target
 		_: # default case
 			if alt_camera:
 				new_lookat = Game.player.pos + smooth_offset #Game.player.pos
-				new_zoom = alt_camera_zoom
+				new_zoom = Game.camera_alt_zoom
 			else:
 				new_lookat = target + smooth_offset
 				new_zoom = zoom_target
 
 	# update 2D camera
 	if Game.is_2D():
-		cam2D.position = Game.delta_interpolate(cam2D.position, target2D, camera_2d_coeff, delta)
-		cam2D.position.y += Game.player.velocity.y * camera_2d_vertical_compensation
+		cam2D.position = Game.delta_interpolate(cam2D.position, target2D, Game.camera_2d_coeff, delta)
+		cam2D.position.y += Game.player.velocity.y * Game.camera_2d_vertical_compensation
 		cam2D.zoom = Vector2(0.01 + zoom, 0.01 + zoom)
 	# update 3D camera
 	else:
-		lookat = Game.delta_interpolate(lookat, new_lookat, camera_3d_coeff, delta)
-		zoom = Game.delta_interpolate(zoom, new_zoom, zoom_delta_speed, delta)
-		zoom_curve = 0.0075 * zoom * zoom
-		cam.translation.z = 20.0 * zoom_curve
+		lookat = Game.delta_interpolate(lookat, new_lookat, Game.camera_3d_coeff, delta)
+		zoom = Game.delta_interpolate(zoom, new_zoom, Game.camera_zoom_delta_speed, delta)
+		zoom_interpolated = 0.0075 * zoom * zoom
+		cam.translation.z = 20.0 * zoom_interpolated
 
 		# update camera transform
 		# for camera tilt:
@@ -388,15 +399,14 @@ func _process(delta):
 	if UI.handle_input == 0 && Game.level != null:
 		update_raycast()
 
-	# debugging info
-	for point in command_points:
-		Debug.point(point, Color(0,1,0))
+	# unit command buffering
+	Game.check_for_valid_commands(selected_objects, get_highlight())
 
-	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom])
+	# debugging info
+	Debug.logpaddedinfo("camera:     ", true, [10, 10, 34, 20, 5], ["phi:", phi, "theta:", theta, "3D:", cam.get_global_transform().origin, "2D:", cam2D.position, "zoom:", zoom, "locked:", locked])
 	Debug.loginfo("raypicks:   ", raypicks.size())
 	Debug.loginfo("highlights: ", highlighted_objects.size())
 	Debug.loginfo("selected:   ", selected_objects.size())
-	Debug.loginfo("commpoints: ", command_points.size())
 
 	emit_signal("controller_update")
 
@@ -406,3 +416,7 @@ func _ready():
 #	cam.set_as_toplevel(true)
 	cursor.set_as_toplevel(true)
 	cursor.transform = Transform()
+
+	# set zoom to initial
+	zoom = Game.camera_initial_zoom
+	zoom_target = zoom

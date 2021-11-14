@@ -9,6 +9,7 @@
 [node name="debug" type="Control"]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 __meta__ = {
 "_edit_lock_": true,
 "_edit_use_anchors_": false
@@ -22,6 +23,7 @@ anchor_left = 1.0
 anchor_right = 1.0
 margin_left = -40.0
 margin_bottom = 40.0
+mouse_filter = 2
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -42,6 +44,7 @@ __meta__ = {
 [node name="text" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 __meta__ = {
 "_edit_use_anchors_": false
 }
@@ -127,6 +130,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 margin_top = 900.0
 margin_bottom = 984.0
+mouse_filter = 2
 __meta__ = {
 "_edit_group_": true,
 "_edit_lock_": true,
@@ -150,6 +154,7 @@ __meta__ = {
 [node name="freefloating" type="Control" parent="."]
 anchor_right = 1.0
 anchor_bottom = 1.0
+mouse_filter = 2
 __meta__ = {
 "_edit_lock_": true,
 "_edit_use_anchors_": false

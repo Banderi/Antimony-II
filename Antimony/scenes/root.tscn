@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=14 format=2]
 
 [ext_resource path="res://Antimony/scenes/hud/hud_item.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Antimony/fonts/font_pixelated_large.tres" type="DynamicFont" id=2]
@@ -8,6 +8,7 @@
 [ext_resource path="res://Antimony/fonts/slkscr.ttf" type="DynamicFontData" id=6]
 [ext_resource path="res://Antimony/shaders/pixelize.shader" type="Shader" id=7]
 [ext_resource path="res://Antimony/materials/im_graphics.tres" type="Material" id=8]
+[ext_resource path="res://ITEMS.gd" type="Script" id=9]
 
 [sub_resource type="ShaderMaterial" id=1]
 shader = ExtResource( 7 )
@@ -23,6 +24,9 @@ font_data = ExtResource( 6 )
 
 [node name="root" type="Node"]
 script = ExtResource( 5 )
+
+[node name="ITEMS" type="Node" parent="."]
+script = ExtResource( 9 )
 
 [node name="TESTING_COLOR" type="ColorRect" parent="."]
 visible = false

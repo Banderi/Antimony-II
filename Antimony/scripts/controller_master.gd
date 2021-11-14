@@ -10,9 +10,6 @@ func get_highlight(n = 0):
 func get_selected(n = 0):
 	return Game.controller.get_selected(n)
 
-func command_point(point):
-	Game.controller.command_point(point)
-
 ###
 
 func camera_shake(strength, charge):

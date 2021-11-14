@@ -42,6 +42,8 @@ func _ready():
 
 	####
 
+	$ITEMS.init()
+
 	# load initial level
 	Game.load_level("levels/test")
 

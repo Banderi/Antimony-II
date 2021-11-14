@@ -2,8 +2,8 @@ extends Spatial
 class_name Prop
 
 export(String) var itemid = "" #setget id_change
-var data = []
-var team = null
+var data = [] # this contains ALL the useful item data -- editable, too.
+export(int, 0, 99) var faction = 0 # ok I lied. not ALL of the data...
 
 var meshnodes = []
 var highlighted = false # currently highlighted
@@ -19,9 +19,6 @@ var start_tr = Transform()
 # TODO: rewrite this utter garbage
 
 func highlight(y):
-#	highlighted = false
-#	if user != null: # already being used by someone!
-#		y = false
 	for n in meshnodes:
 		n.get_surface_material(0).next_pass.next_pass.set_shader_param("visible", y)
 		pass
@@ -29,9 +26,9 @@ func highlight(y):
 func select(y):
 	selected = y
 func can_be_selected(drag):
-	if team == 1:
+	if faction == Game.player_faction:
 		return true
-	elif !drag:
+	elif !drag: # can be selected when not dragging
 		return true
 	return false
 
@@ -97,7 +94,7 @@ func _ready():
 	###
 
 	# wait for game databases to finish loading
-#	yield(Game.level, "level_ready")
+	yield(Game.level, "level_ready")
 
 	# pickup-able item vs interactible/physics room prop
 	var item_data = Game.get_item_data(itemid)

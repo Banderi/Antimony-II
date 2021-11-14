@@ -48,9 +48,23 @@ var max_step_height = 0.5
 var max_slope_angle = 0.2 * PI
 var crouch_height_diff = 0.75
 
+#var locked = false
+var camera_initial_zoom = 10.0
+var camera_alt_zoom = 6.0
+var camera_max_height = 0.1 * PI
+var camera_min_height = - 0.5 * PI
+var camera_zoom_delta_speed = 0.9
+var camera_zoom_min = 0.5
+var camera_zoom_max = 50.0
+var camera_tilt_max = Vector3(0.03, 0.03, 0.03)
+var camera_3d_coeff = Vector3(1, 1, 1)
+var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
+var camera_2d_vertical_compensation = 0.0175
 var camera_fov = 70
 var camera_fov_scope = 20
 var camera_weapon_shake_force = Vector2(0.0015, 0.01)
+var camera_near = 0.1
+var camera_far = 10000.0
 
 var max_bullet_travel = 100
 var max_bullet_lifetime = 10.0
@@ -290,9 +304,79 @@ func get_playername():
 #	return player.player_name
 	return "TEST"
 
-func get_player_team(player = null):
-	# todo....
-	return 0
+var player_faction = 0 # default = 0
+var teams = [0, 1] # default/placeholder teams: one ally (player=0) and one enemy (cpu=1)!
+func get_player_team(faction = player_faction):
+	if faction > teams.size() + 1:
+		return null
+	return teams[faction]
+func is_ally(faction):
+	return get_player_team() == get_player_team(faction)
+func is_enemy(faction):
+	return !is_ally(faction)
+
+# temporary command order buffer for cursor and queue updates
+var cmm_buffer = {
+		"units": null,
+		"order": null,
+		"target": null,
+		"pos": null
+}
+var order_hierarchy = [ # TODO: turn these into enums?
+	"attack",
+	"convert",
+	"use",
+#	"select",
+	"travel",
+	null
+]
+func compare_valid_order_hierarchy(o1, o2):
+	if order_hierarchy.find(o2) < order_hierarchy.find(o1):
+		return o2
+	return o1
+func check_for_valid_order(unit, target):
+	if target == null: # no target
+		return "travel"
+	else:
+		if target == unit: # targeting itself
+			return "travel"
+		else:
+			if is_enemy(target.faction):
+				return "attack" # TODO
+			return null
+func check_for_valid_commands(selection, target):
+	cmm_buffer = {
+		"units": selection,
+		"order": null,
+		"target": target,
+		"pos": null
+	}
+	if selection == null || selection == []: # empty selection
+		if target == null:
+			UI.set_cursor(Input.CURSOR_ARROW)
+		else:
+			UI.set_cursor(Input.CURSOR_CROSS)
+	else:
+		var most_valid = null
+		for unit in selection:
+			most_valid = compare_valid_order_hierarchy(most_valid, check_for_valid_order(unit, target))
+		cmm_buffer.order = most_valid
+		match most_valid:
+			null:
+				UI.set_cursor(Input.CURSOR_CROSS)
+			"attack":
+				UI.set_cursor(Input.CURSOR_IBEAM)
+var command_order_queue = []
+func command_order(units, order, target, point, queued = false): # TODO!!!!
+	print("ORDER: %s, %s, %s (%s), %s" % [units, order, target, point, queued])
+#	Game.command_pawns(point)
+#	Game.player.travel(command_points)
+#	Game.player.reach_prop(get_highlight())
+	pass
+func command_buffered(queued):
+	if cmm_buffer.order == null:
+		return
+	command_order(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.pos, queued)
 
 ###
 
