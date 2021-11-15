@@ -326,6 +326,7 @@ var order_hierarchy = [ # TODO: turn these into enums?
 	"attack",
 	"convert",
 	"use",
+	"repair",
 #	"select",
 	"travel",
 	null
@@ -335,6 +336,8 @@ func compare_valid_order_hierarchy(o1, o2):
 		return o2
 	return o1
 func check_for_valid_order(unit, target):
+	if unit.faction != player_faction: # can only order around for OUR units!
+		return null
 	if target == null: # no target
 		return "travel"
 	else:
@@ -363,20 +366,33 @@ func check_for_valid_commands(selection, target):
 		cmm_buffer.order = most_valid
 		match most_valid:
 			null:
-				UI.set_cursor(Input.CURSOR_CROSS)
+				if target == null:
+					UI.set_cursor(Input.CURSOR_ARROW)
+				elif !selection.has(target):
+					UI.set_cursor(Input.CURSOR_CROSS)
 			"attack":
-				UI.set_cursor(Input.CURSOR_IBEAM)
-var command_order_queue = []
-func command_order(units, order, target, point, queued = false): # TODO!!!!
+				UI.set_cursor(Input.CURSOR_IBEAM) # TODO
+			"convert":
+				UI.set_cursor(Input.CURSOR_DRAG) # TODO
+			"use":
+				UI.set_cursor(Input.CURSOR_POINTING_HAND) # TODO
+			"repair":
+				UI.set_cursor(Input.CURSOR_CROSS) # TODO
+			"travel":
+				UI.set_cursor(Input.CURSOR_ARROW)
+var command_queue = []
+func dispatch_command(units, order, target, point, queued = false): # TODO!!!!
 	print("ORDER: %s, %s, %s (%s), %s" % [units, order, target, point, queued])
 #	Game.command_pawns(point)
 #	Game.player.travel(command_points)
 #	Game.player.reach_prop(get_highlight())
 	pass
-func command_buffered(queued):
+func dispatch_buffered(queued):
 	if cmm_buffer.order == null:
-		return
-	command_order(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.pos, queued)
+		return null
+	return dispatch_command(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.pos, queued)
+func cancel_command(n):
+	pass # TODO
 
 ###
 

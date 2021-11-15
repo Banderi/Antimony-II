@@ -84,8 +84,8 @@ func _physics_process(delta):
 		wake()
 
 	# update pathing origin
-	start_tr = rb.get_global_transform()
-	path_origin = start_tr.origin
+	usage_transform = rb.get_global_transform()
+	usage_origin = usage_transform.origin
 
 func _ready():
 

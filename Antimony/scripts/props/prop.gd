@@ -5,16 +5,17 @@ export(String) var itemid = "" #setget id_change
 var data = [] # this contains ALL the useful item data -- editable, too.
 export(int, 0, 99) var faction = 0 # ok I lied. not ALL of the data...
 
+var bars = null
 var meshnodes = []
+
 var highlighted = false # currently highlighted
 var selected = false # currently selected
 
 var user = null # actor interacting with prop
 var busy = false
 var distance = 0.4
-
-var path_origin = Vector3()
-var start_tr = Transform()
+var usage_origin = Vector3()
+var usage_transform = Transform()
 
 # TODO: rewrite this utter garbage
 
@@ -33,7 +34,7 @@ func can_be_selected(drag):
 	return false
 
 func to_reach(pos):
-	return path_origin
+	return usage_origin
 func interact(a):
 	if user != null:
 		if user == a:
@@ -84,10 +85,32 @@ remote func RPC_release_actor():
 
 ###
 
+func show_bars():
+	if bars == null:
+		return
+	if selected || highlighted:
+		bars.visible = true
+	else:
+		bars.visible = false
+#	bars.scale = Vector2(40,40) / Game.camera_distance(translation)
+	bars.position = Game.to_screen(translation + 2.3 * Vector3(0, scale.y, 0))
+func show_selection_boxes():
+	if selected:
+		UI.box(translation + Vector3(0, scale.y, 0), scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
+	elif highlighted:
+#		UI.box(translation + Vector3(0, scale.y, 0), scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
+		pass
+
+func _process(delta):
+	if Engine.editor_hint:
+		return
+	show_bars()
+	show_selection_boxes()
+
 func _ready():
 	init_mesh_array()
 
-	path_origin = get_global_transform().origin
+	usage_origin = get_global_transform().origin
 	add_to_group("props")
 	add_to_group("rpc_sync")
 
@@ -106,3 +129,9 @@ func _ready():
 			"type": 999,
 			"health" : -1
 		}
+
+	# load statbars
+	var bar_scn = load("res://scenes/hud/unitbars.tscn")
+	if bar_scn != null:
+		bars = load("res://scenes/hud/unitbars.tscn").instance()
+		self.add_child(bars)
