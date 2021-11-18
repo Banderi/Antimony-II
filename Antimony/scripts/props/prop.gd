@@ -17,6 +17,8 @@ var distance = 0.4
 var usage_origin = Vector3()
 var usage_transform = Transform()
 
+var collision_props_list = [] # TODO
+
 # TODO: rewrite this utter garbage
 
 func highlight(y):

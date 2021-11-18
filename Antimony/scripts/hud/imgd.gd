@@ -21,10 +21,12 @@ func vector(p, v, c, point_1 = false, point_2 = false):
 		point(p, c)
 	if point_2:
 		point(p + v, c)
-func path(p, v, c):
+func path(p, v, c, points = false):
 	if !todraw["paths"].has(p):
 		todraw["paths"][p] = []
 	todraw["paths"][p].append([v, c])
+	if points:
+		point(v, c)
 func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 	if centered:
 		p -= Vector3(x, y, z) * 0.5
@@ -71,11 +73,9 @@ func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 			line(vert, vert + edge * Vector3(1, 0, 0), c)
 			line(vert, vert + edge * Vector3(0, 1, 0), c)
 			line(vert, vert + edge * Vector3(0, 0, 1), c)
-
 	if points:
 		for v in vrt:
 			point(v, c)
-
 func box(p, s, c, centered = true, e = -1, points = false):
 	return box_raw(p, s.x, s.y, s.z, c, centered, e, points)
 

@@ -352,8 +352,11 @@ func check_for_valid_commands(selection, target):
 		"units": selection,
 		"order": null,
 		"target": target,
-		"pos": null
+		"position": null
 	}
+	var raypick = controller.get_raypick()
+	if raypick != null:
+		cmm_buffer.position = raypick.position
 	if selection == null || selection == []: # empty selection
 		if target == null:
 			UI.set_cursor(Input.CURSOR_ARROW)
@@ -383,6 +386,13 @@ func check_for_valid_commands(selection, target):
 var command_queue = []
 func dispatch_command(units, order, target, point, queued = false): # TODO!!!!
 	print("ORDER: %s, %s, %s (%s), %s" % [units, order, target, point, queued])
+	match order:
+		"attack", "convert", "use", "repair":
+			pass
+		"travel":
+			for unit in units:
+				unit.go_to_position(point, queued)
+			pass
 #	Game.command_pawns(point)
 #	Game.player.travel(command_points)
 #	Game.player.reach_prop(get_highlight())
@@ -390,9 +400,14 @@ func dispatch_command(units, order, target, point, queued = false): # TODO!!!!
 func dispatch_buffered(queued):
 	if cmm_buffer.order == null:
 		return null
-	return dispatch_command(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.pos, queued)
+	return dispatch_command(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.position, queued)
 func cancel_command(n):
 	pass # TODO
+func get_pathfind(start, end):
+	if navmesh != null:
+		return navmesh.get_simple_path(start, end)
+	else:
+		return null
 
 ###
 
