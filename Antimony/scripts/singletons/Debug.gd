@@ -24,7 +24,7 @@ func draw_nav(a):
 			elif p > a.navigation.path_index:
 				path(name, point + a.nav_correction, Color(1,0,0,1), true)
 func draw_owner(a):
-	var p = a.body.get_global_transform().origin + Vector3(0, 0, 0)
+	var p = a.body.get_global_transform().origin + a.imgd_corr + Vector3(0, 0, 0)
 	point(p, Color(1 - int(RPC.am_master(a)), int(RPC.am_master(a)), 0))
 
 func padinfo(paired, paddings, values):
@@ -78,10 +78,10 @@ func _process(delta):
 			render()
 
 			# render game elements
-			for p in get_tree().get_nodes_in_group("props"):
-				draw_owner(p)
-			for a in get_tree().get_nodes_in_group("actors"):
-				draw_nav(a)
+#			for p in get_tree().get_nodes_in_group("props"):
+#				draw_owner(p)
+#			for a in get_tree().get_nodes_in_group("actors"):
+#				draw_nav(a)
 			for e in get_tree().get_nodes_in_group("emitters"):
 				e.draw_trajectory()
 				var c = Color(1, 1*int(!e.fail), 1*int(!e.fail))

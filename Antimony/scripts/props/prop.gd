@@ -1,14 +1,17 @@
+tool
 extends Spatial
 class_name Prop
 
 export(String) var itemid = "" #setget id_change
 var data = [] # this contains ALL the useful item data -- editable, too.
 export(int, 0, 99) var faction = 0 # ok I lied. not ALL of the data...
+export(Color) var color = Color(1,0,0,1) setget set_color
 
 var bars = null
 var meshnodes = []
 onready var mesh = $mesh
 onready var body = $body
+var imgd_corr = Vector3() # for ImmediateGeometry rendering...
 
 var highlighted = false # currently highlighted
 var selected = false # currently selected
@@ -23,10 +26,23 @@ var collision_props_list = [] # TODO
 
 # TODO: rewrite this utter garbage
 
+func get_all_childs(node):
+	var nodes = []
+	for n in node.get_children():
+		nodes.append(n)
+		if n.get_child_count() > 0:
+			nodes += get_all_childs(n)
+	return nodes
+func set_color(c):
+	init_mesh_array()
+	for m in meshnodes:
+		m.get_surface_material(0).albedo_color = c
+	color = c
+
 func highlight(y):
-	for n in meshnodes:
-		n.get_surface_material(0).next_pass.next_pass.set_shader_param("visible", y)
-		pass
+#	for n in meshnodes:
+#		n.get_surface_material(0).next_pass.next_pass.set_shader_param("visible", y)
+#		pass
 	highlighted = y
 func select(y):
 	selected = y
@@ -63,12 +79,14 @@ func destroy():
 
 func init_mesh_array():
 	meshnodes = []
-	var nodes = Game.get_all_childs(self) # needs to be set beforehand - the "for in" loop evaluates EVERY TIME >:C
+	var nodes = get_all_childs(self) # needs to be set beforehand - the "for in" loop evaluates EVERY TIME >:C
 	for n in nodes:
-		if n is MeshInstance &&\
-		n.get_surface_material(0) != null && \
-		n.get_surface_material(0).next_pass != null &&\
-		n.get_surface_material(0).next_pass.next_pass != null:
+		if n is MeshInstance:
+#		if n is MeshInstance &&\
+#			n.get_surface_material(0) != null && \
+#			n.get_surface_material(0).next_pass != null &&\
+#			n.get_surface_material(0).next_pass.next_pass != null:
+#				meshnodes.push_back(n)
 			meshnodes.push_back(n)
 
 ###
@@ -101,7 +119,7 @@ func show_bars(delta):
 	bars.position = Game.to_screen(body.translation + 2.3 * Vector3(0, body.scale.y, 0))
 func show_selection_boxes(delta):
 	if selected:
-		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
+		UI.box(body.translation + imgd_corr + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
 	elif highlighted:
 #		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
 		pass
@@ -118,6 +136,8 @@ func _process(delta):
 	show_selection_boxes(delta)
 
 	update_mesh_transforms(delta) # UGH
+
+	Debug.draw_owner(self)
 
 func _ready():
 	init_mesh_array()

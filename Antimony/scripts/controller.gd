@@ -57,6 +57,8 @@ func get_selected(n = 0):
 
 var mouse_motion_timer = 0
 func highlight(item, drag_sel):
+	if !item.has_method("can_be_selected"):
+		return
 	if !item.can_be_selected(drag_sel):
 		return
 	item.highlight(true)
@@ -119,7 +121,7 @@ func update_raycast():
 	if Game.is_2D():
 		pass # TODO: 2D raypicking...
 	else:
-		var masks = Masks.LEVEL + Masks.INTERACTABLES + Masks.PROPS + Masks.STATICS # todo?
+		var masks = Masks.LEVEL + Masks.INTERACTABLES + Masks.ACTORS + Masks.PROPS + Masks.STATICS # todo?
 		var proj_origin = cam.project_ray_origin(get_viewport().get_mouse_position())
 		var proj_normal = cam.project_ray_normal(get_viewport().get_mouse_position())
 
@@ -134,10 +136,11 @@ func update_raycast():
 			if result:
 				_add_item(raypicks, result.duplicate())
 #				if !Input.is_action_pressed("left_click"): # skip if dragging
-				var m = result.collider.collision_layer
-				match m:
-					Masks.INTERACTABLES, Masks.PROPS, Masks.STATICS:
-						highlight(result.collider.get_parent(), false)
+				highlight(result.collider.get_parent(), false)
+#				var m = result.collider.collision_layer
+#				match m:
+#					Masks.INTERACTABLES, Masks.PROPS, Masks.ACTORS, Masks.STATICS:
+#						highlight(result.collider.get_parent(), false)
 				from = result.position + proj_normal * 0.001 # advance raycast along -- add EPSILON to avoid infinite loops!
 			else:
 				checking = false

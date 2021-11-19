@@ -218,6 +218,7 @@ func dynamics_update(delta):
 
 	# update position...
 	dynamics.position = body.translation
+	imgd_corr = dynamics.velocity * delta
 
 	# update delta values
 	dynamics.delta_position = dynamics.position - dynamics.last_position
@@ -236,12 +237,5 @@ func _process(delta):
 	# integrate stuff, update final velocity, position, etc.
 	dynamics_update(delta)
 
-#	if navigation != null:
-#		for p in navigation.path_total:
-#			var point = navigation.path[p]
-#			if p < navigation.path_index:
-#				Debug.path(name, point + nav_correction, Color(1,0,0,1), true)
-#			else:
-#				Debug.path(name, point + nav_correction, Color(0,1,0,1), true)
-
-	add_to_group("actors") # temp
+	# debug info
+	Debug.draw_nav(self)
