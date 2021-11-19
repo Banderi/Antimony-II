@@ -352,6 +352,7 @@ func inv_items_update():
 	# refresh graphics of the hotbar
 	update_hotbar()
 func update_peers_menu():
+	return # TODO
 	for p in sb_peers:
 		hide(p)
 

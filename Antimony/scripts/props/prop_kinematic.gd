@@ -1,31 +1,69 @@
 extends Prop
 class_name KinematicProp
+# NOTE: Prop inherits from Spatial. KinematicProp CANNOT extend KinematicBody and thus cannot access KinematicBody methods directly.
+# Fuck the diamond problem.
 
+#var kbody = null
+#var mesh = null
+#onready var kbody = $KinematicBody
+#onready var mesh = $mesh
 
-var nm_corr = Vector3(0, -0.4, 0)
+var nav_correction = Vector3(0, -0.4, 0)
+#var kbody_correction = Vector3(0, 0, 0)
 var up = Vector3(0, 1, 0)
 var hor = Vector3(1, 0, 1)
 
-var pos = Vector3()
-var last_pos = Vector3()
-var velocity = Vector3() # do NOT use this for checking the player "current" velocity externally!
-var last_velocity = Vector3()
-var dir = Vector3()
-var rot = -PI * 0.5
-var lookat = Vector3()
+var dynamics = {
+	"position": Vector3(),
+	"last_position": Vector3(),
+	"delta_position": Vector3(),
 
-var last_dir = Vector3(1, 0, 0)
+	# normalized direction to be used for movement calcs
+	"direction": Vector3(),
+	"last_direction": Vector3(1, 0, 0),
+	"delta_direction": Vector3(1, 0, 0),
 
-var speed = 6
-var turn_friction = 0.2
+	# frame-dependent movement vector
+	"movement": Vector3(),
+	"last_movement": Vector3(),
+	"delta_movement": Vector3(),
+
+	# overall movement (velocity) vector
+	"velocity": Vector3(),
+	"last_velocity": Vector3(),
+	"delta_velocity": Vector3(),
+
+	# rotation angle (horizontal) for mesh transform stuff
+	"rotation": -PI * 0.5,
+
+	"speed": 6,
+	"turn_speed": 0,
+	"turn_friction": 0.2,
+	"on_ground": true,
+}
 
 ###
 
-#var prop_to_reach = null
-#var prop_has_collided = false
 func prop_interact():
 	# TODO
 	pass
+func check_for_prop_in_range(prop):
+	# check for collision list
+	if prop in collision_props_list:
+		return true
+
+	# check for horizontal distance
+	var vec_dist = prop.usage_origin - dynamics.position + nav_correction
+	var horizontal_distance = (vec_dist * hor).length()
+	if horizontal_distance < prop.distance:
+		return true
+
+	# TODO?
+#	if navigation.path_total - navigation.path_index > 2 && horizontal_distance < prop.distance * 2:
+#		return true
+
+	# failure case
+	return false
 
 var action_queue = []
 var navigation = null
@@ -43,7 +81,7 @@ func action_advance_queue():
 	if action_queue.size() == 0:
 		return action_queue_erase() # nothing in queue. clear the current / cached action's navigation and return.
 	var action = action_queue[0] # get the first on in the queue
-	var path = Game.get_pathfind(pos, action.destination)
+	var path = Game.get_pathfind(dynamics.position, action.destination)
 	if path == null:
 		return print("ERROR: no valid navmesh available!") # uh oh
 	navigation = {
@@ -52,20 +90,15 @@ func action_advance_queue():
 		"path": path,
 		"path_index": 1, # skip the first point
 		"path_total": path.size(),
-		"start": pos # current prop's translation
+		"start": dynamics.position # current prop's translation
 	}
-#	navigation.destination = action[0]
-#	navigation.prop = action[1]
-#	navigation.path = Game.navmesh.get_simple_path(pos, action[0])
-#	navigation.path_index = 1 # skip the first point
-#	navigation.path_total = navigation.path.size()
-#	navigation.start = pos
 
 	# remove previous action from the queue
 	action_queue.pop_front()
 func action_queue_erase():
 	action_queue = []
 	navigation = null
+	dynamics.direction = Vector3()
 func go_to_position(destination, queued = false):
 	if !queued:
 		action_queue_erase()
@@ -74,24 +107,6 @@ func go_to_prop(prop, queued = false):
 	if !queued:
 		action_queue_erase()
 	action_add_to_queue(prop.usage_origin, prop)
-
-func check_for_prop_in_range(prop):
-	# check for collision list
-	if prop in collision_props_list:
-		return true
-
-	# check for horizontal distance
-	var vec_dist = prop.usage_origin - pos + nm_corr
-	var horizontal_distance = (vec_dist * hor).length()
-	if horizontal_distance < prop.distance:
-		return true
-
-	# TODO?
-#	if navigation.path_total - navigation.path_index > 2 && horizontal_distance < prop.distance * 2:
-#		return true
-
-	# failure case
-	return false
 
 func navigation_update():
 #	# ignore for now if player controlled
@@ -172,25 +187,61 @@ func navigation_update():
 				prop_interact() # interact!!
 				return action_advance_queue() # advance to next action
 		else:
-			var vec_dist = next_point - pos + nm_corr
+			var vec_dist = next_point - dynamics.position + nav_correction
 			var horizontal_distance = (vec_dist * hor).length()
 			if horizontal_distance < 0.1: # check for horizontal distance to the next path point
 				navigation.path_index += 1 # advance "target" index to the next point in the path!
 
 		# update the direction vector along the path
-		dir = (next_point - pos + nm_corr)
+		dynamics.direction = (next_point - dynamics.position + nav_correction).normalized()
 	else: # navigation is done! index is out of bounds!!
-		dir = Vector3() # arrival at destination!
+		dynamics.direction = Vector3() # arrival at destination!
 		if navigation.prop != null: # alas... prop is unreachable
 			pass
 		action_advance_queue() # advance to next action
 
+###
+
+func dynamics_update(delta):
+	# update previous values
+	dynamics.last_position = dynamics.position
+	dynamics.last_velocity = dynamics.velocity
+	dynamics.last_direction = dynamics.direction
+	dynamics.last_movement = dynamics.movement
+
+	dynamics.movement = dynamics.direction * dynamics.speed
+	if !dynamics.on_ground:
+		dynamics.movement += dynamics.velocity
+
+#	if body != null:
+	dynamics.velocity = body.move_and_slide(dynamics.movement)
+
+	# update position...
+	dynamics.position = body.translation
+
+	# update delta values
+	dynamics.delta_position = dynamics.position - dynamics.last_position
+	dynamics.delta_velocity = dynamics.velocity - dynamics.last_velocity
+	dynamics.delta_direction = dynamics.direction - dynamics.last_direction
+	dynamics.delta_movement = dynamics.movement - dynamics.last_movement
+
+func mesh_update(delta):
+	mesh.translation = dynamics.position
+
+###
+
 func _process(delta):
 	navigation_update()
 
-	if navigation != null:
-		for p in navigation.path:
-			Debug.path(name, p, Color(0,1,0,1), true)
+	# integrate stuff, update final velocity, position, etc.
+	dynamics_update(delta)
 
-func _ready():
-	pos = translation
+#	if navigation != null:
+#		for p in navigation.path_total:
+#			var point = navigation.path[p]
+#			if p < navigation.path_index:
+#				Debug.path(name, point + nav_correction, Color(1,0,0,1), true)
+#			else:
+#				Debug.path(name, point + nav_correction, Color(0,1,0,1), true)
+
+	add_to_group("actors") # temp

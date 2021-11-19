@@ -63,7 +63,8 @@ func highlight(item, drag_sel):
 	if !drag_sel:
 		# tooltips
 		if mouse_motion_timer > 0.2:
-			UI.tooltip(item.data.name)
+			if item.data.has("name"):
+				UI.tooltip(item.data.name)
 	_add_item(highlighted_objects, item)
 
 func select(item):
@@ -104,8 +105,8 @@ func update_selection_rect_intersect():
 	match Game.selection_mode:
 		0:
 			for prop in get_tree().get_nodes_in_group("props"):
-				UI.point(prop.translation, Color(1,1,1,1))
-				if selection_rect.has_point(Game.to_screen(prop.translation)):
+#				UI.point(prop.body.translation, Color(1,1,1,1))
+				if selection_rect.has_point(Game.to_screen(prop.body.translation)):
 					highlight(prop, true)
 func update_raycast():
 	# reset prop highlight & raypicks
@@ -407,6 +408,15 @@ func _process(delta):
 	Debug.loginfo("raypicks:   ", raypicks.size())
 	Debug.loginfo("highlights: ", highlighted_objects.size())
 	Debug.loginfo("selected:   ", selected_objects.size())
+
+	# free floating text (raypick info, actors, etc.)
+	var pick = Game.controller.get_raypick()
+	if pick != null:
+		Debug.floating(Game.print_dict(pick), pick.screencoords + Vector2(30, 0))
+	var sel = get_selected(0)
+	if sel != null:
+		if sel.get("dynamics") != null:
+			Debug.floating(Game.print_dict(sel.dynamics), Game.to_screen(sel.dynamics.position) + Vector2(30, -100))
 
 	emit_signal("controller_update")
 

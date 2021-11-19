@@ -7,6 +7,8 @@ export(int, 0, 99) var faction = 0 # ok I lied. not ALL of the data...
 
 var bars = null
 var meshnodes = []
+onready var mesh = $mesh
+onready var body = $body
 
 var highlighted = false # currently highlighted
 var selected = false # currently selected
@@ -87,7 +89,8 @@ remote func RPC_release_actor():
 
 ###
 
-func show_bars():
+var period = 0
+func show_bars(delta):
 	if bars == null:
 		return
 	if selected || highlighted:
@@ -95,19 +98,26 @@ func show_bars():
 	else:
 		bars.visible = false
 #	bars.scale = Vector2(40,40) / Game.camera_distance(translation)
-	bars.position = Game.to_screen(translation + 2.3 * Vector3(0, scale.y, 0))
-func show_selection_boxes():
+	bars.position = Game.to_screen(body.translation + 2.3 * Vector3(0, body.scale.y, 0))
+func show_selection_boxes(delta):
 	if selected:
-		UI.box(translation + Vector3(0, scale.y, 0), scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
+		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
 	elif highlighted:
-#		UI.box(translation + Vector3(0, scale.y, 0), scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
+#		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
 		pass
+
+func update_mesh_transforms(delta):
+	mesh.translation = body.translation
+	pass
 
 func _process(delta):
 	if Engine.editor_hint:
 		return
-	show_bars()
-	show_selection_boxes()
+	period += delta # todo: this would actually be different for each of the functions...
+	show_bars(delta)
+	show_selection_boxes(delta)
+
+	update_mesh_transforms(delta) # UGH
 
 func _ready():
 	init_mesh_array()
@@ -137,3 +147,8 @@ func _ready():
 	if bar_scn != null:
 		bars = load("res://scenes/hud/unitbars.tscn").instance()
 		self.add_child(bars)
+
+	# initialize composed transformations.... GOD.
+	body.transform = body.get_global_transform()
+	mesh.transform = mesh.get_global_transform()
+	transform = Transform()

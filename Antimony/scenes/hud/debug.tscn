@@ -234,3 +234,228 @@ __meta__ = {
 "_edit_lock_": true,
 "_edit_use_anchors_": false
 }
+
+[node name="ff6" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff7" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff8" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff9" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff10" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff11" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff12" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff13" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff14" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff15" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff16" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff17" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff18" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff19" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}
+
+[node name="ff20" type="Label" parent="freefloating"]
+margin_left = 17.7921
+margin_top = 14.9929
+margin_right = 467.792
+margin_bottom = 303.993
+mouse_filter = 1
+custom_fonts/font = ExtResource( 2 )
+custom_colors/font_color = Color( 1, 0.898039, 0.501961, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 0.5 )
+custom_constants/shadow_offset_y = 0
+__meta__ = {
+"_edit_lock_": true,
+"_edit_use_anchors_": false
+}

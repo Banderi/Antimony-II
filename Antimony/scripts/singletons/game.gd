@@ -401,8 +401,9 @@ func dispatch_buffered(queued):
 	if cmm_buffer.order == null:
 		return null
 	return dispatch_command(cmm_buffer.units, cmm_buffer.order, cmm_buffer.target, cmm_buffer.position, queued)
-func cancel_command(n):
-	pass # TODO
+func cancel_command():
+	for unit in cmm_buffer.units:
+		unit.action_queue_erase()
 func get_pathfind(start, end):
 	if navmesh != null:
 		return navmesh.get_simple_path(start, end)

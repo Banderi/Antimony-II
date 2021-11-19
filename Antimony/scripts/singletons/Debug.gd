@@ -12,11 +12,19 @@ var ff
 ###
 
 func draw_nav(a):
-	for p in a.path:
-		point(p + a.nm_corr, Color(0, 0, 1))
-		path("nav_" + str(a.peer), p + a.nm_corr, Color(0, 0, 1))
+#	for p in a.path:
+#		point(p + a.nm_corr, Color(0, 0, 1))
+#		path("nav_" + str(a.peer), p + a.nm_corr, Color(0, 0, 1))
+	if a.navigation != null:
+		for p in a.navigation.path_total:
+			var point = a.navigation.path[p]
+			if p == a.navigation.path_index:
+				path(name, a.dynamics.position, Color(0,1,0,1), true)
+				path(name, point + a.nav_correction, Color(0,1,0,1), true)
+			elif p > a.navigation.path_index:
+				path(name, point + a.nav_correction, Color(1,0,0,1), true)
 func draw_owner(a):
-	var p = a.get_global_transform().origin + Vector3(0, 0, 0)
+	var p = a.body.get_global_transform().origin + Vector3(0, 0, 0)
 	point(p, Color(1 - int(RPC.am_master(a)), int(RPC.am_master(a)), 0))
 
 func padinfo(paired, paddings, values):
@@ -45,6 +53,9 @@ func logpaddedinfo(txt, paired, paddings, values):
 func loginfo(txt, txt2 = ""):
 	debug_text += str(txt) + str(txt2)
 	debug_text += "\n"
+var floating = []
+func floating(txt, pos):
+	floating.append([txt, pos])
 
 ###
 
@@ -81,12 +92,12 @@ func _process(delta):
 			# render free-floating text
 			for label in ff.get_children():
 				label.text = ""
-			if Game.controller.raypicks.size() > 0:
-				var pick = Game.controller.get_raypick()
-				var label = ff.get_child(0)
-				label.text = Game.print_dict(pick)
-				label.rect_position = pick.screencoords + Vector2(30, 0)
-#				label.rect_position = UI.hud.get_global_mouse_position() + Vector2(30, 0)
+			for f in floating.size():
+				if f < 20:
+					var label = ff.get_child(f)
+					label.text = floating[f][0]
+					label.rect_position = floating[f][1]
+			floating = []
 
 			# FPS
 			fps.text = str(Performance.get_monitor(0))
