@@ -1,6 +1,8 @@
 extends Node
 class_name ImmediateGeometryDisplay
 
+export(bool) var is_self_im = false
+
 var im
 
 var todraw = {
@@ -27,6 +29,14 @@ func path(p, v, c, points = false):
 	todraw["paths"][p].append([v, c])
 	if points:
 		point(v, c)
+func navpath(nav, pos, corr, c1, c2):
+	for p in nav.path_total:
+		var point = nav.path[p]
+		if p == nav.path_index:
+			path(name, pos, c1, true)
+			path(name, point + corr, c1, true)
+		elif p > nav.path_index:
+			path(name, point + corr, c2, true)
 func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 	if centered:
 		p -= Vector3(x, y, z) * 0.5
@@ -109,3 +119,7 @@ func render():
 		"lines": [],
 		"paths": {}
 	}
+
+func _ready():
+	if is_self_im:
+		im = self

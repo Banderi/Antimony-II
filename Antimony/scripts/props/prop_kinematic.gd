@@ -200,6 +200,11 @@ func navigation_update():
 			pass
 		action_advance_queue() # advance to next action
 
+var period_nav = 0
+func show_navigation(delta):
+	if period_nav < 1.0 && navigation != null:
+		UI.im_nodepth.navpath(navigation, dynamics.position, nav_correction, Color(1,0,0,1), Color(0,1,0,1))
+
 ###
 
 func dynamics_update(delta):
@@ -213,7 +218,8 @@ func dynamics_update(delta):
 	if !dynamics.on_ground:
 		dynamics.movement += dynamics.velocity
 
-#	if body != null:
+	# NB: body can NOT be unassigned!
+	# it will fail on startup if the node isn't present!
 	dynamics.velocity = body.move_and_slide(dynamics.movement)
 
 	# update position...
@@ -237,5 +243,4 @@ func _process(delta):
 	# integrate stuff, update final velocity, position, etc.
 	dynamics_update(delta)
 
-	# debug info
-	Debug.draw_nav(self)
+	show_navigation(delta)

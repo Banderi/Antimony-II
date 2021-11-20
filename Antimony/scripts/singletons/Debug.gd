@@ -11,18 +11,18 @@ var ff
 
 ###
 
-func draw_nav(a):
-#	for p in a.path:
-#		point(p + a.nm_corr, Color(0, 0, 1))
-#		path("nav_" + str(a.peer), p + a.nm_corr, Color(0, 0, 1))
-	if a.navigation != null:
-		for p in a.navigation.path_total:
-			var point = a.navigation.path[p]
-			if p == a.navigation.path_index:
-				path(name, a.dynamics.position, Color(0,1,0,1), true)
-				path(name, point + a.nav_correction, Color(0,1,0,1), true)
-			elif p > a.navigation.path_index:
-				path(name, point + a.nav_correction, Color(1,0,0,1), true)
+#func draw_nav(a):
+##	for p in a.path:
+##		point(p + a.nm_corr, Color(0, 0, 1))
+##		path("nav_" + str(a.peer), p + a.nm_corr, Color(0, 0, 1))
+#	if a.navigation != null:
+#		for p in a.navigation.path_total:
+#			var point = a.navigation.path[p]
+#			if p == a.navigation.path_index:
+#				path(name, a.dynamics.position, Color(0,1,0,1), true)
+#				path(name, point + a.nav_correction, Color(0,1,0,1), true)
+#			elif p > a.navigation.path_index:
+#				path(name, point + a.nav_correction, Color(1,0,0,1), true)
 func draw_owner(a):
 	var p = a.body.get_global_transform().origin + a.imgd_corr + Vector3(0, 0, 0)
 	point(p, Color(1 - int(RPC.am_master(a)), int(RPC.am_master(a)), 0))

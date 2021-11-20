@@ -16,6 +16,7 @@ var menus = {}
 
 var UI_root
 var hud
+var im_nodepth = null
 
 var m_main
 var m_pause
@@ -708,7 +709,9 @@ func _input(event):
 
 var cum_delta = 0
 func _process(delta):
-	render() # native ImmediateGeometry parent class
+	# render ImmediateGeometry
+	render()
+	im_nodepth.render()
 
 	if !is_ui_valid():
 		return
