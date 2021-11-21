@@ -5,6 +5,7 @@ export(bool) var is_self_im = false
 
 var im
 
+var has_rendered = false
 func point(v, c, standalone = true):
 	if standalone:
 		im.begin(Mesh.PRIMITIVE_POINTS, null)
@@ -12,6 +13,7 @@ func point(v, c, standalone = true):
 	im.add_vertex(v)
 	if standalone:
 		im.end()
+	has_rendered = true
 func line(v1, v2, c1, c2 = null, standalone = true):
 	if c2 == null:
 		c2 = c1
@@ -23,6 +25,7 @@ func line(v1, v2, c1, c2 = null, standalone = true):
 	im.add_vertex(v2)
 	if standalone:
 		im.end()
+	has_rendered = true
 func vector(p, v, c, point_1 = false, point_2 = false):
 	line(p, p + v, c)
 	if point_1:
@@ -105,10 +108,16 @@ func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 func box(p, s, c, centered = true, e = -1, points = false):
 	return box_raw(p, s.x, s.y, s.z, c, centered, e, points)
 
+var needs_clearing = false # these ENSURE that clear() is called BEFORE rendering anything -- i.e. only clears the PREVIOUS frame!
 func _process(delta):
 	if im == null:
 		return
-	im.clear()
+	if needs_clearing:
+		im.clear()
+		needs_clearing = false
+	if has_rendered:
+		needs_clearing = true
+		has_rendered = false
 
 func _ready():
 	if is_self_im:

@@ -67,6 +67,7 @@ func check_for_prop_in_range(prop):
 
 var action_queue = []
 var navigation = null
+var last_action_timer = 0
 func action_add_to_queue(destination, prop = null, interaction = null):
 	action_queue.push_back({
 		"destination": destination,
@@ -74,8 +75,11 @@ func action_add_to_queue(destination, prop = null, interaction = null):
 		"interaction": interaction # optional interaction order for the prop
 	})
 
+	# reset order timer
+	last_action_timer = 0
+
 	# immediately run the next (first) action if it's the only one in queue...
-	if action_queue.size() == 1:
+	if navigation == null && action_queue.size() == 1:
 		action_advance_queue()
 func action_advance_queue():
 	if action_queue.size() == 0:
@@ -93,8 +97,6 @@ func action_advance_queue():
 		"start": dynamics.position # current prop's translation
 	}
 
-	selection_timer = 0
-
 	# remove previous action from the queue
 	action_queue.pop_front()
 func action_queue_erase():
@@ -110,71 +112,9 @@ func go_to_prop(prop, queued = false):
 		action_queue_erase()
 	action_add_to_queue(prop.usage_origin, prop)
 
-func navigation_update():
-#	# ignore for now if player controlled
-#	if self == Game.player:
-#		match Game.GAMEMODE:
-#			Game.gm.fps, Game.gm.plat, Game.gm.fighting:
-#				return
-#
-#	match state:
-#		states.transit, states.idle:
-#			var reached_prop = false
-#			if path.size() > 0 && prop_to_reach != null: # check
-#				var dist = ((prop_to_reach.path_origin - pos) * hor)
-#				Debug.loginfo(str(dist.length()))
-#				if prop_has_collided || \
-#						dist.length() < prop_to_reach.distance || \
-#						(path.size() < 2 && dist.length() < prop_to_reach.distance * 2):
-#					path = []
-#					reached_prop = prop_interact() # interact!!
-#					prop_has_collided = false
-#			if path.size() > 0:
-#				dir = (path[0] - pos + nm_corr)
-#				if (dir * hor).length() < 0.1: # check for horizontal distance to the path node
-#					path.remove(0)
-#			if path.size() == 0:
-#				dir = Vector3() # arrival at destination!
-#				if prop_to_reach != null && !reached_prop: # alas... prop is unreachable
-#					prop_to_reach = null
-#			else:
-#				dir = (path[0] - pos + nm_corr) # update the movement to keep the motion seamless
-#		states.ladder:
-#			if path.size() > 1:
-#				dir = (path[0] - pos + nm_corr)
-#				if dir.length() < 0.05:
-#					path.remove(0)
-#				if path.size() == 1:
-#					body3D.translation = path[0] + nm_corr
-#					dir = Vector3() # arrival at destination!
-#					path.remove(0)
-#					state = states.idle
-#					release_prop()
-#	dir = dir.normalized() # dir is only used for direction!
-
-
-#	if nav_path.size() > 0 && prop_to_reach != null: # check
-#		var dist = ((prop_to_reach.path_origin - pos) * hor)
-#		Debug.loginfo(str(dist.length()))
-#		if prop_has_collided || \
-#				dist.length() < prop_to_reach.distance || \
-#				(nav_path.size() < 2 && dist.length() < prop_to_reach.distance * 2):
-#			nav_path = []
-#			reached_prop = prop_interact() # interact!!
-#			prop_has_collided = false
-##			path_advance() # TODO
-#		pass
-#	if nav_path.size() > 0:
-#		dir = (nav_path[0] - pos + nm_corr)
-#		if (dir * hor).length() < 0.1: # check for horizontal distance to the path node
-#			nav_path.remove(0)
-#	if nav_path.size() == 0:
-#		dir = Vector3() # arrival at destination!
-#		if prop_to_reach != null && !reached_prop: # alas... prop is unreachable
-#			prop_to_reach = null
-#		path_advance()
-#	else:
-#		dir = (nav_path[0] - pos + nm_corr) # update the movement to keep the motion seamless
+func navigation_update(delta):
+	# advance timer
+	last_action_timer += delta
 
 	if navigation == null:
 		return # no current active action / navigation.
@@ -201,12 +141,23 @@ func navigation_update():
 		if navigation.prop != null: # alas... prop is unreachable
 			pass
 		action_advance_queue() # advance to next action
-
 func show_navigation(delta):
-	if selected && selection_timer < 0.5 && navigation != null:
-		UI.im_no_zbuffer.line(dynamics.position, navigation.destination, Color(0,1,0), Color(0,1,0))
-		UI.im_no_zbuffer.point(dynamics.position, Color(0,1,0))
-		UI.im_no_zbuffer.point(navigation.destination, Color(0,1,0))
+	if selected && (navigation != null || action_queue.size() > 0):
+		if last_action_timer < 0.5 || selection_timer < 0.5:
+			var col = Color(1,1,0)
+			var lastpoint = dynamics.position
+			if navigation != null:
+				col = Color(0,1,0)
+				UI.im_no_zbuffer.line(dynamics.position, navigation.destination, col)
+				UI.im_no_zbuffer.point(navigation.destination, col)
+				lastpoint = navigation.destination
+			UI.im_no_zbuffer.point(dynamics.position, col)
+
+			# render the rest of the queued paths (shallow)
+			for action in action_queue:
+				UI.im_no_zbuffer.line(lastpoint, action.destination, col)
+				UI.im_no_zbuffer.point(action.destination, col)
+				lastpoint = action.destination
 
 ###
 
@@ -240,13 +191,22 @@ func mesh_update(delta):
 ###
 
 func _process(delta):
-	navigation_update()
+	navigation_update(delta)
 
 	# integrate stuff, update final velocity, position, etc.
 	dynamics_update(delta)
 
+	# display / rendering stuff
 	show_navigation(delta)
 
 	# debug info
 	if navigation != null:
 		Debug.navpath(navigation, dynamics.position, nav_correction, Color(0,1,0,1), Color(1,1,0,1), Color(1,0,0,1), true)
+		var lastpoint = navigation.destination
+		for action in action_queue:
+			Debug.line(lastpoint, action.destination, Color(1,0,0,1))
+			Debug.point(action.destination, Color(1,0,0,1))
+			lastpoint = action.destination
+
+	if selected:
+		Debug.loginfo("actions:   ", action_queue.size())
