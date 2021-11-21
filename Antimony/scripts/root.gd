@@ -28,7 +28,7 @@ func _ready():
 	Debug.ff = $UI/debug/freefloating
 	UI.UI_root = $UI
 	UI.im = $UI/im
-	UI.im_nodepth = $UI/im_nodepth
+	UI.im_no_zbuffer = $UI/im_nodepth
 	UI.m_main = $UI/m_main
 	UI.m_pause = $UI/m_pause
 

@@ -388,6 +388,8 @@ func dispatch_command(units, order, target, point, queued = false): # TODO!!!!
 	print("ORDER: %s, %s, %s (%s), %s" % [units, order, target, point, queued])
 	match order:
 		"attack", "convert", "use", "repair":
+			for unit in units:
+				unit.go_to_prop(target, queued)
 			pass
 		"travel":
 			for unit in units:

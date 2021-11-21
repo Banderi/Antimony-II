@@ -11,10 +11,10 @@ var bars = null
 var meshnodes = []
 onready var mesh = $mesh
 onready var body = $body
-var imgd_corr = Vector3() # for ImmediateGeometry rendering...
 
 var highlighted = false # currently highlighted
 var selected = false # currently selected
+var selection_timer = 0
 
 var user = null # actor interacting with prop
 var busy = false
@@ -45,6 +45,7 @@ func highlight(y):
 #		pass
 	highlighted = y
 func select(y):
+	selection_timer = 0
 	selected = y
 func can_be_selected(drag):
 	if faction == Game.player_faction:
@@ -119,7 +120,7 @@ func show_bars(delta):
 	bars.position = Game.to_screen(body.translation + 2.3 * Vector3(0, body.scale.y, 0))
 func show_selection_boxes(delta):
 	if selected:
-		UI.box(body.translation + imgd_corr + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
+		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
 	elif highlighted:
 #		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
 		pass
@@ -132,6 +133,7 @@ func _process(delta):
 	if Engine.editor_hint:
 		return
 	period += delta # todo: this would actually be different for each of the functions...
+	selection_timer += delta
 	show_bars(delta)
 	show_selection_boxes(delta)
 

@@ -24,7 +24,7 @@ var ff
 #			elif p > a.navigation.path_index:
 #				path(name, point + a.nav_correction, Color(1,0,0,1), true)
 func draw_owner(a):
-	var p = a.body.get_global_transform().origin + a.imgd_corr + Vector3(0, 0, 0)
+	var p = a.body.get_global_transform().origin + Vector3(0, 0, 0)
 	point(p, Color(1 - int(RPC.am_master(a)), int(RPC.am_master(a)), 0))
 
 func padinfo(paired, paddings, values):
@@ -75,7 +75,8 @@ func _process(delta):
 	match display:
 		1:
 			# render immediate geometry
-			render()
+#			render()
+			im.visible = true
 
 			# render game elements
 #			for p in get_tree().get_nodes_in_group("props"):
@@ -115,9 +116,10 @@ func _process(delta):
 					if hi is HUDItem:
 						hi.dbg.text = "%d: %s\n%s" % [hi.hbox.slot, Game.items[hi.prop.itemid][0], hi.prop]
 		_:
-			im.clear()
-			todraw = {
-				"points": [],
-				"lines": [],
-				"paths": {}
-			}
+			im.visible = false
+#			im.clear()
+#			todraw = {
+#				"points": [],
+#				"lines": [],
+#				"paths": {}
+#			}

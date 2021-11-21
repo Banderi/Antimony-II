@@ -93,6 +93,8 @@ func action_advance_queue():
 		"start": dynamics.position # current prop's translation
 	}
 
+	selection_timer = 0
+
 	# remove previous action from the queue
 	action_queue.pop_front()
 func action_queue_erase():
@@ -200,10 +202,11 @@ func navigation_update():
 			pass
 		action_advance_queue() # advance to next action
 
-var period_nav = 0
 func show_navigation(delta):
-	if period_nav < 1.0 && navigation != null:
-		UI.im_nodepth.navpath(navigation, dynamics.position, nav_correction, Color(1,0,0,1), Color(0,1,0,1))
+	if selected && selection_timer < 0.5 && navigation != null:
+		UI.im_no_zbuffer.line(dynamics.position, navigation.destination, Color(0,1,0), Color(0,1,0))
+		UI.im_no_zbuffer.point(dynamics.position, Color(0,1,0))
+		UI.im_no_zbuffer.point(navigation.destination, Color(0,1,0))
 
 ###
 
@@ -224,7 +227,6 @@ func dynamics_update(delta):
 
 	# update position...
 	dynamics.position = body.translation
-	imgd_corr = dynamics.velocity * delta
 
 	# update delta values
 	dynamics.delta_position = dynamics.position - dynamics.last_position
@@ -244,3 +246,7 @@ func _process(delta):
 	dynamics_update(delta)
 
 	show_navigation(delta)
+
+	# debug info
+	if navigation != null:
+		Debug.navpath(navigation, dynamics.position, nav_correction, Color(0,1,0,1), Color(1,1,0,1), Color(1,0,0,1), true)

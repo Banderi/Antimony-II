@@ -16,7 +16,7 @@ var menus = {}
 
 var UI_root
 var hud
-var im_nodepth = null
+var im_no_zbuffer = null
 
 var m_main
 var m_pause
@@ -574,17 +574,21 @@ func set_cursor(s, refresh = false):
 
 	# update cursor if there's any change
 	current_cursor_shape = s
-	if refresh:
-		update_cursor()
+#	if refresh:
+#		update_cursor()
 func update_cursor():
 	# BUG:
 	# the cursor changes to the highest custom cursor available (max #16) when reloading the tree
 	# with the debug command. it then prompty switches back to the correct cursor shape on move.
 	# ...I don't even. not a big issue though.
 
+	Debug.loginfo("")
+	Debug.logpaddedinfo("cursor:     ", false, [0, 0], [current_cursor_shape, Input.get_current_cursor_shape()])
+
 	if Input.get_current_cursor_shape() != current_cursor_shape:
 		Input.set_default_cursor_shape(current_cursor_shape)
-		get_viewport().warp_mouse(get_viewport().get_mouse_position()); # refresh mouse input to update the frickin' cursor
+#		get_viewport().warp_mouse(get_viewport().get_mouse_position()); # refresh mouse input to update the frickin' cursor
+#		print("cursor updated!")
 	current_cursor_shape = Input.CURSOR_ARROW
 
 ###
@@ -709,10 +713,6 @@ func _input(event):
 
 var cum_delta = 0
 func _process(delta):
-	# render ImmediateGeometry
-	render()
-	im_nodepth.render()
-
 	if !is_ui_valid():
 		return
 
@@ -739,6 +739,3 @@ func _process(delta):
 	# tooltips & cursors
 	update_tooltip(delta)
 	update_cursor()
-
-	Debug.loginfo("")
-	Debug.loginfo("cursor:     ", Input.get_current_cursor_shape())

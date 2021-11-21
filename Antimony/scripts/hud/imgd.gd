@@ -5,38 +5,54 @@ export(bool) var is_self_im = false
 
 var im
 
-var todraw = {
-	"points": [],
-	"lines": [],
-	"paths": {}
-}
-
-func point(v, c):
-	todraw["points"].append([v, c])
-func line(v1, v2, c1, c2 = null):
+func point(v, c, standalone = true):
+	if standalone:
+		im.begin(Mesh.PRIMITIVE_POINTS, null)
+	im.set_color(c)
+	im.add_vertex(v)
+	if standalone:
+		im.end()
+func line(v1, v2, c1, c2 = null, standalone = true):
 	if c2 == null:
 		c2 = c1
-	todraw["lines"].append([v1, v2, c1, c2])
+	if standalone:
+		im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
+	im.set_color(c1)
+	im.add_vertex(v1)
+	im.set_color(c2)
+	im.add_vertex(v2)
+	if standalone:
+		im.end()
 func vector(p, v, c, point_1 = false, point_2 = false):
 	line(p, p + v, c)
 	if point_1:
 		point(p, c)
 	if point_2:
 		point(p + v, c)
-func path(p, v, c, points = false):
-	if !todraw["paths"].has(p):
-		todraw["paths"][p] = []
-	todraw["paths"][p].append([v, c])
-	if points:
-		point(v, c)
-func navpath(nav, pos, corr, c1, c2):
+func navpath(nav, pos, corr, c1, c2, c3, points = false):
+	var pp = null
 	for p in nav.path_total:
 		var point = nav.path[p]
 		if p == nav.path_index:
-			path(name, pos, c1, true)
-			path(name, point + corr, c1, true)
-		elif p > nav.path_index:
-			path(name, point + corr, c2, true)
+			line(pos, point + corr, c2, c2, true)
+			if pp != null:
+				line(point + corr, pp + corr, c3, c3, true)
+		if p > nav.path_index:
+			if pp != null:
+				line(point + corr, pp + corr, c1, c1, true)
+		pp = point # save previous point in cache
+
+	# draw points
+	if points:
+		for p in nav.path_total:
+			point(pos, c2)
+			var point = nav.path[p]
+			if p == nav.path_index:
+				point(point + corr, c2)
+			elif p > nav.path_index:
+				point(point + corr, c1)
+			else:
+				point(point + corr, c3)
 func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 	if centered:
 		p -= Vector3(x, y, z) * 0.5
@@ -89,36 +105,10 @@ func box_raw(p, x, y, z, c, centered = true, e = -1, points = false):
 func box(p, s, c, centered = true, e = -1, points = false):
 	return box_raw(p, s.x, s.y, s.z, c, centered, e, points)
 
-func render():
+func _process(delta):
 	if im == null:
 		return
 	im.clear()
-	im.begin(Mesh.PRIMITIVE_POINTS, null)
-	for e in todraw["points"]:
-		im.set_color(e[1])
-		im.add_vertex(e[0])
-	im.end()
-
-	for e in todraw["lines"]:
-		im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
-		im.set_color(e[2])
-		im.add_vertex(e[0])
-		im.set_color(e[3])
-		im.add_vertex(e[1])
-		im.end()
-
-	for p in todraw["paths"]:
-		im.begin(Mesh.PRIMITIVE_LINE_STRIP, null)
-		for e in todraw["paths"][p]:
-			im.set_color(e[1])
-			im.add_vertex(e[0])
-		im.end()
-
-	todraw = {
-		"points": [],
-		"lines": [],
-		"paths": {}
-	}
 
 func _ready():
 	if is_self_im:
