@@ -3,33 +3,38 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends Spatial
 
+signal level_ready
+
 func start():
-	UI.load_UI(game.gm.fps)
-	game.air_drag = 0.1
-	game.air_speed_coeff = 0.1
-	game.air_speed_max = 100
-	game.gravity = 1
-	game.jump_strength = 25
-	game.jump_falloff = 40
-	game.walk_speed = 6
-	game.run_speed = 10
-	game.sprint_speed = 14
-	game.sneak_speed = 4
-#	game.dash_speed = 500
-	game.jump_spam = true
+	UI.init(\"rts\", Game.gm.rts)
 
-	game.controller.init_zoom(0.0, 0.0, 0.0)
-	game.controller.zoom_delta_speed = 1
-	game.controller.min_height = -0.5 * PI + 0.01
-	game.controller.max_height = 0.5 * PI - 0.01
-	game.controller.offset = Vector3(0, 1.72, 0)
-	game.controller.crouch_offset = Vector3(0, 1.0, 0)
-#	game.controller.alt_camera = true
-	game.controller.alt_camera_zoom = 3.75
-	game.controller.camera_3d_coeff = Vector3(1, 1, 1)
+#	Game.air_drag = 0.1
+#	Game.air_speed_coeff = 0.1
+#	Game.air_speed_max = 100
+#	Game.gravity = 1
+#	Game.jump_strength = 25
+#	Game.jump_falloff = 40
+#	Game.walk_speed = 6
+#	Game.run_speed = 10
+#	Game.sprint_speed = 14
+#	Game.sneak_speed = 4
+#	Game.dash_speed = 500
+#	Game.jump_spam = true
 
-	game.spawn_player()
-	UI.h_playername.text = game.get_playername()
+#	Game.controller.init_zoom(0.0, 0.0, 0.0)
+#	Game.controller.zoom_delta_speed = 1
+#	Game.controller.min_height = -0.5 * PI + 0.01
+#	Game.controller.max_height = 0.5 * PI - 0.01
+#	Game.controller.offset = Vector3(0, 1.72, 0)
+#	Game.controller.crouch_offset = Vector3(0, 1.0, 0)
+#	Game.controller.alt_camera = true
+#	Game.controller.alt_camera_zoom = 3.75
+#	Game.controller.camera_3d_coeff = Vector3(1, 1, 1)
+
+#	Game.spawn_player()
+	UI.h_playername.text = Game.get_playername()
+
+	emit_signal(\"level_ready\")
 "
 
 [sub_resource type="CubeMesh" id=2]

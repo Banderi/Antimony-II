@@ -7,6 +7,8 @@ var data = [] # this contains ALL the useful item data -- editable, too.
 export(int, 0, 99) var faction = 0 # ok I lied. not ALL of the data...
 export(Color) var color = Color(1,0,0,1) setget set_color
 
+export(bool) var IS_COLLADA_IMPORT = false
+
 var bars = null
 var meshnodes = []
 onready var mesh = $mesh
@@ -25,6 +27,11 @@ var usage_transform = Transform()
 var collision_props_list = [] # TODO
 
 # TODO: rewrite this utter garbage
+
+func prepare_dae():
+	if !IS_COLLADA_IMPORT: # ignore if not collada
+		false
+
 
 func get_all_childs(node):
 	var nodes = []

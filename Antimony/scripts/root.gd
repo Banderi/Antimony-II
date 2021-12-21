@@ -46,7 +46,7 @@ func _ready():
 	$ITEMS.init()
 
 	# load initial level
-	Game.load_level("levels/test")
+	Game.load_level("levels/main")
 
 	# push chat history (for testing purposes)
 #	UI.chat_push("testest", OS.get_datetime(), "test")

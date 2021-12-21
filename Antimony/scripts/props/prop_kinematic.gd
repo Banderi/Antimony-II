@@ -3,13 +3,7 @@ class_name KinematicProp
 # NOTE: Prop inherits from Spatial. KinematicProp CANNOT extend KinematicBody and thus cannot access KinematicBody methods directly.
 # Fuck the diamond problem.
 
-#var kbody = null
-#var mesh = null
-#onready var kbody = $KinematicBody
-#onready var mesh = $mesh
-
 var nav_correction = Vector3(0, -0.4, 0)
-#var kbody_correction = Vector3(0, 0, 0)
 var up = Vector3(0, 1, 0)
 var hor = Vector3(1, 0, 1)
 
@@ -184,9 +178,6 @@ func dynamics_update(delta):
 	dynamics.delta_velocity = dynamics.velocity - dynamics.last_velocity
 	dynamics.delta_direction = dynamics.direction - dynamics.last_direction
 	dynamics.delta_movement = dynamics.movement - dynamics.last_movement
-
-func mesh_update(delta):
-	mesh.translation = dynamics.position
 
 ###
 

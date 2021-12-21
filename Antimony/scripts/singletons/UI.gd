@@ -69,7 +69,7 @@ var sb_peers = []
 
 # pause/game menu buttons
 func resume_btn():
-	UI.menu(UI.ms.pause, false)
+	menu(ms.pause, false)
 
 func newgame_btn():
 	pass
@@ -79,24 +79,24 @@ func loadgame_btn():
 	pass
 
 func multiplayer_btn():
-	UI.menu(UI.ms.multiplayer)
+	menu(ms.multiplayer)
 func connect_btn():
 	if RPC.join("banderi.dynu.net"):
 		$UI/Panel/connect.disabled = true
 
 func settings_btn():
-	UI.menu(UI.ms.settings)
+	menu(ms.settings)
 func about_btn():
 	return # TODO
-	UI.menu(UI.ms.about)
+	menu(ms.about)
 func credits_btn():
-	UI.menu(UI.ms.credits)
+	menu(ms.credits)
 func quit_btn():
 	Game.quit_game()
 func chat_enter(txt):
 	if txt.strip_edges(true, true) == "":
 		return
-	UI.h_chatbox.text = ""
+	h_chatbox.text = ""
 	RPC.RPC_chat_message(txt)
 var inchat = false
 func _on_chat_enter():
@@ -624,10 +624,10 @@ func is_ui_valid():
 func register_inv_hotbar_slots(tot_slots, hbar_slots): # register hotbar slots
 	for i in range(0,tot_slots):
 		if i < hbar_slots:
-			UI.hh_hotbar[i].slot = i
-			UI.hh_invbar[i].slot = i
+			hh_hotbar[i].slot = i
+			hh_invbar[i].slot = i
 		else:
-			UI.hh_invequip[i - hbar_slots].slot = i
+			hh_invequip[i - hbar_slots].slot = i
 func game_text_set(wname, pmenu, sub = ""):
 	OS.set_window_title(wname)
 	m_pause.get_node("Panel/Label").text = pmenu
@@ -657,7 +657,7 @@ func _input(event):
 				Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		Game.gm.ludcorp:
 			# update hotbar selection
-			if Game.player.prop_inuse == null && !UI.paused: # player is not interacting with a prop
+			if Game.player.prop_inuse == null && !paused: # player is not interacting with a prop
 				if Input.is_action_just_pressed("item_prev"):
 					hotbar_sel -= 1
 				elif Input.is_action_just_pressed("item_next"):
@@ -708,7 +708,7 @@ func _input(event):
 	if Input.is_action_just_released("menu_chat") && m_chat.visible:
 		h_chatbox.grab_focus()
 
-	if check_mouse_within(UI.h_invpanel) && m_inv.visible:
+	if check_mouse_within(h_invpanel) && m_inv.visible:
 		handle_input += 1
 
 var cum_delta = 0
@@ -732,9 +732,9 @@ func _process(delta):
 
 	# update chat menu transparency
 	if inchat:
-		UI.h_chatpanel.modulate.a += (1 - UI.h_chatpanel.modulate.a) * delta * 10
+		h_chatpanel.modulate.a += (1 - h_chatpanel.modulate.a) * delta * 10
 	else:
-		UI.h_chatpanel.modulate.a += (0.5 - UI.h_chatpanel.modulate.a) * delta * 10
+		h_chatpanel.modulate.a += (0.5 - h_chatpanel.modulate.a) * delta * 10
 
 	# tooltips & cursors
 	update_tooltip(delta)
