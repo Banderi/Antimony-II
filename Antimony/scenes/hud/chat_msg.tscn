@@ -3,7 +3,7 @@
 [ext_resource path="res://Antimony/scripts/hud/chat_msg.gd" type="Script" id=1]
 
 [sub_resource type="DynamicFontData" id=1]
-font_path = "res://fonts/whitrabt.ttf"
+font_path = "res://Antimony/fonts/whitrabt.ttf"
 
 [sub_resource type="DynamicFont" id=2]
 size = 28

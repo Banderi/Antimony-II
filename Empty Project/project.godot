@@ -62,7 +62,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
-Game="*res://Antimony/scripts/singletons/game.gd"
+Game="*res://Antimony/scripts/singletons/Game.gd"
 UI="*res://Antimony/scripts/singletons/UI.gd"
 Masks="*res://Antimony/scripts/singletons/Masks.gd"
 Inventory="*res://Antimony/scripts/singletons/Inventory.gd"
