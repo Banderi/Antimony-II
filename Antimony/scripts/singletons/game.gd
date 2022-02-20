@@ -15,6 +15,8 @@ var weaps # toolbelt
 var space_state
 var space_state2D
 
+signal level_ready
+
 var raypick_ignore_first = false
 
 var gravity = 100
@@ -61,10 +63,12 @@ var camera_3d_coeff = Vector3(1, 1, 1)
 var camera_2d_coeff = Vector2(0.15, 0.15) #0.0175
 var camera_2d_vertical_compensation = 0.0175
 var camera_fov = 70
-var camera_fov_scope = 20
-var camera_weapon_shake_force = Vector2(0.0015, 0.01)
+#var camera_fov_scope = 20
+#var camera_weapon_shake_force = Vector2(0.0015, 0.01)
 var camera_near = 0.1
 var camera_far = 10000.0
+var camera_offset = Vector3(0, 1, 0)
+#var camera_crouch_offset = Vector3(0, 0.75, 0)
 
 var max_bullet_travel = 100
 var max_bullet_lifetime = 10.0

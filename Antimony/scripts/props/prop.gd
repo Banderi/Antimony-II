@@ -18,6 +18,9 @@ var highlighted = false # currently highlighted
 var selected = false # currently selected
 var selection_timer = 0
 
+export(Vector3) var selection_scale = Vector3(2.3, 2.3, 2.3)
+export(bool) var selection_offset_from_ground = true
+
 var user = null # actor interacting with prop
 var busy = false
 var distance = 0.4
@@ -30,8 +33,8 @@ var collision_props_list = [] # TODO
 
 func prepare_dae():
 	if !IS_COLLADA_IMPORT: # ignore if not collada
-		false
-
+		return
+	print("Preparing collada file...")
 
 func get_all_childs(node):
 	var nodes = []
@@ -55,6 +58,8 @@ func select(y):
 	selection_timer = 0
 	selected = y
 func can_be_selected(drag):
+	if !visible:
+		return false # do not select/highlight when invisible
 	if faction == Game.player_faction:
 		return true
 	elif !drag: # can be selected when not dragging
@@ -126,18 +131,22 @@ func show_bars(delta):
 #	bars.scale = Vector2(40,40) / Game.camera_distance(translation)
 	bars.position = Game.to_screen(body.translation + 2.3 * Vector3(0, body.scale.y, 0))
 func show_selection_boxes(delta):
+	var box_offset = body.translation
+	if selection_offset_from_ground:
+		box_offset += Vector3(0, body.scale.y, 0)
 	if selected:
-		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 1, 1), true, 0.4)
+		UI.box(box_offset, body.scale * selection_scale, Color(1, 1, 1, 1), true, 0.4)
 	elif highlighted:
-#		UI.box(body.translation + Vector3(0, body.scale.y, 0), body.scale * 2.3, Color(1, 1, 0, 1), true, 0.4)
+#		UI.box(box_offset, body.scale * selection_scale, Color(1, 1, 0, 1), true, 0.4)
 		pass
 
 func update_mesh_transforms(delta):
 	mesh.translation = body.translation
 	pass
 
+var isready = false
 func _process(delta):
-	if Engine.editor_hint:
+	if Engine.editor_hint || !isready:
 		return
 	period += delta # todo: this would actually be different for each of the functions...
 	selection_timer += delta
@@ -158,7 +167,7 @@ func _ready():
 	###
 
 	# wait for game databases to finish loading
-	yield(Game.level, "level_ready")
+	yield(Game, "level_ready")
 
 	# pickup-able item vs interactible/physics room prop
 	var item_data = Game.get_item_data(itemid)
@@ -177,7 +186,15 @@ func _ready():
 		bars = load("res://scenes/hud/unitbars.tscn").instance()
 		self.add_child(bars)
 
+	# prepare collada file structure
+	if IS_COLLADA_IMPORT:
+		prepare_dae()
+		return # DEAL WITH THIS LATER....
+
 	# initialize composed transformations.... GOD.
 	body.transform = body.get_global_transform()
 	mesh.transform = mesh.get_global_transform()
 	transform = Transform()
+
+	# additional flag to stop the _process() function to fire before the "level_ready" signal is fired
+	isready = true

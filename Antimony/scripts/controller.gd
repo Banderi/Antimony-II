@@ -11,12 +11,15 @@ onready var cursor2D = get_node("cursor2D")
 
 var up = Vector3(0, 1, 0)
 
-var offset = Vector3(0, 1, 0) # height off of the ground
-var crouch_offset = Vector3(0, 0.75, 0) # height off of the ground
-var smooth_offset = offset
+#var offset = Vector3(0, 1, 0) # height off of the ground
+#var crouch_offset = Vector3(0, 0.75, 0) # height off of the ground
+var offset = Vector3()
 var target = Vector3(0, 0, 0) # interpolation target
-var lookat = target + smooth_offset
+var lookat = target + offset
 var target2D = Vector2(0, 0) # for 2D camera
+
+var target_velocity = Vector3()
+var target_velocity2D = Vector2()
 
 var locked = false
 var alt_camera = false
@@ -340,29 +343,30 @@ func _process(delta):
 	jerk_update(delta)
 
 	# how do the LookAt and Camera origin behave? (GAME-specific logic)
-	var lookat_offset = offset
+	var lookat_offset = Game.camera_offset
 #	if Game.can_sneak && Game.player.crouching:
 #		lookat_offset = crouch_offset
-#	smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
-	var new_lookat = target + smooth_offset
+#	offset = Game.delta_interpolate(offset, lookat_offset, 0.3, delta)
+	var new_lookat = target + offset
 	var new_zoom = zoom_target
-	match Game.GAMEMODE:
-		Game.gm.fps:
-			if Game.can_sneak && Game.player.crouching:
-				lookat_offset = crouch_offset
-			smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
-			new_lookat = Game.player.pos + smooth_offset
-			if alt_camera:
-				new_zoom = Game.camera_alt_zoom
-			else:
-				new_zoom = zoom_target
-		_: # default case
-			if alt_camera:
-				new_lookat = Game.player.pos + smooth_offset #Game.player.pos
-				new_zoom = Game.camera_alt_zoom
-			else:
-				new_lookat = target + smooth_offset
-				new_zoom = zoom_target
+#	match Game.GAMEMODE:
+#		Game.gm.fps:
+#			if Game.can_sneak && Game.player.crouching:
+#				lookat_offset = Game.camera_crouch_offset
+#			smooth_offset = Game.delta_interpolate(smooth_offset, lookat_offset, 0.3, delta)
+#			new_lookat = Game.player.pos + smooth_offset
+#			if alt_camera:
+#				new_zoom = Game.camera_alt_zoom
+#			else:
+#				new_zoom = zoom_target
+#		_: # default case
+#			if alt_camera:
+#				new_lookat = Game.player.pos + smooth_offset #Game.player.pos
+#				new_zoom = Game.camera_alt_zoom
+#			else:
+#				new_lookat = target + smooth_offset
+#				new_zoom = zoom_target
+
 
 	# update 2D camera
 	if Game.is_2D():
@@ -430,6 +434,8 @@ func _ready():
 	cursor.set_as_toplevel(true)
 	cursor.transform = Transform()
 
-	# set zoom to initial
-	zoom = Game.camera_initial_zoom
+	yield(Game, "level_ready")
+
+	# load in game values
+	zoom = min(Game.camera_initial_zoom, Game.camera_zoom_max)
 	zoom_target = zoom

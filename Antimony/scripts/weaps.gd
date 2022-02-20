@@ -370,7 +370,7 @@ func update_anims(delta):
 	animation_tilt.y += 5 * anim_weapon_switching
 
 	# player's vertical speed sway
-	animation_offset.y += 1 * (Game.player.velocity.y / Game.max_fall_speed)
+	animation_offset.y += 1 * (Game.controller.target_velocity.y / Game.max_fall_speed)
 
 	# BUG: the first shot fired after reloading, if it hits something,
 	# will not display a muzzle flash *SOMETIMES*.

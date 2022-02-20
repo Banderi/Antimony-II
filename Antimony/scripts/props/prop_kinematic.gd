@@ -155,6 +155,13 @@ func show_navigation(delta):
 
 ###
 
+var external_forces = Vector3()
+func move_to_point(point):
+	var DELTA = point - dynamics.position
+	external_forces += DELTA
+func apply_velocity(vel):
+	external_forces += vel
+
 func dynamics_update(delta):
 	# update previous values
 	dynamics.last_position = dynamics.position
@@ -163,6 +170,8 @@ func dynamics_update(delta):
 	dynamics.last_movement = dynamics.movement
 
 	dynamics.movement = dynamics.direction * dynamics.speed
+	dynamics.movement += external_forces
+	external_forces = Vector3() # remember to RESET this! >:O
 	if !dynamics.on_ground:
 		dynamics.movement += dynamics.velocity
 
